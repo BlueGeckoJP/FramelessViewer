@@ -6,7 +6,6 @@ import java.awt.Image
 import java.awt.Rectangle
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
-import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
@@ -42,7 +41,7 @@ class App : JFrame() {
     init {
         title = "FramelessViewer"
         defaultCloseOperation = EXIT_ON_CLOSE
-        isUndecorated = App.isUndecoratedWindow
+        isUndecorated = isUndecoratedWindow
         bounds = App.bounds
 
         frameWidth = 600 - insets.left - insets.right
@@ -83,7 +82,7 @@ class App : JFrame() {
     }
 
     private fun toggleTitleBar() {
-        App.isUndecoratedWindow = !App.isUndecoratedWindow
+        isUndecoratedWindow = !isUndecoratedWindow
         App.bounds = bounds
         this@App.isVisible = false
     }
@@ -103,33 +102,31 @@ class App : JFrame() {
             val file = File(filePath)
             val bufferedImage = ImageIO.read(file)
 
-            var size1 = this@App.width; var size2 = this@App.height
-            val imgSize1 = bufferedImage.width; val imgSize2 = bufferedImage.height
+            var width = this@App.width
+            var height = this@App.height
             if (!isUndecoratedWindow) {
-                size1 = frameWidth; size2 = frameHeight
+                width = frameWidth
+                height = frameHeight
             }
-            if (size1 - getSizeFromAR(size2, getAspectRatio(bufferedImage.width, bufferedImage.height)) < size2 - getSizeFromAR(
-                    size1, getAspectRatio(bufferedImage.width, bufferedImage.height))) {
-                val (size1, size2) = Pair(size2, size1)
-                val (imgSize1, imgSize2) = Pair(imgSize2, imgSize1)
-            }
-            if (imgSize1 > size1) {
-                setImage(bufferedImage, size1)
-            } else if (imgSize2 > size2) {
-                setImage(bufferedImage, size2)
-            } else {
-                iconLabel.icon = ImageIcon(bufferedImage)
+
+            if (bufferedImage.width > width || bufferedImage.height > height) {
+                val widthStandardSize = Pair(width, getSizeFromAspectRatio(width, getAspectRatio(bufferedImage.width, bufferedImage.height), false))
+                val heightStandardSize = Pair(getSizeFromAspectRatio(height, getAspectRatio(bufferedImage.width, bufferedImage.height), true), height)
+
+                if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
+                    val image = bufferedImage.getScaledInstance(widthStandardSize.first, widthStandardSize.second, Image.SCALE_SMOOTH)
+                    iconLabel.icon = ImageIcon(image)
+                } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
+                    val image = bufferedImage.getScaledInstance(heightStandardSize.first, heightStandardSize.second, Image.SCALE_SMOOTH)
+                    iconLabel.icon = ImageIcon(image)
+                }
             }
         } catch (_: IIOException) {
             iconLabel.text = ""
         }
     }
 
-    private fun setImage(bufferedImage: BufferedImage, size: Int) {
-        val image = bufferedImage.getScaledInstance(size, getSizeFromAR(size, getAspectRatio(bufferedImage.width, bufferedImage.height)) , Image.SCALE_SMOOTH)
-        iconLabel.icon = ImageIcon(image)
-    }
-
+    // Example: firstI1: 1920, firstI2: 1080 = Pair<16, 9>
     private fun getAspectRatio(firstI1: Int, firstI2: Int): Pair<Int, Int> {
         var i1 = firstI1
         var i2 = firstI2
@@ -145,7 +142,11 @@ class App : JFrame() {
         }
     }
 
-    private fun getSizeFromAR(size: Int, i: Pair<Int, Int>): Int {
+    // Example: size: 1920, i: Pair<16, 9> = 1080
+    private fun getSizeFromAspectRatio(size: Int, i: Pair<Int, Int>, isHeightStandard: Boolean): Int {
+        if (isHeightStandard) {
+            return (size * i.first) / i.second
+        }
         return (size * i.second) / i.first
     }
 }
