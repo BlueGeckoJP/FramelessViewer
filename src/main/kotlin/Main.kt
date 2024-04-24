@@ -121,7 +121,6 @@ class App : JFrame() {
                         filePath = fileList[fileListIndex]
                         updateImage()
                     }
-                    println(fileListIndex)
                 }
             }
         }
