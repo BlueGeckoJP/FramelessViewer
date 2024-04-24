@@ -6,6 +6,8 @@ import java.awt.Image
 import java.awt.Rectangle
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import java.io.File
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
@@ -15,6 +17,7 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JMenuItem
 import javax.swing.JPanel
+import kotlin.system.exitProcess
 
 fun main() {
     var app = App()
@@ -35,6 +38,8 @@ class App : JFrame() {
         var filePath = ""
         var frameWidth = 0
         var frameHeight = 0
+        var fileList = mutableListOf("")
+        var fileListIndex = 0
     }
     private var iconLabel: JLabel
 
@@ -50,10 +55,13 @@ class App : JFrame() {
         val popupMenu = PopupMenu(this)
         val itemTitleBar = JMenuItem("Toggle TitleBar")
         val itemOpen = JMenuItem("Open")
+        val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
         itemOpen.addActionListener { open() }
+        itemExit.addActionListener{ exit() }
         popupMenu.add(itemTitleBar)
         popupMenu.add(itemOpen)
+        popupMenu.add(itemExit)
 
         iconLabel = JLabel()
         iconLabel.horizontalAlignment = JLabel.CENTER
@@ -66,6 +74,7 @@ class App : JFrame() {
         contentPane.add(panel, BorderLayout.CENTER)
 
         addComponentListener(WindowResizeListener())
+        addKeyListener(ArrowKeyListener())
     }
 
     inner class WindowResizeListener : ComponentListener {
@@ -78,6 +87,42 @@ class App : JFrame() {
             frameHeight = size.height - insets.top - insets.bottom
 
             this@App.updateImage()
+        }
+    }
+
+    inner class ArrowKeyListener : KeyListener {
+        override fun keyPressed(p0: KeyEvent?) {}
+        override fun keyTyped(p0: KeyEvent?) {}
+        override fun keyReleased(p0: KeyEvent?) {
+            if (p0 != null && filePath != "") {
+                if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
+                    val filePathSlashIndex = filePath.lastIndexOf("/")
+                    val dirPath = filePath.substring(0, filePathSlashIndex)
+                    val dir = File(dirPath)
+                    val rawFileList = dir.listFiles()
+                    val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter { it.contains(Regex(".jpg|.jpeg|.png")) }
+                        ?.sorted()
+                    fileList = filenameList as MutableList<String>
+                    fileListIndex = fileList.indexOf(filePath)
+                    if (p0.keyCode == 37) { // Left arrow key
+                        if (fileListIndex - 1 <= 0) {
+                            fileListIndex = fileList.size - 1
+                        } else {
+                            fileListIndex -= 1
+                        }
+                        filePath = fileList[fileListIndex]
+                        updateImage()
+                    } else if (p0.keyCode == 39) { // Right arrow key
+                        if (fileListIndex + 1 >= fileList.size) {
+                            fileListIndex = 0
+                        } else {
+                            fileListIndex += 1
+                        }
+                        filePath = fileList[fileListIndex]
+                        updateImage()
+                    }
+                }
+            }
         }
     }
 
@@ -95,6 +140,10 @@ class App : JFrame() {
             filePath = file.absolutePath
             updateImage()
         }
+    }
+
+    private fun exit() {
+        exitProcess(0)
     }
 
     private fun updateImage() {
@@ -142,7 +191,7 @@ class App : JFrame() {
         }
     }
 
-    // Example: size: 1920, i: Pair<16, 9> = 1080
+    // Example: size: 1920, i: Pair<16, 9>, isHeightStandard = true/false = 1080
     private fun getSizeFromAspectRatio(size: Int, i: Pair<Int, Int>, isHeightStandard: Boolean): Int {
         if (isHeightStandard) {
             return (size * i.first) / i.second
