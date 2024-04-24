@@ -105,7 +105,7 @@ class App : JFrame() {
                     fileList = filenameList as MutableList<String>
                     fileListIndex = fileList.indexOf(filePath)
                     if (p0.keyCode == 37) { // Left arrow key
-                        if (fileListIndex - 1 <= 0) {
+                        if (fileListIndex - 1 < 0) {
                             fileListIndex = fileList.size - 1
                         } else {
                             fileListIndex -= 1
@@ -121,6 +121,7 @@ class App : JFrame() {
                         filePath = fileList[fileListIndex]
                         updateImage()
                     }
+                    println(fileListIndex)
                 }
             }
         }
