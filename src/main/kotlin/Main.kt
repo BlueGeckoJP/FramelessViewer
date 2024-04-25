@@ -4,6 +4,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.Image
 import java.awt.Rectangle
+import java.awt.datatransfer.DataFlavor
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import java.awt.event.KeyEvent
@@ -17,6 +18,7 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JMenuItem
 import javax.swing.JPanel
+import javax.swing.TransferHandler
 import kotlin.system.exitProcess
 
 fun main() {
@@ -33,24 +35,25 @@ fun main() {
 
 class App : JFrame() {
     companion object {
-        var isUndecoratedWindow = true
-        var bounds = Rectangle(0, 0, 600, 400)
-        var filePath = ""
-        var frameWidth = 0
-        var frameHeight = 0
-        var fileList = mutableListOf("")
-        var fileListIndex = 0
+        var gIsUndecorated = true
+        var gBounds = Rectangle(0, 0, 600, 400)
+        var gFilePath = ""
+        var gFrameWidth = 0
+        var gFrameHeight = 0
+        var gFileList = mutableListOf("")
+        var gFileListIndex = 0
+        var gExtensionRegex = Regex(".jpg|.jpeg|.png")
     }
     private var iconLabel: JLabel
 
     init {
         title = "FramelessViewer"
         defaultCloseOperation = EXIT_ON_CLOSE
-        isUndecorated = isUndecoratedWindow
-        bounds = App.bounds
+        isUndecorated = gIsUndecorated
+        bounds = gBounds
 
-        frameWidth = 600 - insets.left - insets.right
-        frameHeight = 400 - insets.top - insets.bottom
+        gFrameWidth = width - insets.left - insets.right
+        gFrameHeight = height - insets.top - insets.bottom
 
         val popupMenu = PopupMenu(this)
         val itemTitleBar = JMenuItem("Toggle TitleBar")
@@ -75,6 +78,7 @@ class App : JFrame() {
 
         addComponentListener(WindowResizeListener())
         addKeyListener(ArrowKeyListener())
+        transferHandler = DropFileHandler()
     }
 
     inner class WindowResizeListener : ComponentListener {
@@ -83,8 +87,8 @@ class App : JFrame() {
         override fun componentShown(p0: ComponentEvent?) {}
 
         override fun componentResized(p0: ComponentEvent?) {
-            frameWidth = size.width - insets.left - insets.right
-            frameHeight = size.height - insets.top - insets.bottom
+            gFrameWidth = size.width - insets.left - insets.right
+            gFrameHeight = size.height - insets.top - insets.bottom
 
             this@App.updateImage()
         }
@@ -94,31 +98,24 @@ class App : JFrame() {
         override fun keyPressed(p0: KeyEvent?) {}
         override fun keyTyped(p0: KeyEvent?) {}
         override fun keyReleased(p0: KeyEvent?) {
-            if (p0 != null && filePath != "") {
+            if (p0 != null && gFilePath != "") {
                 if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
-                    val filePathSlashIndex = filePath.lastIndexOf("/")
-                    val dirPath = filePath.substring(0, filePathSlashIndex)
-                    val dir = File(dirPath)
-                    val rawFileList = dir.listFiles()
-                    val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter { it.contains(Regex(".jpg|.jpeg|.png")) }
-                        ?.sorted()
-                    fileList = filenameList as MutableList<String>
-                    fileListIndex = fileList.indexOf(filePath)
+                    updateFileList()
                     if (p0.keyCode == 37) { // Left arrow key
-                        if (fileListIndex - 1 < 0) {
-                            fileListIndex = fileList.size - 1
+                        if (gFileListIndex - 1 < 0) {
+                            gFileListIndex = gFileList.size - 1
                         } else {
-                            fileListIndex -= 1
+                            gFileListIndex -= 1
                         }
-                        filePath = fileList[fileListIndex]
+                        gFilePath = gFileList[gFileListIndex]
                         updateImage()
                     } else if (p0.keyCode == 39) { // Right arrow key
-                        if (fileListIndex + 1 >= fileList.size) {
-                            fileListIndex = 0
+                        if (gFileListIndex + 1 >= gFileList.size) {
+                            gFileListIndex = 0
                         } else {
-                            fileListIndex += 1
+                            gFileListIndex += 1
                         }
-                        filePath = fileList[fileListIndex]
+                        gFilePath = gFileList[gFileListIndex]
                         updateImage()
                     }
                 }
@@ -126,9 +123,39 @@ class App : JFrame() {
         }
     }
 
+    inner class DropFileHandler : TransferHandler() {
+        override fun canImport(support: TransferSupport): Boolean {
+            if (!support.isDrop) {
+                return false
+            }
+            if (!support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                return false
+            }
+            return true
+        }
+        override fun importData(support: TransferSupport): Boolean {
+            if (!canImport(support)) {
+                return false
+            }
+            val t = support.transferable
+            try {
+                val files = t.getTransferData(DataFlavor.javaFileListFlavor) as List<*>
+                val filePath = files[0].toString()
+                if (!filePath.contains(gExtensionRegex)) {
+                    return false
+                }
+                gFilePath = filePath
+                updateImage()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return true
+        }
+    }
+
     private fun toggleTitleBar() {
-        isUndecoratedWindow = !isUndecoratedWindow
-        App.bounds = bounds
+        gIsUndecorated = !gIsUndecorated
+        gBounds = bounds
         this@App.isVisible = false
     }
 
@@ -137,8 +164,9 @@ class App : JFrame() {
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
         if (file != null) {
-            filePath = file.absolutePath
+            gFilePath = file.absolutePath
             updateImage()
+            updateFileList()
         }
     }
 
@@ -148,14 +176,14 @@ class App : JFrame() {
 
     private fun updateImage() {
         try {
-            val file = File(filePath)
+            val file = File(gFilePath)
             val bufferedImage = ImageIO.read(file)
 
             var width = this@App.width
             var height = this@App.height
-            if (!isUndecoratedWindow) {
-                width = frameWidth
-                height = frameHeight
+            if (!gIsUndecorated) {
+                width = gFrameWidth
+                height = gFrameHeight
             }
 
             if (bufferedImage.width > width || bufferedImage.height > height) {
@@ -169,10 +197,27 @@ class App : JFrame() {
                     val image = bufferedImage.getScaledInstance(heightStandardSize.first, heightStandardSize.second, Image.SCALE_SMOOTH)
                     iconLabel.icon = ImageIcon(image)
                 }
+            } else {
+                iconLabel.icon = ImageIcon(bufferedImage)
             }
-        } catch (_: IIOException) {
+
+            title = "${File(gFilePath).name} [${gFileListIndex+1}/${gFileList.size}] | FramelessViewer"
+        } catch (e: IIOException) {
             iconLabel.text = ""
         }
+    }
+
+    private fun updateFileList() {
+        val filePathSlashIndex = gFilePath.lastIndexOf("/")
+        val dirPath = gFilePath.substring(0, filePathSlashIndex)
+        val dir = File(dirPath)
+        val rawFileList = dir.listFiles()
+        val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter { it.contains(
+            gExtensionRegex) }
+            ?.sorted()
+        gFileList = filenameList as MutableList<String>
+        gFileListIndex = gFileList.indexOf(gFilePath)
+        title = "${File(gFilePath).name} [${gFileListIndex+1}/${gFileList.size}] | FramelessViewer"
     }
 
     // Example: firstI1: 1920, firstI2: 1080 = Pair<16, 9>
