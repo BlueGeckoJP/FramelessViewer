@@ -15,16 +15,11 @@ import javax.imageio.ImageIO
 import javax.swing.*
 
 class App(msg: AtomicReference<Channel>) : JFrame() {
-    companion object {
-        val appData = AppData()
-        lateinit var channel: AtomicReference<Channel>
-    }
-
     private var iconLabel: JLabel
+    private var appData = msg.get().initAppData
+    private var channel = msg
 
     init {
-        channel = msg
-
         title = "FramelessViewer"
         defaultCloseOperation = EXIT_ON_CLOSE
         isUndecorated = appData.isUndecorated
@@ -35,12 +30,15 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         val popupMenu = PopupMenu(this)
         val itemTitleBar = JMenuItem("Toggle TitleBar")
+        val itemNew = JMenuItem("New")
         val itemOpen = JMenuItem("Open")
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
+        itemNew.addActionListener { new() }
         itemOpen.addActionListener { open() }
         itemExit.addActionListener { exit() }
         popupMenu.add(itemTitleBar)
+        popupMenu.add(itemNew)
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
 
@@ -57,6 +55,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         addComponentListener(WindowResizeListener())
         addKeyListener(ArrowKeyListener())
         transferHandler = DropFileHandler()
+
+        this@App.isVisible = true
     }
 
     inner class WindowResizeListener : ComponentListener {
@@ -137,6 +137,10 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         appData.bounds = bounds
         channel.set(Channel(ChannelMessage.Reinit, appData))
         this@App.dispose()
+    }
+
+    private fun new() {
+        channel.set(Channel(ChannelMessage.NewWindow, AppData()))
     }
 
     private fun open() {

@@ -6,5 +6,5 @@ enum class ChannelMessage {
     Normal,
     Exit,
     NewWindow,
-    Reinit,
+    Reinit
 }
