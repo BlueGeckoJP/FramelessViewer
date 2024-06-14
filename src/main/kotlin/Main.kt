@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
             channelMap[returnValue.first] = returnValue.second
             isFirstTime = false
         }
-        
+
         if (channelMap.isEmpty()) {
             exitProcess(0)
         }
@@ -32,12 +32,14 @@ fun main(args: Array<String>) {
                 Exit -> {
                     iter.remove()
                     v.first.interrupt()
+                    println("Exited $k")
                 }
 
                 NewWindow -> {
                     v.second.set(Channel(Normal, AppData()))
                     val returnValue = runApp()
                     channelMap[returnValue.first] = returnValue.second
+                    println("New $k -> ${returnValue.first}")
                 }
 
                 Reinit -> {
@@ -45,6 +47,7 @@ fun main(args: Array<String>) {
                     channelMap[returnValue.first] = returnValue.second
                     channelMap.remove(k)
                     v.first.interrupt()
+                    println("Reinit $k -> ${returnValue.first}")
                 }
 
                 Normal -> {}
