@@ -1,57 +1,66 @@
 package me.bluegecko
 
+import me.bluegecko.ChannelMessage.*
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val channelMap = mutableMapOf<String, AtomicReference<Channel>>()
+    val channelMap = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
     var isFirstTime = true
+
     while (true) {
         if (isFirstTime) {
-            if (args.size == 1) {
-                val returnValue = runApp(AppData(filePath = args[0]))
-                channelMap[returnValue.first] = returnValue.second
-                isFirstTime = false
+            val returnValue = if (args.size == 1) {
+                runApp(AppData(filePath = args[0]))
             } else {
-                val returnValue = runApp()
-                channelMap[returnValue.first] = returnValue.second
-                isFirstTime = false
+                runApp()
             }
+            channelMap[returnValue.first] = returnValue.second
+            isFirstTime = false
         }
-
+        
         if (channelMap.isEmpty()) {
             exitProcess(0)
         }
 
-        val tempChannelMap = mutableMapOf<String, AtomicReference<Channel>>()
-        tempChannelMap.putAll(channelMap)
-        tempChannelMap.forEach { (k, v) ->
-            run {
-                if (v.get().message == ChannelMessage.Exit) {
-                    channelMap.remove(k)
-                } else if (v.get().message == ChannelMessage.NewWindow) {
-                    v.set(Channel(ChannelMessage.Normal, AppData()))
+        val iter = channelMap.iterator()
+        while (iter.hasNext()) {
+            val (k, v) = iter.next()
+            val message = v.second.get().message
+            when (message) {
+                Exit -> {
+                    iter.remove()
+                    v.first.interrupt()
+                }
+
+                NewWindow -> {
+                    v.second.set(Channel(Normal, AppData()))
                     val returnValue = runApp()
                     channelMap[returnValue.first] = returnValue.second
-                } else if (v.get().message == ChannelMessage.Reinit) {
-                    val returnValue = runApp(v.get().initAppData)
+                }
+
+                Reinit -> {
+                    val returnValue = runApp(v.second.get().initAppData)
                     channelMap[returnValue.first] = returnValue.second
                     channelMap.remove(k)
+                    v.first.interrupt()
                 }
+
+                Normal -> {}
             }
         }
 
-        Thread.sleep(1000)
+        Thread.sleep(500)
     }
 }
 
-fun runApp(initAppData: AppData = AppData()): Pair<String, AtomicReference<Channel>> {
-    val channel = AtomicReference(Channel(ChannelMessage.Normal, initAppData))
+fun runApp(initAppData: AppData = AppData()): Pair<String, Pair<Thread, AtomicReference<Channel>>> {
+    val channel = AtomicReference(Channel(Normal, initAppData))
     val thread = Thread {
         val app = App(channel)
         app.isVisible = true
     }
     thread.start()
-    return UUID.randomUUID().toString() to channel
+    return UUID.randomUUID().toString() to (thread to channel)
 }

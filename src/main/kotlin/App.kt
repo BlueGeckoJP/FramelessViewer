@@ -21,7 +21,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     init {
         title = "FramelessViewer"
-        defaultCloseOperation = EXIT_ON_CLOSE
+        defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.isUndecorated
         bounds = appData.bounds
 
@@ -55,8 +55,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         addComponentListener(WindowResizeListener())
         addKeyListener(ArrowKeyListener())
         transferHandler = DropFileHandler()
-
-        this@App.isVisible = true
     }
 
     inner class WindowResizeListener : ComponentListener {
