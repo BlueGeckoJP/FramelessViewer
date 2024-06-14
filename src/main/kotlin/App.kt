@@ -4,10 +4,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
-import java.awt.event.ComponentEvent
-import java.awt.event.ComponentListener
-import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
+import java.awt.event.*
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.IIOException
@@ -57,6 +54,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         addComponentListener(WindowResizeListener())
         addKeyListener(ArrowKeyListener())
+        addWindowListener(WindowEventListener())
         transferHandler = DropFileHandler()
 
         updateImage()
@@ -102,6 +100,22 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                 }
             }
         }
+    }
+
+    inner class WindowEventListener : WindowListener {
+        override fun windowClosing(p0: WindowEvent?) {
+            if (p0 != null) {
+                channel.set(Channel(ChannelMessage.Exit, AppData()))
+                this@App.dispose()
+            }
+        }
+
+        override fun windowOpened(p0: WindowEvent?) {}
+        override fun windowClosed(p0: WindowEvent?) {}
+        override fun windowIconified(p0: WindowEvent?) {}
+        override fun windowDeiconified(p0: WindowEvent?) {}
+        override fun windowActivated(p0: WindowEvent?) {}
+        override fun windowDeactivated(p0: WindowEvent?) {}
     }
 
     inner class DropFileHandler : TransferHandler() {
