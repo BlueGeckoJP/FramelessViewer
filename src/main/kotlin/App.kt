@@ -3,34 +3,28 @@ package me.bluegecko
 import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.Image
-import java.awt.Rectangle
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.swing.*
-import kotlin.system.exitProcess
 
-class App : JFrame() {
+class App(msg: AtomicReference<Channel>) : JFrame() {
     companion object {
-        var appData = AppData(
-            true,
-            Rectangle(0, 0, 600, 400),
-            "",
-            0,
-            0,
-            mutableListOf(""),
-            0,
-            Regex(".jpg|.jpeg|.png|.webp")
-        )
+        val appData = AppData()
+        lateinit var channel: AtomicReference<Channel>
     }
+
     private var iconLabel: JLabel
 
     init {
+        channel = msg
+
         title = "FramelessViewer"
         defaultCloseOperation = EXIT_ON_CLOSE
         isUndecorated = appData.isUndecorated
@@ -45,7 +39,7 @@ class App : JFrame() {
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
         itemOpen.addActionListener { open() }
-        itemExit.addActionListener{ exit() }
+        itemExit.addActionListener { exit() }
         popupMenu.add(itemTitleBar)
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
@@ -117,6 +111,7 @@ class App : JFrame() {
             }
             return true
         }
+
         override fun importData(support: TransferSupport): Boolean {
             if (!canImport(support)) {
                 return false
@@ -140,7 +135,8 @@ class App : JFrame() {
     private fun toggleTitleBar() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
-        this@App.isVisible = false
+        channel.set(Channel(ChannelMessage.Reinit, appData))
+        this@App.dispose()
     }
 
     private fun open() {
@@ -155,7 +151,8 @@ class App : JFrame() {
     }
 
     private fun exit() {
-        exitProcess(0)
+        channel.set(Channel(ChannelMessage.Exit, AppData()))
+        this@App.dispose()
     }
 
     private fun updateImage() {
@@ -171,21 +168,39 @@ class App : JFrame() {
             }
 
             if (bufferedImage.width > width || bufferedImage.height > height) {
-                val widthStandardSize = Pair(width, getSizeFromAspectRatio(width, getAspectRatio(bufferedImage.width, bufferedImage.height), false))
-                val heightStandardSize = Pair(getSizeFromAspectRatio(height, getAspectRatio(bufferedImage.width, bufferedImage.height), true), height)
+                val widthStandardSize = Pair(
+                    width,
+                    getSizeFromAspectRatio(width, getAspectRatio(bufferedImage.width, bufferedImage.height), false)
+                )
+                val heightStandardSize = Pair(
+                    getSizeFromAspectRatio(
+                        height,
+                        getAspectRatio(bufferedImage.width, bufferedImage.height),
+                        true
+                    ), height
+                )
 
                 if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
-                    val image = bufferedImage.getScaledInstance(widthStandardSize.first, widthStandardSize.second, Image.SCALE_SMOOTH)
+                    val image = bufferedImage.getScaledInstance(
+                        widthStandardSize.first,
+                        widthStandardSize.second,
+                        Image.SCALE_SMOOTH
+                    )
                     iconLabel.icon = ImageIcon(image)
                 } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
-                    val image = bufferedImage.getScaledInstance(heightStandardSize.first, heightStandardSize.second, Image.SCALE_SMOOTH)
+                    val image = bufferedImage.getScaledInstance(
+                        heightStandardSize.first,
+                        heightStandardSize.second,
+                        Image.SCALE_SMOOTH
+                    )
                     iconLabel.icon = ImageIcon(image)
                 }
             } else {
                 iconLabel.icon = ImageIcon(bufferedImage)
             }
 
-            title = "${File(appData.filePath).name} [${appData.fileListIndex+1}/${appData.fileList.size}] | FramelessViewer"
+            title =
+                "${File(appData.filePath).name} [${appData.fileListIndex + 1}/${appData.fileList.size}] | FramelessViewer"
         } catch (e: IIOException) {
             iconLabel.text = ""
         }
@@ -196,12 +211,16 @@ class App : JFrame() {
         val dirPath = appData.filePath.substring(0, filePathSlashIndex)
         val dir = File(dirPath)
         val rawFileList = dir.listFiles()
-        val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter { it.contains(
-            appData.extensionRegex) }
+        val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter {
+            it.contains(
+                appData.extensionRegex
+            )
+        }
             ?.sorted()
         appData.fileList = filenameList as MutableList<String>
         appData.fileListIndex = appData.fileList.indexOf(appData.filePath)
-        title = "${File(appData.filePath).name} [${appData.fileListIndex+1}/${appData.fileList.size}] | FramelessViewer"
+        title =
+            "${File(appData.filePath).name} [${appData.fileListIndex + 1}/${appData.fileList.size}] | FramelessViewer"
     }
 
     // Example: firstI1: 1920, firstI2: 1080 = Pair<16, 9>
