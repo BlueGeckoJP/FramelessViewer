@@ -1,10 +1,14 @@
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 plugins {
     kotlin("jvm") version "1.9.23"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "me.bluegecko"
-version = "1.0-SNAPSHOT"
+version = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").withZone(ZoneId.systemDefault()).format(Instant.now())
 
 repositories {
     mavenCentral()
