@@ -31,14 +31,17 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         val popupMenu = PopupMenu(this)
         val itemTitleBar = JMenuItem("Toggle TitleBar")
         val itemNew = JMenuItem("New")
+        val itemNewWindowWithImage = JMenuItem("New Window with Image")
         val itemOpen = JMenuItem("Open")
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
         itemNew.addActionListener { new() }
+        itemNewWindowWithImage.addActionListener { newWindowWithImage() }
         itemOpen.addActionListener { open() }
         itemExit.addActionListener { exit() }
         popupMenu.add(itemTitleBar)
         popupMenu.add(itemNew)
+        popupMenu.add(itemNewWindowWithImage)
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
 
@@ -55,6 +58,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         addComponentListener(WindowResizeListener())
         addKeyListener(ArrowKeyListener())
         transferHandler = DropFileHandler()
+
+        updateImage()
     }
 
     inner class WindowResizeListener : ComponentListener {
@@ -139,6 +144,10 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun new() {
         channel.set(Channel(ChannelMessage.NewWindow, AppData()))
+    }
+
+    private fun newWindowWithImage() {
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath)))
     }
 
     private fun open() {

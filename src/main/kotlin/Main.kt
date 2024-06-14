@@ -36,9 +36,9 @@ fun main(args: Array<String>) {
                 }
 
                 NewWindow -> {
-                    v.second.set(Channel(Normal, AppData()))
                     val returnValue = runApp()
                     channelMap[returnValue.first] = returnValue.second
+                    v.second.set(Channel(Normal, AppData()))
                     println("New $k -> ${returnValue.first}")
                 }
 
@@ -48,6 +48,13 @@ fun main(args: Array<String>) {
                     channelMap.remove(k)
                     v.first.interrupt()
                     println("Reinit $k -> ${returnValue.first}")
+                }
+
+                NewWindowWithImage -> {
+                    val returnValue = runApp(v.second.get().initAppData)
+                    channelMap[returnValue.first] = returnValue.second
+                    v.second.set(Channel(Normal, AppData()))
+                    println("NewWindowWithImage $k -> ${returnValue.first}")
                 }
 
                 Normal -> {}
