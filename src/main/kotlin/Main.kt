@@ -4,14 +4,20 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
-fun main() {
+fun main(args: Array<String>) {
     val channelMap = mutableMapOf<String, AtomicReference<Channel>>()
     var isFirstTime = true
     while (true) {
         if (isFirstTime) {
-            val returnValue = runApp()
-            channelMap[returnValue.first] = returnValue.second
-            isFirstTime = false
+            if (args.size == 1) {
+                val returnValue = runApp(AppData(filePath = args[0]))
+                channelMap[returnValue.first] = returnValue.second
+                isFirstTime = false
+            } else {
+                val returnValue = runApp()
+                channelMap[returnValue.first] = returnValue.second
+                isFirstTime = false
+            }
         }
 
         if (channelMap.isEmpty()) {
