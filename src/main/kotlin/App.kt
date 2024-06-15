@@ -79,7 +79,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         override fun keyReleased(p0: KeyEvent?) {
             if (p0 != null && appData.filePath != "") {
                 if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
-                    updateFileList()
                     if (p0.keyCode == 37) { // Left arrow key
                         if (appData.fileListIndex - 1 < 0) {
                             appData.fileListIndex = appData.fileList.size - 1
@@ -171,7 +170,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         if (file != null) {
             appData.filePath = file.absolutePath
             updateImage()
-            updateFileList()
         }
     }
 
@@ -223,6 +221,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             } else {
                 iconLabel.icon = ImageIcon(bufferedImage)
             }
+
+            updateFileList()
 
             title =
                 "${File(appData.filePath).name} [${appData.fileListIndex + 1}/${appData.fileList.size}] | FramelessViewer"
