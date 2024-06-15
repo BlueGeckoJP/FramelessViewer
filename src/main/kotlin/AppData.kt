@@ -10,5 +10,6 @@ data class AppData(
     var frameHeight: Int = 0,
     var fileList: MutableList<String> = mutableListOf(""),
     var fileListIndex: Int = 0,
-    var extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.webp")
+    // Extensions supported by default ( JPEG, PNG, GIF, BMP, WBMP )
+    var extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp", RegexOption.IGNORE_CASE)
 )
