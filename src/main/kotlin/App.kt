@@ -180,6 +180,9 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun updateImage() {
         try {
+            ImageIO.scanForPlugins()
+            ImageIO.getImageReadersByFormatName("webp").next()
+
             val file = File(appData.filePath)
             val bufferedImage = ImageIO.read(file)
 

@@ -19,6 +19,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.0-RC1")
+    // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core
+    implementation("com.twelvemonkeys.imageio:imageio-core:3.11.0")
+    // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
+    implementation("com.twelvemonkeys.imageio:imageio-webp:3.11.0")
 }
 
 tasks.test {
