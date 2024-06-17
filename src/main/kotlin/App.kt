@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.swing.*
+import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(msg: AtomicReference<Channel>) : JFrame() {
     private var iconLabel: JLabel
@@ -165,6 +166,14 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun open() {
         val chooser = JFileChooser()
+        chooser.fileFilter =
+            FileNameExtensionFilter("Supported images", "jpg", "jpeg", "png", "gif", "bmp", "dib", "wbmp", "webp")
+        chooser.fileFilter = FileNameExtensionFilter("JPEG", "jpg", "jpeg")
+        chooser.fileFilter = FileNameExtensionFilter("PNG", "png")
+        chooser.fileFilter = FileNameExtensionFilter("GIF", "gif")
+        chooser.fileFilter = FileNameExtensionFilter("BMP", "bmp", "dib")
+        chooser.fileFilter = FileNameExtensionFilter("WBMP", "wbmp")
+        chooser.fileFilter = FileNameExtensionFilter("WebP", "webp")
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
         if (file != null) {
