@@ -166,14 +166,14 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun open() {
         val chooser = JFileChooser()
-        chooser.fileFilter =
-            FileNameExtensionFilter("Supported images", "jpg", "jpeg", "png", "gif", "bmp", "dib", "wbmp", "webp")
         chooser.fileFilter = FileNameExtensionFilter("JPEG", "jpg", "jpeg")
         chooser.fileFilter = FileNameExtensionFilter("PNG", "png")
         chooser.fileFilter = FileNameExtensionFilter("GIF", "gif")
         chooser.fileFilter = FileNameExtensionFilter("BMP", "bmp", "dib")
         chooser.fileFilter = FileNameExtensionFilter("WBMP", "wbmp")
         chooser.fileFilter = FileNameExtensionFilter("WebP", "webp")
+        chooser.fileFilter =
+            FileNameExtensionFilter("Supported images", "jpg", "jpeg", "png", "gif", "bmp", "dib", "wbmp", "webp")
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
         if (file != null) {
