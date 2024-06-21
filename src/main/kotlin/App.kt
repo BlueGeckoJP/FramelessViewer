@@ -6,6 +6,7 @@ import java.awt.Image
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.*
 import java.io.File
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
@@ -235,8 +236,14 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun updateFileList() {
-        val filePathSlashIndex = appData.filePath.lastIndexOf("/")
-        val dirPath = appData.filePath.substring(0, filePathSlashIndex)
+        lateinit var dirPath: String
+        try {
+            val filePathSlashIndex = appData.filePath.lastIndexOf("/")
+            dirPath = appData.filePath.substring(0, filePathSlashIndex)
+        } catch (e: StringIndexOutOfBoundsException) {
+            val filePathSlashIndex = appData.filePath.lastIndexOf("\\")
+            dirPath = appData.filePath.substring(0, filePathSlashIndex)
+        }
         val dir = File(dirPath)
         val rawFileList = dir.listFiles()
         val filenameList = rawFileList?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter {
@@ -244,7 +251,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                 appData.extensionRegex
             )
         }
-            ?.sorted()
+        filenameList?.let { Collections.sort(it, String.CASE_INSENSITIVE_ORDER) }
         appData.fileList = filenameList as MutableList<String>
         appData.fileListIndex = appData.fileList.indexOf(appData.filePath)
         title =
