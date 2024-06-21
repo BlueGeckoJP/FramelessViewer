@@ -24,6 +24,8 @@ fun main(args: Array<String>) {
             exitProcess(0)
         }
 
+        val channelMapAdd = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
+
         val iter = channelMap.iterator()
         while (iter.hasNext()) {
             val (k, v) = iter.next()
@@ -37,28 +39,32 @@ fun main(args: Array<String>) {
 
                 NewWindow -> {
                     val returnValue = runApp()
-                    channelMap[returnValue.first] = returnValue.second
+                    channelMapAdd[returnValue.first] = returnValue.second
                     v.second.set(Channel(Normal, AppData()))
                     println("New $k -> ${returnValue.first}")
                 }
 
                 Reinit -> {
                     val returnValue = runApp(v.second.get().initAppData)
-                    channelMap[returnValue.first] = returnValue.second
-                    channelMap.remove(k)
+                    channelMapAdd[returnValue.first] = returnValue.second
+                    iter.remove()
                     v.first.interrupt()
                     println("Reinit $k -> ${returnValue.first}")
                 }
 
                 NewWindowWithImage -> {
                     val returnValue = runApp(v.second.get().initAppData)
-                    channelMap[returnValue.first] = returnValue.second
+                    channelMapAdd[returnValue.first] = returnValue.second
                     v.second.set(Channel(Normal, AppData()))
                     println("NewWindowWithImage $k -> ${returnValue.first}")
                 }
 
                 Normal -> {}
             }
+        }
+
+        for (item in channelMapAdd) {
+            channelMap[item.key] = item.value
         }
 
         Thread.sleep(500)
