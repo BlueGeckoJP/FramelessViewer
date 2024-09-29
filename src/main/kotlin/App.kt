@@ -28,9 +28,9 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         appData.frameHeight = height - insets.top - insets.bottom
 
         val popupMenu = PopupMenu(this)
-        val itemTitleBar = JMenuItem("Toggle TitleBar")
+        val itemTitleBar = JMenuItem("Toggle titleBar")
         val itemNew = JMenuItem("New")
-        val itemNewWindowWithImage = JMenuItem("New Window with Image")
+        val itemNewWindowWithImage = JMenuItem("New with same options")
         val itemOpen = JMenuItem("Open")
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
