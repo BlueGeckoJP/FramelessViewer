@@ -15,7 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(msg: AtomicReference<Channel>) : JFrame() {
     private var iconLabel: JLabel
-    private var appData = msg.get().initAppData
+    var appData = msg.get().initAppData
     private var channel = msg
 
     init {
@@ -44,7 +44,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
 
-        iconLabel = JLabel()
+        iconLabel = ImageWidget(ImageWidgetData())
         iconLabel.horizontalAlignment = JLabel.CENTER
         iconLabel.verticalAlignment = JLabel.CENTER
 
