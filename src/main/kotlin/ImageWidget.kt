@@ -2,14 +2,14 @@ package me.bluegecko
 
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
-import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
+import java.awt.event.*
 import java.io.File
 import java.nio.file.Paths
 import java.util.Collections
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
+import javax.swing.SwingUtilities
 import javax.swing.TransferHandler
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
@@ -21,6 +21,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         this.verticalAlignment = CENTER
 
         addKeyListener(ArrowKeyListener())
+        addMouseListener(ClickEventListener())
         transferHandler = DropFileHandler()
     }
 
@@ -77,6 +78,19 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                         }
                         updateImage()
                     }
+                }
+            }
+        }
+    }
+
+    inner class ClickEventListener : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+            if (e != null) {
+                if (SwingUtilities.isLeftMouseButton(e)) { // button 3 = left click
+                    data.parent.focusedWidget = this@ImageWidget
+                    println(data.parent.focusedWidget)
+                } else if (SwingUtilities.isRightMouseButton(e)) {
+                    data.parent.popupMenu.show(e.component, e.x, e.y)
                 }
             }
         }

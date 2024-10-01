@@ -13,6 +13,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     private var imageWidgets: MutableList<ImageWidget> = mutableListOf()
     var appData = msg.get().initAppData
     private var channel = msg
+    val popupMenu = PopupMenu(this)
 
     init {
         title = "FramelessViewer"
@@ -23,7 +24,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         appData.frameWidth = width - insets.left - insets.right
         appData.frameHeight = height - insets.top - insets.bottom
 
-        val popupMenu = PopupMenu(this)
         val itemTitleBar = JMenuItem("Toggle titleBar")
         val itemNew = JMenuItem("New")
         val itemNewWindowWithImage = JMenuItem("New with same options")
