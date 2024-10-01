@@ -9,7 +9,8 @@ import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(msg: AtomicReference<Channel>) : JFrame() {
-    private var iconLabel: ImageWidget
+    var focusedWidget: ImageWidget
+    private var imageWidgets: MutableList<ImageWidget> = mutableListOf()
     var appData = msg.get().initAppData
     private var channel = msg
 
@@ -39,32 +40,65 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
 
-        val imageData = ImageWidgetData(this, "", this.width, this.height)
-        if (!appData.isUndecorated) {
-            imageData.width = appData.frameWidth
-            imageData.height = appData.frameHeight
-        }
-        iconLabel = ImageWidget(imageData)
-        iconLabel.horizontalAlignment = JLabel.CENTER
-        iconLabel.verticalAlignment = JLabel.CENTER
-
         val panel = JPanel()
         panel.layout = GridBagLayout()
 
-        val gbc = GridBagConstraints()
-        gbc.gridx = 0
-        gbc.gridy = 0
-        gbc.fill = GridBagConstraints.BOTH
-        gbc.weightx = 0.1
-        gbc.weighty = 0.1
-        panel.add(iconLabel, gbc)
+        if (appData.imageDataList.isEmpty()) {
+            val imageData = ImageWidgetData(this, "", this.width, this.height)
+            if (!appData.isUndecorated) {
+                imageData.width = appData.frameWidth
+                imageData.height = appData.frameHeight
+            }
+            val iw = ImageWidget(imageData)
+            imageWidgets.add(iw)
+            val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
+            iconLabel.horizontalAlignment = JLabel.CENTER
+            iconLabel.verticalAlignment = JLabel.CENTER
+
+            val gbc = GridBagConstraints()
+            gbc.gridx = 0
+            gbc.gridy = 0
+            gbc.fill = GridBagConstraints.BOTH
+            gbc.weightx = 0.1
+            gbc.weighty = 0.1
+            panel.add(iconLabel, gbc)
+        } else {
+            val imageDataList = appData.imageDataList
+            var gridx = 0
+            imageDataList.forEach {
+                try {
+                    val imageData = ImageWidgetData(this, it.imagePath, this.width, this.height)
+                    if (!appData.isUndecorated) {
+                        imageData.width = appData.frameWidth
+                        imageData.height = appData.frameHeight
+                    }
+                    val iw = ImageWidget(imageData)
+                    imageWidgets.add(iw)
+                    val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
+                    iconLabel.horizontalAlignment = JLabel.CENTER
+                    iconLabel.verticalAlignment = JLabel.CENTER
+
+                    val gbc = GridBagConstraints()
+                    gbc.gridx = gridx
+                    gridx += 1
+                    gbc.gridy = 0
+                    gbc.fill = GridBagConstraints.BOTH
+                    gbc.weightx = 0.1
+                    gbc.weighty = 0.1
+                    panel.add(iconLabel, gbc)
+                } catch (e: Exception) {
+                    println("An error occurred in initializing ImageWidget. Ignored.")
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        focusedWidget = imageWidgets[0]
 
         contentPane.add(panel, BorderLayout.CENTER)
 
         addComponentListener(WindowResizeListener())
         addWindowListener(WindowEventListener())
-
-        iconLabel.updateImage()
     }
 
     inner class WindowResizeListener : ComponentListener {
@@ -76,7 +110,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             appData.frameWidth = size.width - insets.left - insets.right
             appData.frameHeight = size.height - insets.top - insets.bottom
 
-            this@App.iconLabel.updateImage()
+            focusedWidget.updateImage()
         }
     }
 
@@ -99,6 +133,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     private fun toggleTitleBar() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
+        appData.imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>
         channel.set(Channel(ChannelMessage.Reinit, appData))
         this@App.dispose()
     }
@@ -108,7 +143,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun newWindowWithImage() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath)))
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath, imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
     }
 
     private fun open() {
@@ -124,8 +159,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
         if (file != null) {
-            this@App.iconLabel.data.imagePath = file.absolutePath
-            this@App.iconLabel.updateImage()
+            focusedWidget.data.imagePath = file.absolutePath
+            focusedWidget.updateImage()
         }
     }
 

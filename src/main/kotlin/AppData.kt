@@ -8,6 +8,5 @@ data class AppData(
     var filePath: String = "",
     var frameWidth: Int = 0,
     var frameHeight: Int = 0,
-    var fileList: MutableList<String> = mutableListOf(""),
-    var fileListIndex: Int = 0,
+    var imageDataList: MutableList<ImageWidgetData> = mutableListOf()
 )

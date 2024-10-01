@@ -12,7 +12,7 @@ import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.TransferHandler
 
-class ImageWidget(val data: ImageWidgetData): JLabel() {
+class ImageWidget(val data: ImageWidgetData) : JLabel() {
     private lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
 
@@ -133,7 +133,8 @@ class ImageWidget(val data: ImageWidgetData): JLabel() {
         val parentDir = Paths.get(data.imagePath).parent.toString()
         val dir = File(parentDir)
         val fileList =
-            dir.listFiles()?.filter { it.isFile }?.map { it.absolutePath.toString() }?.filter { it.contains(extensionRegex) }
+            dir.listFiles()?.filter { it.isFile }?.map { it.absolutePath.toString() }
+                ?.filter { it.contains(extensionRegex) }
         fileList?.let { Collections.sort(it, String.CASE_INSENSITIVE_ORDER) }
         this.fileList = fileList as MutableList<String>
     }
