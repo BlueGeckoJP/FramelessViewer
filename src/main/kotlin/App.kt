@@ -14,6 +14,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     var appData = msg.get().initAppData
     private var channel = msg
     val popupMenu = PopupMenu(this)
+    private val panel = JPanel()
+    private var gridx = 0
 
     init {
         title = "FramelessViewer"
@@ -27,20 +29,22 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         val itemTitleBar = JMenuItem("Toggle titleBar")
         val itemNew = JMenuItem("New")
         val itemNewWindowWithImage = JMenuItem("New with same options")
+        val itemNewWidget = JMenuItem("New widget")
         val itemOpen = JMenuItem("Open")
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
         itemNew.addActionListener { new() }
         itemNewWindowWithImage.addActionListener { newWindowWithImage() }
+        itemNewWidget.addActionListener { newWidget() }
         itemOpen.addActionListener { open() }
         itemExit.addActionListener { exit() }
         popupMenu.add(itemTitleBar)
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWindowWithImage)
+        popupMenu.add(itemNewWidget)
         popupMenu.add(itemOpen)
         popupMenu.add(itemExit)
 
-        val panel = JPanel()
         panel.layout = GridBagLayout()
 
         if (appData.imageDataList.isEmpty()) {
@@ -59,12 +63,14 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             gbc.gridx = 0
             gbc.gridy = 0
             gbc.fill = GridBagConstraints.BOTH
-            gbc.weightx = 0.1
-            gbc.weighty = 0.1
+            gbc.weightx = 1.0
+            gbc.weighty = 1.0
+            gbc.gridwidth = 1
             panel.add(iconLabel, gbc)
+            panel.revalidate()
+            panel.repaint()
         } else {
             val imageDataList = appData.imageDataList
-            var gridx = 0
             imageDataList.forEach {
                 try {
                     val imageData = ImageWidgetData(this, it.imagePath, this.width, this.height)
@@ -83,9 +89,12 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                     gridx += 1
                     gbc.gridy = 0
                     gbc.fill = GridBagConstraints.BOTH
-                    gbc.weightx = 0.1
-                    gbc.weighty = 0.1
+                    gbc.weightx = 1.0
+                    gbc.weighty = 1.0
+                    gbc.gridwidth = 1
                     panel.add(iconLabel, gbc)
+                    panel.revalidate()
+                    panel.repaint()
                 } catch (e: Exception) {
                     println("An error occurred in initializing ImageWidget. Ignored.")
                     e.printStackTrace()
@@ -144,6 +153,31 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun newWindowWithImage() {
         channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath, imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
+    }
+
+    private fun newWidget() {
+        val imageData = ImageWidgetData(this, "", this.width, this.height)
+        if (!appData.isUndecorated) {
+            imageData.width = appData.frameWidth
+            imageData.height = appData.frameHeight
+        }
+        val iw = ImageWidget(imageData)
+        imageWidgets.add(iw)
+        val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
+        iconLabel.horizontalAlignment = JLabel.CENTER
+        iconLabel.verticalAlignment = JLabel.CENTER
+
+        val gbc = GridBagConstraints()
+        gbc.gridx = gridx
+        gridx += 1
+        gbc.gridy = 0
+        gbc.fill = GridBagConstraints.BOTH
+        gbc.weightx = 1.0
+        gbc.weighty = 1.0
+        gbc.gridwidth = 1
+        panel.add(iconLabel, gbc)
+        panel.revalidate()
+        panel.repaint()
     }
 
     private fun open() {

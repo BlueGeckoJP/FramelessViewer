@@ -1,5 +1,6 @@
 package me.bluegecko
 
+import java.awt.Color
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.*
@@ -11,6 +12,7 @@ import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.SwingUtilities
 import javax.swing.TransferHandler
+import javax.swing.border.LineBorder
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
     private lateinit var fileList: MutableList<String>
@@ -19,6 +21,8 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     init {
         this.horizontalAlignment = CENTER
         this.verticalAlignment = CENTER
+
+        border = LineBorder(Color.GRAY, 1)
 
         addKeyListener(ArrowKeyListener())
         addMouseListener(ClickEventListener())
