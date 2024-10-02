@@ -60,7 +60,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             iconLabel.verticalAlignment = JLabel.CENTER
 
             val gbc = GridBagConstraints()
-            gbc.gridx = 0
+            gbc.gridx = gridx
+            gridx += 1
             gbc.gridy = 0
             gbc.fill = GridBagConstraints.BOTH
             gbc.weightx = 1.0
@@ -119,7 +120,9 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             appData.frameWidth = size.width - insets.left - insets.right
             appData.frameHeight = size.height - insets.top - insets.bottom
 
-            focusedWidget.updateImage()
+            imageWidgets.forEach {
+                it.updateImage()
+            }
         }
     }
 
