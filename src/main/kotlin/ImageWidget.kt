@@ -1,6 +1,7 @@
 package me.bluegecko
 
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.*
@@ -23,6 +24,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         this.verticalAlignment = CENTER
 
         border = LineBorder(Color.GRAY, 1)
+        minimumSize = Dimension()
 
         addMouseListener(ClickEventListener())
         transferHandler = DropFileHandler()
@@ -65,11 +67,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                 data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
                 data.parent.focusedWidget = this@ImageWidget
                 border = LineBorder(Color.CYAN, 1)
-                try {
-                    data.parent.title = "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
-                } catch (e: Exception) {
-                    println("set data.parent.title ignored")
-                }
+                updateTitle()
                 if (SwingUtilities.isRightMouseButton(e)) {
                     data.parent.popupMenu.show(e.component, e.x, e.y)
                 }
@@ -132,6 +130,14 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                 ?.filter { it.contains(extensionRegex) }
         fileList?.let { Collections.sort(it, String.CASE_INSENSITIVE_ORDER) }
         this.fileList = fileList as MutableList<String>
+    }
+
+    fun updateTitle() {
+        try {
+            data.parent.title = "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
+        } catch (e: Exception) {
+            println("Ignored updateTitle")
+        }
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900

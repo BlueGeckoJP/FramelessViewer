@@ -1,11 +1,9 @@
 package me.bluegecko
 
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.*
-import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -86,7 +84,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             appData.frameHeight = size.height - insets.top - insets.bottom
 
             imageWidgets.forEach {
-                it.minimumSize = Dimension()
                 it.updateImage()
             }
         }
@@ -130,11 +127,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                         }
                         focusedWidget.updateImage()
                     }
-                    try {
-                        focusedWidget.data.parent.title = "${File(focusedWidget.data.imagePath).name} [${focusedWidget.fileList.indexOf(focusedWidget.data.imagePath) + 1}/${focusedWidget.fileList.size}] | FramelessViewer"
-                    } catch (e: Exception) {
-                        println("set data.parent.title ignored")
-                    }
+                    focusedWidget.updateTitle()
                 }
             }
         }
@@ -186,7 +179,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         addImageWidget()
 
         imageWidgets.forEach {
-            it.minimumSize = Dimension()
             it.updateImage()
         }
     }
