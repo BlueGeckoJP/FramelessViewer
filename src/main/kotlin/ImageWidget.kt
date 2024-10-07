@@ -90,10 +90,11 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     inner class ClickEventListener : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent?) {
             if (e != null) {
-                if (SwingUtilities.isLeftMouseButton(e)) { // button 3 = left click
-                    data.parent.focusedWidget = this@ImageWidget
-                    println(data.parent.focusedWidget)
-                } else if (SwingUtilities.isRightMouseButton(e)) {
+                data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
+                data.parent.focusedWidget = this@ImageWidget
+                border = LineBorder(Color.CYAN, 1)
+                println(data.parent.focusedWidget)
+                if (SwingUtilities.isRightMouseButton(e)) {
                     data.parent.popupMenu.show(e.component, e.x, e.y)
                 }
             }

@@ -11,7 +11,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(msg: AtomicReference<Channel>) : JFrame() {
     var focusedWidget: ImageWidget
-    private var imageWidgets: MutableList<ImageWidget> = mutableListOf()
+    var imageWidgets: MutableList<ImageWidget> = mutableListOf()
     var appData = msg.get().initAppData
     private var channel = msg
     val popupMenu = PopupMenu(this)
@@ -146,6 +146,11 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
     private fun newWidget() {
         addImageWidget()
+
+        imageWidgets.forEach {
+            it.minimumSize = Dimension()
+            it.updateImage()
+        }
     }
 
     private fun open() {
