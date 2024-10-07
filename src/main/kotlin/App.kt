@@ -5,6 +5,7 @@ import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.*
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -66,6 +67,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         contentPane.add(panel, BorderLayout.CENTER)
 
+        addKeyListener(ArrowKeyListener())
         addComponentListener(WindowResizeListener())
         addWindowListener(WindowEventListener())
     }
@@ -100,6 +102,38 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         override fun windowDeiconified(p0: WindowEvent?) {}
         override fun windowActivated(p0: WindowEvent?) {}
         override fun windowDeactivated(p0: WindowEvent?) {}
+    }
+
+    inner class ArrowKeyListener : KeyListener {
+        override fun keyPressed(p0: KeyEvent?) {}
+        override fun keyTyped(p0: KeyEvent?) {}
+        override fun keyReleased(p0: KeyEvent?) {
+            if (p0 != null && focusedWidget.data.imagePath != "") {
+                if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
+                    val fileListIndex = focusedWidget.fileList.indexOf(focusedWidget.data.imagePath)
+                    if (p0.keyCode == 37) { // Left arrow key
+                        if (fileListIndex - 1 < 0) {
+                            focusedWidget.data.imagePath = focusedWidget.fileList[focusedWidget.fileList.size - 1]
+                        } else {
+                            focusedWidget.data.imagePath = focusedWidget.fileList[fileListIndex - 1]
+                        }
+                        focusedWidget.updateImage()
+                    } else if (p0.keyCode == 39) { // Right arrow key
+                        if (fileListIndex + 1 >= focusedWidget.fileList.size) {
+                            focusedWidget.data.imagePath = focusedWidget.fileList[0]
+                        } else {
+                            focusedWidget.data.imagePath = focusedWidget.fileList[fileListIndex + 1]
+                        }
+                        focusedWidget.updateImage()
+                    }
+                    try {
+                        focusedWidget.data.parent.title = "${File(focusedWidget.data.imagePath).name} [${focusedWidget.fileList.indexOf(focusedWidget.data.imagePath) + 1}/${focusedWidget.fileList.size}] | FramelessViewer"
+                    } catch (e: Exception) {
+                        println("set data.parent.title ignored")
+                    }
+                }
+            }
+        }
     }
 
     private fun addImageWidget(path: String = "") {

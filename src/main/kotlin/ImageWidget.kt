@@ -24,7 +24,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
         border = LineBorder(Color.GRAY, 1)
 
-        addKeyListener(ArrowKeyListener())
         addMouseListener(ClickEventListener())
         transferHandler = DropFileHandler()
     }
@@ -60,33 +59,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         }
     }
 
-    inner class ArrowKeyListener : KeyListener {
-        override fun keyPressed(p0: KeyEvent?) {}
-        override fun keyTyped(p0: KeyEvent?) {}
-        override fun keyReleased(p0: KeyEvent?) {
-            if (p0 != null && data.imagePath != "") {
-                if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
-                    val fileListIndex = fileList.indexOf(data.imagePath)
-                    if (p0.keyCode == 37) { // Left arrow key
-                        if (fileListIndex - 1 < 0) {
-                            data.imagePath = fileList[fileList.size - 1]
-                        } else {
-                            data.imagePath = fileList[fileListIndex - 1]
-                        }
-                        updateImage()
-                    } else if (p0.keyCode == 39) { // Right arrow key
-                        if (fileListIndex + 1 >= fileList.size) {
-                            data.imagePath = fileList[0]
-                        } else {
-                            data.imagePath = fileList[fileListIndex + 1]
-                        }
-                        updateImage()
-                    }
-                }
-            }
-        }
-    }
-
     inner class ClickEventListener : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent?) {
             if (e != null) {
@@ -96,7 +68,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                 try {
                     data.parent.title = "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
                 } catch (e: Exception) {
-                    println("data.parent.title ignored")
+                    println("set data.parent.title ignored")
                 }
                 if (SwingUtilities.isRightMouseButton(e)) {
                     data.parent.popupMenu.show(e.component, e.x, e.y)
