@@ -49,6 +49,10 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         panel.layout = GridBagLayout()
 
+        if (appData.initPath.isNotEmpty()) {
+            appData.imageDataList.add(ImageWidgetData(this, appData.initPath, this.width, this.height))
+        }
+
         if (appData.imageDataList.isEmpty()) {
             addImageWidget()
         } else {
@@ -175,7 +179,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun newWindowWithImage() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath, imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
     }
 
     private fun newWidget() {

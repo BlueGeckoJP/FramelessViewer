@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
     while (true) {
         if (isFirstTime) {
             val returnValue = if (args.size == 1) {
-                runApp(AppData(filePath = args[0]))
+                runApp(AppData(initPath = args[0]))
             } else {
                 runApp()
             }
