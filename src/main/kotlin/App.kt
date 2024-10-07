@@ -48,54 +48,12 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         panel.layout = GridBagLayout()
 
         if (appData.imageDataList.isEmpty()) {
-            val imageData = ImageWidgetData(this, "", this.width, this.height)
-            if (!appData.isUndecorated) {
-                imageData.width = appData.frameWidth
-                imageData.height = appData.frameHeight
-            }
-            val iw = ImageWidget(imageData)
-            imageWidgets.add(iw)
-            val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
-            iconLabel.horizontalAlignment = JLabel.CENTER
-            iconLabel.verticalAlignment = JLabel.CENTER
-
-            val gbc = GridBagConstraints()
-            gbc.gridx = gridx
-            gridx += 1
-            gbc.gridy = 0
-            gbc.fill = GridBagConstraints.BOTH
-            gbc.weightx = 1.0
-            gbc.weighty = 1.0
-            gbc.gridwidth = 1
-            panel.add(iconLabel, gbc)
-            panel.revalidate()
-            panel.repaint()
+            addImageWidget()
         } else {
             val imageDataList = appData.imageDataList
             imageDataList.forEach {
                 try {
-                    val imageData = ImageWidgetData(this, it.imagePath, this.width, this.height)
-                    if (!appData.isUndecorated) {
-                        imageData.width = appData.frameWidth
-                        imageData.height = appData.frameHeight
-                    }
-                    val iw = ImageWidget(imageData)
-                    imageWidgets.add(iw)
-                    val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
-                    iconLabel.horizontalAlignment = JLabel.CENTER
-                    iconLabel.verticalAlignment = JLabel.CENTER
-
-                    val gbc = GridBagConstraints()
-                    gbc.gridx = gridx
-                    gridx += 1
-                    gbc.gridy = 0
-                    gbc.fill = GridBagConstraints.BOTH
-                    gbc.weightx = 1.0
-                    gbc.weighty = 1.0
-                    gbc.gridwidth = 1
-                    panel.add(iconLabel, gbc)
-                    panel.revalidate()
-                    panel.repaint()
+                    addImageWidget(it.imagePath)
                 } catch (e: Exception) {
                     println("An error occurred in initializing ImageWidget. Ignored.")
                     e.printStackTrace()
@@ -142,24 +100,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         override fun windowDeactivated(p0: WindowEvent?) {}
     }
 
-    private fun toggleTitleBar() {
-        appData.isUndecorated = !appData.isUndecorated
-        appData.bounds = bounds
-        appData.imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>
-        channel.set(Channel(ChannelMessage.Reinit, appData))
-        this@App.dispose()
-    }
-
-    private fun new() {
-        channel.set(Channel(ChannelMessage.NewWindow, AppData()))
-    }
-
-    private fun newWindowWithImage() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath, imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
-    }
-
-    private fun newWidget() {
-        val imageData = ImageWidgetData(this, "", this.width, this.height)
+    private fun addImageWidget(path: String = "") {
+        val imageData = ImageWidgetData(this, path, this.width, this.height)
         if (!appData.isUndecorated) {
             imageData.width = appData.frameWidth
             imageData.height = appData.frameHeight
@@ -181,6 +123,26 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         panel.add(iconLabel, gbc)
         panel.revalidate()
         panel.repaint()
+    }
+
+    private fun toggleTitleBar() {
+        appData.isUndecorated = !appData.isUndecorated
+        appData.bounds = bounds
+        appData.imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>
+        channel.set(Channel(ChannelMessage.Reinit, appData))
+        this@App.dispose()
+    }
+
+    private fun new() {
+        channel.set(Channel(ChannelMessage.NewWindow, AppData()))
+    }
+
+    private fun newWindowWithImage() {
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(filePath = appData.filePath, imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
+    }
+
+    private fun newWidget() {
+        addImageWidget()
     }
 
     private fun open() {
