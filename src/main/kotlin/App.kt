@@ -1,6 +1,7 @@
 package me.bluegecko
 
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.*
@@ -79,6 +80,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             appData.frameHeight = size.height - insets.top - insets.bottom
 
             imageWidgets.forEach {
+                it.minimumSize = Dimension()
                 it.updateImage()
             }
         }
@@ -113,13 +115,14 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         iconLabel.verticalAlignment = JLabel.CENTER
 
         val gbc = GridBagConstraints()
+        gbc.fill = GridBagConstraints.BOTH
         gbc.gridx = gridx
         gridx += 1
         gbc.gridy = 0
-        gbc.fill = GridBagConstraints.BOTH
         gbc.weightx = 1.0
         gbc.weighty = 1.0
         gbc.gridwidth = 1
+        gbc.gridheight = 1
         panel.add(iconLabel, gbc)
         panel.revalidate()
         panel.repaint()
