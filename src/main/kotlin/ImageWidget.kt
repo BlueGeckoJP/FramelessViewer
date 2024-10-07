@@ -15,7 +15,7 @@ import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
-    private lateinit var fileList: MutableList<String>
+    lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
 
     init {
@@ -93,7 +93,11 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                 data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
                 data.parent.focusedWidget = this@ImageWidget
                 border = LineBorder(Color.CYAN, 1)
-                println(data.parent.focusedWidget)
+                try {
+                    data.parent.title = "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
+                } catch (e: Exception) {
+                    println("data.parent.title ignored")
+                }
                 if (SwingUtilities.isRightMouseButton(e)) {
                     data.parent.popupMenu.show(e.component, e.x, e.y)
                 }
