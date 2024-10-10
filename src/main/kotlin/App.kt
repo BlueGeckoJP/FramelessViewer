@@ -4,6 +4,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.*
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -112,8 +113,28 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         override fun keyPressed(p0: KeyEvent?) {}
         override fun keyTyped(p0: KeyEvent?) {}
         override fun keyReleased(p0: KeyEvent?) {
-            if (p0 != null && focusedWidget.data.imagePath != "") {
-                if (p0.keyCode == 37 || p0.keyCode == 39) { // Left arrow key: 37 | Right arrow key: 39
+            if (p0 != null) {
+                if (p0.modifiersEx == KeyEvent.CTRL_DOWN_MASK) {
+                    println(imageWidgets.indexOf(focusedWidget))
+                    if (p0.keyCode == KeyEvent.VK_LEFT) {
+                        try {
+                            Collections.swap(imageWidgets, imageWidgets.indexOf(focusedWidget), imageWidgets.indexOf(focusedWidget) - 1)
+                            repaintWidgets()
+                        } catch (e: Exception) {
+                            println("Cannot swap in that direction")
+                        }
+                    }
+                    if (p0.keyCode == KeyEvent.VK_RIGHT) {
+                        try {
+                            Collections.swap(imageWidgets, imageWidgets.indexOf(focusedWidget), imageWidgets.indexOf(focusedWidget) + 1)
+                            repaintWidgets()
+                        } catch (e: Exception) {
+                            println("Cannot swap in that direction")
+                        }
+
+                    }
+                }
+                else if ((p0.keyCode == 37 || p0.keyCode == 39) && focusedWidget.data.imagePath != "") { // Left arrow key: 37 | Right arrow key: 39
                     val fileListIndex = focusedWidget.fileList.indexOf(focusedWidget.data.imagePath)
                     if (p0.keyCode == 37) { // Left arrow key
                         if (fileListIndex - 1 < 0) {
@@ -171,6 +192,21 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         return gridxSum + 1
     }
 
+    private fun repaintWidgets() {
+        imageWidgets.forEach {
+            val gbc = (panel.layout as GridBagLayout).getConstraints(it)
+            gbc.gridx = getGridX(it)
+            (panel.layout as GridBagLayout).setConstraints(it, gbc)
+        }
+
+        if (imageWidgets.isEmpty()) {
+            addImageWidget()
+        }
+
+        panel.revalidate()
+        panel.repaint()
+    }
+
     private fun toggleTitleBar() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
@@ -217,18 +253,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         panel.remove(focusedWidget)
         imageWidgets.remove(focusedWidget)
 
-        imageWidgets.forEach {
-            val gbc = (panel.layout as GridBagLayout).getConstraints(it)
-            gbc.gridx = getGridX(it)
-            (panel.layout as GridBagLayout).setConstraints(it, gbc)
-        }
-
-        if (imageWidgets.isEmpty()) {
-            addImageWidget()
-        }
-
-        panel.revalidate()
-        panel.repaint()
+        repaintWidgets()
     }
 
     private fun exit() {
