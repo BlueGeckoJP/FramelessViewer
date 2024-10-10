@@ -209,7 +209,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         val file = chooser.selectedFile
         if (file != null) {
             focusedWidget.data.imagePath = file.absolutePath
-            focusedWidget.updateImage()
+            imageWidgets.forEach { it.updateImage() }
         }
     }
 
@@ -222,6 +222,11 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             gbc.gridx = getGridX(it)
             (panel.layout as GridBagLayout).setConstraints(it, gbc)
         }
+
+        if (imageWidgets.isEmpty()) {
+            addImageWidget()
+        }
+
         panel.revalidate()
         panel.repaint()
     }
