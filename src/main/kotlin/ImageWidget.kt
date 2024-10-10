@@ -18,6 +18,8 @@ import javax.swing.border.LineBorder
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
+    var gridx = 1
+
 
     init {
         this.horizontalAlignment = CENTER
@@ -134,7 +136,8 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
     fun updateTitle() {
         try {
-            data.parent.title = "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
+            data.parent.title =
+                "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
         } catch (e: Exception) {
             println("Ignored updateTitle")
         }

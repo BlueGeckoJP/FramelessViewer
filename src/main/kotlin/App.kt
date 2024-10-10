@@ -15,7 +15,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     private var channel = msg
     val popupMenu = PopupMenu(this)
     private val panel = JPanel()
-    private var gridx = 0
 
     init {
         title = "FramelessViewer"
@@ -31,18 +30,22 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         val itemNewWindowWithImage = JMenuItem("New with same options")
         val itemNewWidget = JMenuItem("New widget")
         val itemOpen = JMenuItem("Open")
+        val itemRemoveWidget = JMenuItem("Remove widget")
         val itemExit = JMenuItem("Exit")
         itemTitleBar.addActionListener { toggleTitleBar() }
         itemNew.addActionListener { new() }
         itemNewWindowWithImage.addActionListener { newWindowWithImage() }
         itemNewWidget.addActionListener { newWidget() }
         itemOpen.addActionListener { open() }
+        itemRemoveWidget.addActionListener { removeWidget() }
         itemExit.addActionListener { exit() }
         popupMenu.add(itemTitleBar)
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWindowWithImage)
         popupMenu.add(itemNewWidget)
         popupMenu.add(itemOpen)
+        popupMenu.addSeparator()
+        popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
 
         panel.layout = GridBagLayout()
@@ -147,8 +150,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         val gbc = GridBagConstraints()
         gbc.fill = GridBagConstraints.BOTH
-        gbc.gridx = gridx
-        gridx += 1
+        gbc.gridx = getGridX(iconLabel)
         gbc.gridy = 0
         gbc.weightx = 1.0
         gbc.weighty = 1.0
@@ -157,6 +159,16 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         panel.add(iconLabel, gbc)
         panel.revalidate()
         panel.repaint()
+    }
+
+    private fun getGridX(widget: ImageWidget): Int {
+        var gridxSum = 0
+        var index = 0
+        while (imageWidgets[index] != widget) {
+            gridxSum += imageWidgets[index].gridx
+            index++
+        }
+        return gridxSum + 1
     }
 
     private fun toggleTitleBar() {
@@ -199,6 +211,19 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             focusedWidget.data.imagePath = file.absolutePath
             focusedWidget.updateImage()
         }
+    }
+
+    private fun removeWidget() {
+        panel.remove(focusedWidget)
+        imageWidgets.remove(focusedWidget)
+
+        imageWidgets.forEach {
+            val gbc = (panel.layout as GridBagLayout).getConstraints(it)
+            gbc.gridx = getGridX(it)
+            (panel.layout as GridBagLayout).setConstraints(it, gbc)
+        }
+        panel.revalidate()
+        panel.repaint()
     }
 
     private fun exit() {
