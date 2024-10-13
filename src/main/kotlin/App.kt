@@ -4,7 +4,7 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.*
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -117,7 +117,11 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                 if (p0.modifiersEx == KeyEvent.CTRL_DOWN_MASK) {
                     if (p0.keyCode == KeyEvent.VK_LEFT) {
                         try {
-                            Collections.swap(imageWidgets, imageWidgets.indexOf(focusedWidget), imageWidgets.indexOf(focusedWidget) - 1)
+                            Collections.swap(
+                                imageWidgets,
+                                imageWidgets.indexOf(focusedWidget),
+                                imageWidgets.indexOf(focusedWidget) - 1
+                            )
                             repaintWidgets()
                         } catch (e: Exception) {
                             println("Cannot swap in that direction")
@@ -125,15 +129,18 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                     }
                     if (p0.keyCode == KeyEvent.VK_RIGHT) {
                         try {
-                            Collections.swap(imageWidgets, imageWidgets.indexOf(focusedWidget), imageWidgets.indexOf(focusedWidget) + 1)
+                            Collections.swap(
+                                imageWidgets,
+                                imageWidgets.indexOf(focusedWidget),
+                                imageWidgets.indexOf(focusedWidget) + 1
+                            )
                             repaintWidgets()
                         } catch (e: Exception) {
                             println("Cannot swap in that direction")
                         }
 
                     }
-                }
-                else if (p0.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                } else if (p0.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
                     if (p0.keyCode == KeyEvent.VK_LEFT) {
                         if (focusedWidget.gridwidth > 1) {
                             focusedWidget.gridwidth -= 1
@@ -143,8 +150,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                         focusedWidget.gridwidth += 1
                         repaintWidgets()
                     }
-                }
-                else if ((p0.keyCode == 37 || p0.keyCode == 39) && focusedWidget.data.imagePath != "") { // Left arrow key: 37 | Right arrow key: 39
+                } else if ((p0.keyCode == 37 || p0.keyCode == 39) && focusedWidget.data.imagePath != "") { // Left arrow key: 37 | Right arrow key: 39
                     val fileListIndex = focusedWidget.fileList.indexOf(focusedWidget.data.imagePath)
                     if (p0.keyCode == 37) { // Left arrow key
                         if (fileListIndex - 1 < 0) {
@@ -247,7 +253,10 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun newWindowWithImage() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
+        channel.set(
+            Channel(
+                ChannelMessage.NewWindowWithImage,
+                AppData(imageDataList = imageWidgets.map { it.data } as MutableList<ImageWidgetData>)))
     }
 
     private fun newWidget() {

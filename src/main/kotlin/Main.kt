@@ -1,7 +1,7 @@
 package me.bluegecko
 
 import me.bluegecko.ChannelMessage.*
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 

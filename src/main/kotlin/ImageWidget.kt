@@ -4,10 +4,11 @@ import java.awt.Color
 import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
-import java.awt.event.*
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.file.Paths
-import java.util.Collections
+import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
