@@ -115,7 +115,6 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         override fun keyReleased(p0: KeyEvent?) {
             if (p0 != null) {
                 if (p0.modifiersEx == KeyEvent.CTRL_DOWN_MASK) {
-                    println(imageWidgets.indexOf(focusedWidget))
                     if (p0.keyCode == KeyEvent.VK_LEFT) {
                         try {
                             Collections.swap(imageWidgets, imageWidgets.indexOf(focusedWidget), imageWidgets.indexOf(focusedWidget) - 1)
@@ -132,6 +131,17 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                             println("Cannot swap in that direction")
                         }
 
+                    }
+                }
+                else if (p0.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                    if (p0.keyCode == KeyEvent.VK_LEFT) {
+                        if (focusedWidget.gridwidth > 1) {
+                            focusedWidget.gridwidth -= 1
+                            repaintWidgets()
+                        }
+                    } else if (p0.keyCode == KeyEvent.VK_RIGHT) {
+                        focusedWidget.gridwidth += 1
+                        repaintWidgets()
                     }
                 }
                 else if ((p0.keyCode == 37 || p0.keyCode == 39) && focusedWidget.data.imagePath != "") { // Left arrow key: 37 | Right arrow key: 39
@@ -164,22 +174,27 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
             imageData.height = appData.frameHeight
         }
         val iw = ImageWidget(imageData)
-        imageWidgets.add(iw)
-        val iconLabel = imageWidgets[imageWidgets.indexOf(iw)]
-        iconLabel.horizontalAlignment = JLabel.CENTER
-        iconLabel.verticalAlignment = JLabel.CENTER
+        iw.horizontalAlignment = JLabel.CENTER
+        iw.verticalAlignment = JLabel.CENTER
 
-        val gbc = GridBagConstraints()
-        gbc.fill = GridBagConstraints.BOTH
-        gbc.gridx = getGridX(iconLabel)
-        gbc.gridy = 0
-        gbc.weightx = 1.0
-        gbc.weighty = 1.0
-        gbc.gridwidth = 1
-        gbc.gridheight = 1
-        panel.add(iconLabel, gbc)
+        imageWidgets.add(iw)
+        addWidgetWithGBC(iw)
+
         panel.revalidate()
         panel.repaint()
+    }
+
+    private fun addWidgetWithGBC(widget: ImageWidget) {
+        val gbc = GridBagConstraints()
+        gbc.fill = GridBagConstraints.BOTH
+        gbc.gridx = getGridX(widget)
+        gbc.gridy = 0
+        gbc.weightx = getWeightX(widget)
+        gbc.weighty = 1.0
+        gbc.gridwidth = widget.gridwidth
+        gbc.gridheight = 1
+
+        panel.add(widget, gbc)
     }
 
     private fun getGridX(widget: ImageWidget): Int {
@@ -187,17 +202,27 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         var index = 0
         while (imageWidgets[index] != widget) {
             gridxSum += imageWidgets[index].gridx
+            gridxSum += imageWidgets[index].gridwidth - 1
             index++
         }
         return gridxSum + 1
+
+    }
+
+    private fun getWeightX(widget: ImageWidget): Double {
+        val totalWidth = imageWidgets.sumOf { it.gridwidth }
+
+        return if (totalWidth > 0) {
+            widget.gridwidth.toDouble() / totalWidth
+        } else {
+            0.0
+        }
     }
 
     private fun repaintWidgets() {
-        imageWidgets.forEach {
-            val gbc = (panel.layout as GridBagLayout).getConstraints(it)
-            gbc.gridx = getGridX(it)
-            (panel.layout as GridBagLayout).setConstraints(it, gbc)
-        }
+        panel.removeAll()
+
+        imageWidgets.forEach { addWidgetWithGBC(it) }
 
         if (imageWidgets.isEmpty()) {
             addImageWidget()
@@ -205,6 +230,8 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
 
         panel.revalidate()
         panel.repaint()
+
+        imageWidgets.forEach { it.updateImage() }
     }
 
     private fun toggleTitleBar() {
@@ -245,6 +272,7 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
         val file = chooser.selectedFile
         if (file != null) {
             focusedWidget.data.imagePath = file.absolutePath
+            repaintWidgets()
             imageWidgets.forEach { it.updateImage() }
         }
     }

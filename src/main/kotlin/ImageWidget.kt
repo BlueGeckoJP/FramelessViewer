@@ -19,6 +19,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     var gridx = 1
+    var gridwidth = 1
 
 
     init {
