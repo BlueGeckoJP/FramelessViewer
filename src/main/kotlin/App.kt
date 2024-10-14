@@ -150,16 +150,16 @@ class App(msg: AtomicReference<Channel>) : JFrame() {
                         focusedWidget.gridwidth += 1
                         repaintWidgets()
                     }
-                } else if ((p0.keyCode == 37 || p0.keyCode == 39) && focusedWidget.data.imagePath != "") { // Left arrow key: 37 | Right arrow key: 39
+                } else if (focusedWidget.data.imagePath != "") {
                     val fileListIndex = focusedWidget.fileList.indexOf(focusedWidget.data.imagePath)
-                    if (p0.keyCode == 37) { // Left arrow key
+                    if (p0.keyCode == KeyEvent.VK_LEFT) {
                         if (fileListIndex - 1 < 0) {
                             focusedWidget.data.imagePath = focusedWidget.fileList[focusedWidget.fileList.size - 1]
                         } else {
                             focusedWidget.data.imagePath = focusedWidget.fileList[fileListIndex - 1]
                         }
                         focusedWidget.updateImage()
-                    } else if (p0.keyCode == 39) { // Right arrow key
+                    } else if (p0.keyCode == KeyEvent.VK_RIGHT) {
                         if (fileListIndex + 1 >= focusedWidget.fileList.size) {
                             focusedWidget.data.imagePath = focusedWidget.fileList[0]
                         } else {
