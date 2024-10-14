@@ -66,7 +66,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     }
 
     inner class ClickEventListener : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent?) {
+        /*override fun mouseClicked(e: MouseEvent?) {
             if (e != null) {
                 data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
                 data.parent.focusedWidget = this@ImageWidget
@@ -76,7 +76,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                     data.parent.popupMenu.show(e.component, e.x, e.y)
                 }
             }
-        }
+        }*/
     }
 
     fun updateImage() {
