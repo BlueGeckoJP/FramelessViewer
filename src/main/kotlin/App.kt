@@ -1,5 +1,6 @@
 package me.bluegecko
 
+import PanelData
 import java.awt.*
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
@@ -10,10 +11,10 @@ import kotlin.math.abs
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
     val snapDistance = 20
-    var appData = channel.get().initAppData
+    private var appData = channel.get().initAppData
     var panels = arrayListOf<JPanel>()
     val popupMenu = PopupMenu(this)
-    var focusedPanel: JPanel
+    private var focusedPanel: JPanel
     private var appWidth = this.width
     private var appHeight = this.height
 
@@ -49,14 +50,26 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
 
+        if (appData.panelDataList.isNotEmpty()) {
+            appData.panelDataList.forEach {
+                val panel = createNewPanel(it.imagePath)
+                panel.bounds = it.bounds
+            }
+
+            repaint()
+            revalidate()
+        }
+
         if (appData.initPath.isNotEmpty()) {
             createNewPanel(appData.initPath)
         }
 
-        if (appData.imageDataList.isEmpty()) {
-            createNewPanel()
-        } else {
-            appData.imageDataList.forEach { createNewPanel(it.imagePath) }
+        if (panels.isEmpty()) {
+            if (appData.imageDataList.isEmpty()) {
+                createNewPanel()
+            } else {
+                appData.imageDataList.forEach { createNewPanel(it.imagePath) }
+            }
         }
 
         focusedPanel = panels[0]
@@ -98,7 +111,30 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         override fun keyPressed(e: KeyEvent?) {}
 
         override fun keyReleased(e: KeyEvent?) {
-            TODO()
+            if (e != null) {
+                val widget = getWidget(focusedPanel)
+
+                if (widget.data.imagePath.isNotEmpty()) {
+                    val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
+
+                    if (e.keyCode == KeyEvent.VK_LEFT) {
+                        if (fileListIndex - 1 < 0) {
+                            widget.data.imagePath = widget.fileList[widget.fileList.size - 1]
+                        } else {
+                            widget.data.imagePath = widget.fileList[fileListIndex - 1]
+                        }
+                    } else if (e.keyCode == KeyEvent.VK_RIGHT) {
+                        if (fileListIndex + 1 >= widget.fileList.size) {
+                            widget.data.imagePath = widget.fileList[0]
+                        } else {
+                            widget.data.imagePath = widget.fileList[fileListIndex + 1]
+                        }
+                    }
+
+                    widget.updateImage()
+                    widget.updateTitle()
+                }
+            }
         }
 
     }
@@ -114,6 +150,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 val widget = getWidget(targetPanel)
 
                 panels.forEach { it.border = LineBorder(Color.GRAY, 1) }
+                focusedPanel = targetPanel
                 targetPanel.border = LineBorder(Color.CYAN, 1)
                 widget.updateTitle()
                 if (SwingUtilities.isRightMouseButton(e)) {
@@ -150,6 +187,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         val panel = JPanel()
 
         panel.border = LineBorder(Color.GRAY, 1)
+        panel.background = Color.GRAY
         panel.bounds = Rectangle(600, 400)
 
         val listener = DraggableListener(panel)
@@ -166,7 +204,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    private fun createNewPanel(path: String = "") {
+    private fun createNewPanel(path: String = ""): JPanel{
         val panel = createDraggablePanel()
         val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
 
@@ -183,6 +221,11 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         panel.add(widget, gbc)
         panels.add(panel)
         this.add(panel)
+
+        this.repaint()
+        this.revalidate()
+
+        return panel
     }
 
     private fun getWidget(panel: JPanel): ImageWidget {
@@ -194,7 +237,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemNewWidgetFun() {
-        TODO()
+        createNewPanel()
     }
 
     private fun itemOpenFun() {
@@ -217,7 +260,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemCloneFun() {
-        TODO()
+        val panelList = mutableListOf<PanelData>()
+        panels.forEach {
+            panelList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
+        }
+
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = panelList)))
     }
 
     private fun itemToggleTitleFun() {

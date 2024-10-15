@@ -1,6 +1,5 @@
 package me.bluegecko
 
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
@@ -11,7 +10,6 @@ import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.TransferHandler
-import javax.swing.border.LineBorder
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: MutableList<String>
@@ -24,7 +22,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         this.horizontalAlignment = CENTER
         this.verticalAlignment = CENTER
 
-        border = LineBorder(Color.GRAY, 1)
         minimumSize = Dimension()
 
         transferHandler = DropFileHandler()
