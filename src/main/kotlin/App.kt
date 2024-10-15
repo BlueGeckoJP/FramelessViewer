@@ -73,6 +73,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
 
         focusedPanel = panels[0]
+        focusToPanel(panels[0])
 
         addComponentListener(ResizeListener())
         addWindowListener(CloseListener())
@@ -149,9 +150,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                 val widget = getWidget(targetPanel)
 
-                panels.forEach { it.border = LineBorder(Color.GRAY, 1) }
-                focusedPanel = targetPanel
-                targetPanel.border = LineBorder(Color.CYAN, 1)
+                focusToPanel(targetPanel)
+
                 widget.updateTitle()
                 if (SwingUtilities.isRightMouseButton(e)) {
                     popupMenu.show(e.component, e.x, e.y)
@@ -169,8 +169,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 var newX = panelX + (mouseX - initClick.x - panelX)
                 var newY = panelY + (mouseY - initClick.y - panelY)
 
-                newX = snap(newX, width - targetPanel.width)
-                newY = snap(newY, height - targetPanel.height)
+                newX = snap(newX, appWidth - targetPanel.width)
+                newY = snap(newY, appHeight - targetPanel.height)
 
                 targetPanel.location = Point(newX, newY)
             }
@@ -204,7 +204,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    private fun createNewPanel(path: String = ""): JPanel{
+    private fun createNewPanel(path: String = ""): JPanel {
         val panel = createDraggablePanel()
         val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
 
@@ -229,7 +229,22 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun getWidget(panel: JPanel): ImageWidget {
-        return panel.getComponent(0) as ImageWidget
+        val widget = panel.components.filter { it.javaClass == ImageWidget::class.java }[0] as ImageWidget
+        return widget
+    }
+
+    private fun convertToPanelData(): MutableList<PanelData> {
+        val panelDataList = mutableListOf<PanelData>()
+        panels.forEach {
+            panelDataList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
+        }
+        return panelDataList
+    }
+
+    private fun focusToPanel(targetPanel: JPanel) {
+        panels.forEach { it.border = LineBorder(Color.GRAY, 1) }
+        focusedPanel = targetPanel
+        targetPanel.border = LineBorder(Color.CYAN, 1)
     }
 
     private fun itemNewFun() {
@@ -260,24 +275,26 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemCloneFun() {
-        val panelList = mutableListOf<PanelData>()
-        panels.forEach {
-            panelList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
-        }
-
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = panelList)))
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = convertToPanelData())))
     }
 
     private fun itemToggleTitleFun() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
-        TODO()
+        appData.panelDataList = convertToPanelData()
         channel.set(Channel(ChannelMessage.Reinit, appData))
         this.dispose()
     }
 
     private fun itemRemoveWidgetFun() {
-        TODO()
+        this.remove(focusedPanel)
+        panels.remove(focusedPanel)
+
+        if (panels.isEmpty()) {
+            createNewPanel()
+        }
+
+        focusToPanel(panels[0])
     }
 
     private fun itemExitFun() {
