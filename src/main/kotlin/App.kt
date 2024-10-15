@@ -1,16 +1,19 @@
 package me.bluegecko
 
+import java.awt.*
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
-import javax.swing.JFileChooser
-import javax.swing.JMenuItem
-import javax.swing.JPanel
+import javax.swing.*
+import javax.swing.border.LineBorder
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.math.abs
 
-class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
+class App(private val channel: AtomicReference<Channel>) : JFrame() {
+    val snapDistance = 20
     var appData = channel.get().initAppData
     var panels = arrayListOf<JPanel>()
-    lateinit var focusedPanel: JPanel
+    val popupMenu = PopupMenu(this)
+    var focusedPanel: JPanel
     private var appWidth = this.width
     private var appHeight = this.height
 
@@ -19,6 +22,7 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
         defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.isUndecorated
         bounds = appData.bounds
+        layout = null
 
         updateAppSize()
 
@@ -37,7 +41,6 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
-        val popupMenu = PopupMenu(this)
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWidget)
         popupMenu.add(itemOpen)
@@ -70,7 +73,7 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
 
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
-            panels.forEach { (it.getComponent(0) as ImageWidget).updateImage() }
+            panels.forEach { getWidget(it).updateImage() }
         }
     }
 
@@ -100,6 +103,62 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
 
     }
 
+    inner class DraggableListener(panel: JPanel) : MouseAdapter() {
+        private var targetPanel: JPanel = panel
+        private lateinit var initClick: Point
+
+        override fun mousePressed(e: MouseEvent?) {
+            if (e != null) {
+                initClick = e.point
+
+                val widget = getWidget(targetPanel)
+
+                panels.forEach { it.border = LineBorder(Color.GRAY, 1) }
+                targetPanel.border = LineBorder(Color.CYAN, 1)
+                widget.updateTitle()
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    popupMenu.show(e.component, e.x, e.y)
+                }
+            }
+        }
+
+        override fun mouseDragged(e: MouseEvent?) {
+            if (e != null) {
+                val panelX = targetPanel.x
+                val panelY = targetPanel.y
+                val mouseX = e.x + panelX
+                val mouseY = e.y + panelY
+
+                var newX = panelX + (mouseX - initClick.x - panelX)
+                var newY = panelY + (mouseY - initClick.y - panelY)
+
+                newX = snap(newX, width - targetPanel.width)
+                newY = snap(newY, height - targetPanel.height)
+
+                targetPanel.location = Point(newX, newY)
+            }
+        }
+
+        private fun snap(position: Int, max: Int): Int {
+            if (abs(position) < snapDistance) return 0
+            if (abs(position - max) < snapDistance) return max
+            return position
+        }
+    }
+
+    private fun createDraggablePanel(): JPanel {
+        val panel = JPanel()
+
+        panel.border = LineBorder(Color.GRAY, 1)
+        panel.bounds = Rectangle(600, 400)
+
+        val listener = DraggableListener(panel)
+        panel.addMouseListener(listener)
+        panel.addMouseMotionListener(listener)
+
+        return panel
+    }
+
     private fun updateAppSize() {
         if (!appData.isUndecorated) {
             appWidth = width - insets.left - insets.right
@@ -108,11 +167,26 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
     }
 
     private fun createNewPanel(path: String = "") {
-        val panel = createDraggablePanel(appWidth, appHeight)
+        val panel = createDraggablePanel()
         val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
-        panel.add(widget)
+
+        val gbc = GridBagConstraints()
+        gbc.fill = GridBagConstraints.BOTH
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.weightx = 1.0
+        gbc.weighty = 1.0
+        gbc.gridwidth = 1
+        gbc.gridheight = 1
+
+        panel.layout = GridBagLayout()
+        panel.add(widget, gbc)
         panels.add(panel)
         this.add(panel)
+    }
+
+    private fun getWidget(panel: JPanel): ImageWidget {
+        return panel.getComponent(0) as ImageWidget
     }
 
     private fun itemNewFun() {
@@ -136,7 +210,10 @@ class App(private val channel: AtomicReference<Channel>) : WindowModeFrame() {
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
 
-        TODO()
+        if (file != null) {
+            getWidget(focusedPanel).data.imagePath = file.absolutePath
+            panels.forEach { getWidget(it).updateImage() }
+        }
     }
 
     private fun itemCloneFun() {

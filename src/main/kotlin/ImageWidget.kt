@@ -4,15 +4,12 @@ import java.awt.Color
 import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
-import javax.swing.SwingUtilities
 import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 
@@ -30,7 +27,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         border = LineBorder(Color.GRAY, 1)
         minimumSize = Dimension()
 
-        addMouseListener(ClickEventListener())
         transferHandler = DropFileHandler()
     }
 
@@ -63,20 +59,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
             }
             return true
         }
-    }
-
-    inner class ClickEventListener : MouseAdapter() {
-        /*override fun mouseClicked(e: MouseEvent?) {
-            if (e != null) {
-                data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
-                data.parent.focusedWidget = this@ImageWidget
-                border = LineBorder(Color.CYAN, 1)
-                updateTitle()
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    data.parent.popupMenu.show(e.component, e.x, e.y)
-                }
-            }
-        }*/
     }
 
     fun updateImage() {
