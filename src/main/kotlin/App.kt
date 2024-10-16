@@ -158,44 +158,17 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     val isNearEdge = { coord: Int, size: Int -> coord in (0 until snapDistance) || coord in (size - snapDistance until size) }
                     val isNearCorner = { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
 
-                    val cursorType = when {
-                        isNearCorner(e.x, e.y) -> when {
-                            e.x < snapDistance && e.y < snapDistance -> Cursor.NW_RESIZE_CURSOR
-                            e.x > targetPanel.width - snapDistance && e.y < snapDistance -> Cursor.NE_RESIZE_CURSOR
-                            e.x < snapDistance && e.y > targetPanel.height - snapDistance -> Cursor.SW_RESIZE_CURSOR
-                            else -> Cursor.SE_RESIZE_CURSOR
-                        }
-
-                        isNearEdge(e.x, targetPanel.width) -> Cursor.E_RESIZE_CURSOR
-                        isNearEdge(e.y, targetPanel.height) -> Cursor.S_RESIZE_CURSOR
-                        isNearEdge(e.x, 0) -> Cursor.W_RESIZE_CURSOR
-                        isNearEdge(e.y, 0) -> Cursor.N_RESIZE_CURSOR
-                        else -> Cursor.DEFAULT_CURSOR
+                    if (isNearCorner(e.x ,e.y) == (e.x > snapDistance && e.y > snapDistance)) {
+                        targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
                     }
-                    targetPanel.cursor = Cursor.getPredefinedCursor(cursorType)
                 }
             }
         }
 
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
-                if (targetPanel.cursor.type != Cursor.DEFAULT_CURSOR) {
-                    val newWidth = when (targetPanel.cursor.type) {
-                        Cursor.NW_RESIZE_CURSOR, Cursor.SW_RESIZE_CURSOR -> - e.x
-                        Cursor.NE_RESIZE_CURSOR, Cursor.SE_RESIZE_CURSOR -> e.x
-                        Cursor.W_RESIZE_CURSOR -> - e.x
-                        Cursor.E_RESIZE_CURSOR -> e.x
-                        else -> 0
-                    }
-                    val newHeight = when(targetPanel.cursor.type) {
-                        Cursor.NW_RESIZE_CURSOR, Cursor.NE_RESIZE_CURSOR -> - e.y
-                        Cursor.SW_RESIZE_CURSOR, Cursor.SE_RESIZE_CURSOR -> e.y
-                        Cursor.N_RESIZE_CURSOR -> - e.y
-                        Cursor.S_RESIZE_CURSOR -> e.y
-                        else -> 0
-                    }
-
-                    targetPanel.size = Dimension(newWidth, newHeight)
+                if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
+                    targetPanel.size = Dimension(e.x, e.y)
                 } else {
                     val panelX = targetPanel.x
                     val panelY = targetPanel.y
