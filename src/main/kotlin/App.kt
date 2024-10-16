@@ -10,7 +10,6 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.math.abs
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
-    val snapDistance = 20
     private var appData = channel.get().initAppData
     var panels = arrayListOf<JPanel>()
     val popupMenu = PopupMenu(this)
@@ -141,38 +140,82 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     inner class DraggableListener(panel: JPanel) : MouseAdapter() {
+        private val snapDistance = 20
+
         private var targetPanel: JPanel = panel
         private lateinit var initClick: Point
 
         override fun mousePressed(e: MouseEvent?) {
             if (e != null) {
                 initClick = e.point
-
                 val widget = getWidget(targetPanel)
-
                 focusToPanel(targetPanel)
-
                 widget.updateTitle()
+
                 if (SwingUtilities.isRightMouseButton(e)) {
                     popupMenu.show(e.component, e.x, e.y)
+                } else if (SwingUtilities.isLeftMouseButton(e)) {
+                    val isNearEdge = { coord: Int, size: Int -> coord in (0 until snapDistance) || coord in (size - snapDistance until size) }
+                    val isNearCorner = { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
+
+                    val cursorType = when {
+                        isNearCorner(e.x, e.y) -> when {
+                            e.x < snapDistance && e.y < snapDistance -> Cursor.NW_RESIZE_CURSOR
+                            e.x > targetPanel.width - snapDistance && e.y < snapDistance -> Cursor.NE_RESIZE_CURSOR
+                            e.x < snapDistance && e.y > targetPanel.height - snapDistance -> Cursor.SW_RESIZE_CURSOR
+                            else -> Cursor.SE_RESIZE_CURSOR
+                        }
+
+                        isNearEdge(e.x, targetPanel.width) -> Cursor.E_RESIZE_CURSOR
+                        isNearEdge(e.y, targetPanel.height) -> Cursor.S_RESIZE_CURSOR
+                        isNearEdge(e.x, 0) -> Cursor.W_RESIZE_CURSOR
+                        isNearEdge(e.y, 0) -> Cursor.N_RESIZE_CURSOR
+                        else -> Cursor.DEFAULT_CURSOR
+                    }
+                    targetPanel.cursor = Cursor.getPredefinedCursor(cursorType)
                 }
             }
         }
 
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
-                val panelX = targetPanel.x
-                val panelY = targetPanel.y
-                val mouseX = e.x + panelX
-                val mouseY = e.y + panelY
+                if (targetPanel.cursor.type != Cursor.DEFAULT_CURSOR) {
+                    val newWidth = when (targetPanel.cursor.type) {
+                        Cursor.NW_RESIZE_CURSOR, Cursor.SW_RESIZE_CURSOR -> - e.x
+                        Cursor.NE_RESIZE_CURSOR, Cursor.SE_RESIZE_CURSOR -> e.x
+                        Cursor.W_RESIZE_CURSOR -> - e.x
+                        Cursor.E_RESIZE_CURSOR -> e.x
+                        else -> 0
+                    }
+                    val newHeight = when(targetPanel.cursor.type) {
+                        Cursor.NW_RESIZE_CURSOR, Cursor.NE_RESIZE_CURSOR -> - e.y
+                        Cursor.SW_RESIZE_CURSOR, Cursor.SE_RESIZE_CURSOR -> e.y
+                        Cursor.N_RESIZE_CURSOR -> - e.y
+                        Cursor.S_RESIZE_CURSOR -> e.y
+                        else -> 0
+                    }
 
-                var newX = panelX + (mouseX - initClick.x - panelX)
-                var newY = panelY + (mouseY - initClick.y - panelY)
+                    targetPanel.size = Dimension(newWidth, newHeight)
+                } else {
+                    val panelX = targetPanel.x
+                    val panelY = targetPanel.y
+                    val mouseX = e.x + panelX
+                    val mouseY = e.y + panelY
 
-                newX = snap(newX, appWidth - targetPanel.width)
-                newY = snap(newY, appHeight - targetPanel.height)
+                    var newX = panelX + (mouseX - initClick.x - panelX)
+                    var newY = panelY + (mouseY - initClick.y - panelY)
 
-                targetPanel.location = Point(newX, newY)
+                    newX = snap(newX, appWidth - targetPanel.width)
+                    newY = snap(newY, appHeight - targetPanel.height)
+
+                    targetPanel.location = Point(newX, newY)
+                }
+            }
+        }
+
+        override fun mouseReleased(e: MouseEvent?) {
+            if (e != null) {
+                targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
             }
         }
 
