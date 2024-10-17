@@ -23,6 +23,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         isUndecorated = appData.isUndecorated
         bounds = appData.bounds
         layout = null
+        isVisible = true
 
         updateAppSize()
 
@@ -79,12 +80,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         addWindowListener(CloseListener())
         addKeyListener(ArrowKeyListener())
 
-        isVisible = true
-
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            focusedPanel.size = Dimension(width, appHeight)
+            focusedPanel.size = Dimension(appWidth, appHeight)
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
