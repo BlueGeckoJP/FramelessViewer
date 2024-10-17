@@ -203,7 +203,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         override fun mouseReleased(e: MouseEvent?) {
             if (e != null) {
-                targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
+                if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
+                    targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
+                    val widget = getWidget(targetPanel)
+                    widget.size = Dimension(e.x, e.y)
+                    widget.updateImage()
+                }
             }
         }
 

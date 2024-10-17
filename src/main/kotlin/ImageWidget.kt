@@ -100,6 +100,9 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
             }
 
             updateFileList()
+
+            repaint()
+            revalidate()
         } catch (e: Exception) {
             e.printStackTrace()
         }
