@@ -77,6 +77,17 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         addComponentListener(ResizeListener())
         addWindowListener(CloseListener())
         addKeyListener(ArrowKeyListener())
+
+        isVisible = true
+
+        updateAppSize()
+
+        val widget = getWidget(focusedPanel)
+        widget.size = Dimension(appWidth, appHeight)
+        widget.updateImage()
+
+        repaint()
+        revalidate()
     }
 
     inner class ResizeListener : ComponentListener {

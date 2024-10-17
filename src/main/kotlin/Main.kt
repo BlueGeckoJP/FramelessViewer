@@ -74,8 +74,7 @@ fun main(args: Array<String>) {
 fun runApp(initAppData: AppData = AppData()): Pair<String, Pair<Thread, AtomicReference<Channel>>> {
     val channel = AtomicReference(Channel(Normal, initAppData))
     val thread = Thread {
-        val app = App(channel)
-        app.isVisible = true
+        App(channel)
     }
     thread.start()
     return UUID.randomUUID().toString() to (thread to channel)
