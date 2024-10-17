@@ -168,10 +168,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     popupMenu.show(e.component, e.x, e.y)
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
-                    val isNearEdge = { coord: Int, size: Int -> coord in (0 until snapDistance) || coord in (size - snapDistance until size) }
-                    val isNearCorner = { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
+                    val isNearEdge =
+                        { coord: Int, size: Int -> coord in (0 until snapDistance) || coord in (size - snapDistance until size) }
+                    val isNearCorner =
+                        { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
 
-                    if (isNearCorner(e.x ,e.y) == (e.x > snapDistance && e.y > snapDistance)) {
+                    if (isNearCorner(e.x, e.y) == (e.x > snapDistance && e.y > snapDistance)) {
                         targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
                     }
                 }
