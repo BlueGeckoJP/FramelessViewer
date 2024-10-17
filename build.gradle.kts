@@ -2,13 +2,25 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+fun runCommand(command: String): String {
+    val process = ProcessBuilder(*command.split(" ").toTypedArray()).redirectErrorStream(true).start()
+
+    val output = process.inputStream.bufferedReader().readText().trim()
+    val exitCode = process.waitFor()
+    if (exitCode != 0) {
+        return "unknown"
+    }
+
+    return output
+}
+
 plugins {
     kotlin("jvm") version "1.9.23"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "me.bluegecko"
-version = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").withZone(ZoneId.systemDefault()).format(Instant.now())
+version = "${runCommand("git rev-parse --short HEAD")}-${DateTimeFormatter.ofPattern("HHmm").withZone(ZoneId.systemDefault()).format(Instant.now())}"
 
 repositories {
     mavenCentral()
