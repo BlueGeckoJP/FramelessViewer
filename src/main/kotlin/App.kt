@@ -81,14 +81,16 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         isVisible = true
 
-        updateAppSize()
+        SwingUtilities.invokeLater {
+            updateAppSize()
 
-        val widget = getWidget(focusedPanel)
-        widget.size = Dimension(appWidth, appHeight)
-        widget.updateImage()
+            focusedPanel.preferredSize = Dimension(appWidth, appHeight)
+            val widget = getWidget(focusedPanel)
+            widget.updateImage()
 
-        repaint()
-        revalidate()
+            repaint()
+            revalidate()
+        }
     }
 
     inner class ResizeListener : ComponentListener {
@@ -233,6 +235,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             appWidth = width
             appHeight = height
         }
+
+        println("$appWidth, $appHeight        $width, $height")
     }
 
     private fun createNewPanel(path: String = ""): JPanel {
