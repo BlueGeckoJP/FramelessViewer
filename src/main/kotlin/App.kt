@@ -84,7 +84,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            focusedPanel.preferredSize = Dimension(appWidth, appHeight)
+            focusedPanel.size = Dimension(width, appHeight)
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
