@@ -23,6 +23,8 @@ dependencies {
     implementation("com.twelvemonkeys.imageio:imageio-core:3.11.0")
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
     implementation("com.twelvemonkeys.imageio:imageio-webp:3.11.0")
+    // https://mvnrepository.com/artifact/com.formdev/flatlaf
+    implementation("com.formdev:flatlaf:3.5.1")
 }
 
 tasks.test {

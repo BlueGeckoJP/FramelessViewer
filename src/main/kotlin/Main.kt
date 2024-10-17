@@ -1,13 +1,17 @@
 package me.bluegecko
 
+import com.formdev.flatlaf.themes.FlatMacDarkLaf
 import me.bluegecko.ChannelMessage.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import javax.swing.UIManager
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val channelMap = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
     var isFirstTime = true
+
+    UIManager.setLookAndFeel(FlatMacDarkLaf())
 
     while (true) {
         if (isFirstTime) {
