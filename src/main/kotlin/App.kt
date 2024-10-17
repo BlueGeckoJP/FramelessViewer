@@ -228,6 +228,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         if (!appData.isUndecorated) {
             appWidth = width - insets.left - insets.right
             appHeight = height - insets.top - insets.bottom
+        } else {
+            appWidth = width
+            appHeight = height
         }
     }
 
