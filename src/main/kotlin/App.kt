@@ -194,12 +194,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (isPressedShiftKey) {
                         targetPanel.size = Dimension(e.x, e.y)
                     } else {
-                        val newWidth = snap(e.x, appWidth)
-                        val newHeight = snap(e.y, appHeight)
+                        val newWidth = snap(e.x, appWidth - targetPanel.x)
+                        val newHeight = snap(e.y, appHeight - targetPanel.y)
 
                         val snapped = snapToPanel(newWidth, newHeight)
 
-                        targetPanel.size = Dimension(snapped.first, snapped.second)
+                        targetPanel.size = Dimension(snapped.first - targetPanel.x, snapped.second - targetPanel.y)
                     }
                 } else {
                     val panelX = targetPanel.x
@@ -209,7 +209,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                     var newX = panelX + (mouseX - initClick.x - panelX)
                     var newY = panelY + (mouseY - initClick.y - panelY)
-                    
+
                     if (!isPressedShiftKey) {
                         newX = snap(newX, appWidth - targetPanel.width)
                         newY = snap(newY, appHeight - targetPanel.height)
