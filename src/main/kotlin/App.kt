@@ -77,9 +77,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         focusedPanel = panels[0]
         focusToPanel(panels[0])
 
-        addComponentListener(AppComponentListener())
-        addWindowListener(AppWindowListener())
-        addKeyListener(AppKeyListener())
+        addComponentListener(AppComponentAdapter())
+        addWindowListener(AppWindowAdapter())
+        addKeyListener(AppKeyAdapter())
 
         SwingUtilities.invokeLater {
             updateAppSize()
@@ -93,25 +93,14 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class AppComponentListener : ComponentListener {
-        override fun componentMoved(e: ComponentEvent?) {}
-        override fun componentShown(e: ComponentEvent?) {}
-        override fun componentHidden(e: ComponentEvent?) {}
-
+    inner class AppComponentAdapter : ComponentAdapter() {
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
             panels.forEach { getWidget(it).updateImage() }
         }
     }
 
-    inner class AppWindowListener : WindowListener {
-        override fun windowOpened(e: WindowEvent?) {}
-        override fun windowClosed(e: WindowEvent?) {}
-        override fun windowIconified(e: WindowEvent?) {}
-        override fun windowDeiconified(e: WindowEvent?) {}
-        override fun windowActivated(e: WindowEvent?) {}
-        override fun windowDeactivated(e: WindowEvent?) {}
-
+    inner class AppWindowAdapter : WindowAdapter() {
         override fun windowClosing(e: WindowEvent?) {
             if (e != null) {
                 channel.set(Channel(ChannelMessage.Exit, AppData()))
@@ -120,9 +109,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class AppKeyListener : KeyListener {
-        override fun keyTyped(e: KeyEvent?) {}
-
+    inner class AppKeyAdapter : KeyAdapter() {
         override fun keyPressed(e: KeyEvent?) {
             if (e != null) {
                 if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
@@ -157,7 +144,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 }
             }
         }
-
     }
 
     inner class DraggableListener(panel: JPanel) : MouseAdapter() {
