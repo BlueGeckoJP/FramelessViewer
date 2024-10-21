@@ -162,6 +162,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     inner class DraggableListener(panel: JPanel) : MouseAdapter() {
         private val snapDistance = 20
+        private val minimumSize = 50
 
         private var targetPanel: JPanel = panel
         private lateinit var initClick: Point
@@ -190,16 +191,23 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
+                println("${e.x} ${e.y}          ${targetPanel.x} ${targetPanel.y} ${targetPanel.width} ${targetPanel.height}")
+
                 if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
                     if (isPressedShiftKey) {
-                        targetPanel.size = Dimension(e.x, e.y)
+                        val newWidth = maxOf(e.x, minimumSize)
+                        val newHeight = maxOf(e.y, minimumSize)
+                        targetPanel.size = Dimension(newWidth, newHeight)
                     } else {
-                        val newWidth = snap(e.x, appWidth - targetPanel.x)
-                        val newHeight = snap(e.y, appHeight - targetPanel.y)
+                        var newWidth = snap(e.x, appWidth - targetPanel.x)
+                        var newHeight = snap(e.y, appHeight - targetPanel.y)
 
                         val snapped = snapToPanel(newWidth, newHeight)
 
-                        targetPanel.size = Dimension(snapped.first - targetPanel.x, snapped.second - targetPanel.y)
+                        newWidth = maxOf(snapped.first - targetPanel.x, minimumSize)
+                        newHeight = maxOf(snapped.second - targetPanel.y, minimumSize)
+
+                        targetPanel.size = Dimension(newWidth, newHeight)
                     }
                 } else {
                     val panelX = targetPanel.x
