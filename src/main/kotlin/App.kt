@@ -16,6 +16,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var focusedPanel: JPanel
     private var appWidth = this.width
     private var appHeight = this.height
+    private var isPressedShiftKey = false
 
     init {
         title = "FramelessViewer"
@@ -121,10 +122,17 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     inner class AppKeyListener : KeyListener {
         override fun keyTyped(e: KeyEvent?) {}
-        override fun keyPressed(e: KeyEvent?) {}
+
+        override fun keyPressed(e: KeyEvent?) {
+            if (e != null) {
+                if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
+            }
+        }
 
         override fun keyReleased(e: KeyEvent?) {
             if (e != null) {
+                if (isPressedShiftKey) isPressedShiftKey = false
+
                 val widget = getWidget(focusedPanel)
 
                 if (widget.data.imagePath.isNotEmpty()) {
@@ -183,12 +191,16 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
                 if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                    val newWidth = snap(e.x, appWidth)
-                    val newHeight = snap(e.y, appHeight)
+                    if (isPressedShiftKey) {
+                        targetPanel.size = Dimension(e.x, e.y)
+                    } else {
+                        val newWidth = snap(e.x, appWidth)
+                        val newHeight = snap(e.y, appHeight)
 
-                    val snapped = snapToPanel(newWidth, newHeight)
+                        val snapped = snapToPanel(newWidth, newHeight)
 
-                    targetPanel.size = Dimension(snapped.first, snapped.second)
+                        targetPanel.size = Dimension(snapped.first, snapped.second)
+                    }
                 } else {
                     val panelX = targetPanel.x
                     val panelY = targetPanel.y
@@ -197,9 +209,11 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                     var newX = panelX + (mouseX - initClick.x - panelX)
                     var newY = panelY + (mouseY - initClick.y - panelY)
-
-                    newX = snap(newX, appWidth - targetPanel.width)
-                    newY = snap(newY, appHeight - targetPanel.height)
+                    
+                    if (!isPressedShiftKey) {
+                        newX = snap(newX, appWidth - targetPanel.width)
+                        newY = snap(newY, appHeight - targetPanel.height)
+                    }
 
                     targetPanel.location = Point(newX, newY)
                 }
