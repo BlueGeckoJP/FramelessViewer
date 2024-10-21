@@ -182,7 +182,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     val isNearCorner =
                         { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
 
-                    if (isNearCorner(e.x, e.y) == (e.x > snapDistance && e.y > snapDistance)) {
+                    if (isNearCorner(e.x, e.y)) {
                         targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
                     }
                 }
@@ -191,8 +191,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
-                println("${e.x} ${e.y}          ${targetPanel.x} ${targetPanel.y} ${targetPanel.width} ${targetPanel.height}")
-
                 if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
                     if (isPressedShiftKey) {
                         val newWidth = maxOf(e.x, minimumSize)
@@ -204,19 +202,17 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                         val snapped = snapToPanel(newWidth, newHeight)
 
-                        newWidth = maxOf(snapped.first - targetPanel.x, minimumSize)
-                        newHeight = maxOf(snapped.second - targetPanel.y, minimumSize)
+                        newWidth = maxOf(snapped.first, minimumSize)
+                        newHeight = maxOf(snapped.second, minimumSize)
 
                         targetPanel.size = Dimension(newWidth, newHeight)
                     }
                 } else {
                     val panelX = targetPanel.x
                     val panelY = targetPanel.y
-                    val mouseX = e.x + panelX
-                    val mouseY = e.y + panelY
 
-                    var newX = panelX + (mouseX - initClick.x - panelX)
-                    var newY = panelY + (mouseY - initClick.y - panelY)
+                    var newX = panelX + (e.x - initClick.x)
+                    var newY = panelY + (e.y - initClick.y)
 
                     if (!isPressedShiftKey) {
                         newX = snap(newX, appWidth - targetPanel.width)
@@ -236,6 +232,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     widget.size = Dimension(e.x, e.y)
                     widget.updateImage()
                 }
+
+                repaint()
+                revalidate()
             }
         }
 
@@ -254,6 +253,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 if (abs(y - it.y) <= snapDistance) return x to it.y
                 if (abs(y - it.y + it.height) <= snapDistance) return x to it.y + it.height
             }
+
             return x to y
         }
     }
