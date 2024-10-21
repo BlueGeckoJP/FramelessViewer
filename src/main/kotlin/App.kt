@@ -183,7 +183,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         override fun mouseDragged(e: MouseEvent?) {
             if (e != null) {
                 if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                    targetPanel.size = Dimension(e.x, e.y)
+                    val newWidth = snap(e.x, appWidth)
+                    val newHeight = snap(e.y, appHeight)
+
+                    targetPanel.size = Dimension(newWidth, newHeight)
                 } else {
                     val panelX = targetPanel.x
                     val panelY = targetPanel.y
