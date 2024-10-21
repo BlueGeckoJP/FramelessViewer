@@ -167,101 +167,64 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         private var targetPanel: JPanel = panel
         private lateinit var initClick: Point
 
-        override fun mousePressed(e: MouseEvent?) {
-            if (e != null) {
-                initClick = e.point
-                val widget = getWidget(targetPanel)
-                focusToPanel(targetPanel)
-                widget.updateTitle()
+        override fun mousePressed(e: MouseEvent) {
+            initClick = e.point
 
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    popupMenu.show(e.component, e.x, e.y)
-                } else if (SwingUtilities.isLeftMouseButton(e)) {
-                    val isNearEdge =
-                        { coord: Int, size: Int -> coord in (0 until snapDistance) || coord in (size - snapDistance until size) }
-                    val isNearCorner =
-                        { x: Int, y: Int -> isNearEdge(x, targetPanel.width) && isNearEdge(y, targetPanel.height) }
+            focusToPanel(targetPanel)
 
-                    if (isNearCorner(e.x, e.y)) {
-                        targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
-                    }
-                }
+            if (SwingUtilities.isRightMouseButton(e)) {
+                popupMenu.show(e.component, e.x, e.y)
+            } else if (isNearCorner(e.x, e.y)) {
+                targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
             }
         }
 
-        override fun mouseDragged(e: MouseEvent?) {
-            if (e != null) {
-                if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                    if (isPressedShiftKey) {
-                        val newWidth = maxOf(e.x, minimumSize)
-                        val newHeight = maxOf(e.y, minimumSize)
-                        targetPanel.size = Dimension(newWidth, newHeight)
-                    } else {
-                        var newWidth = snap(e.x, appWidth - targetPanel.x)
-                        var newHeight = snap(e.y, appHeight - targetPanel.y)
-
-                        val snapped = snapToPanel(newWidth, newHeight)
-
-                        newWidth = maxOf(snapped.first, minimumSize)
-                        newHeight = maxOf(snapped.second, minimumSize)
-
-                        targetPanel.size = Dimension(newWidth, newHeight)
-                    }
-                } else {
-                    val panelX = targetPanel.x
-                    val panelY = targetPanel.y
-
-                    var newX = panelX + (e.x - initClick.x)
-                    var newY = panelY + (e.y - initClick.y)
-
-                    if (!isPressedShiftKey) {
-                        newX = snap(newX, appWidth - targetPanel.width)
-                        newY = snap(newY, appHeight - targetPanel.height)
-                    }
-
-                    targetPanel.location = Point(newX, newY)
-                }
+        override fun mouseDragged(e: MouseEvent) {
+            if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
+                val newWidth = snapToEdge(e.x, targetPanel.parent.width - targetPanel.x)
+                val newHeight = snapToEdge(e.y, targetPanel.parent.height - targetPanel.y)
+                targetPanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
+            } else {
+                val newX = snapToEdge(targetPanel.x + e.x - initClick.x, targetPanel.parent.width - targetPanel.width)
+                val newY = snapToEdge(targetPanel.y + e.y - initClick.y, targetPanel.parent.height - targetPanel.height)
+                targetPanel.location = Point(newX, newY)
             }
+            targetPanel.repaint()
+            targetPanel.revalidate()
         }
 
-        override fun mouseReleased(e: MouseEvent?) {
-            if (e != null) {
-                if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                    targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
-                    val widget = getWidget(targetPanel)
-                    widget.size = Dimension(e.x, e.y)
-                    widget.updateImage()
-                }
-
-                repaint()
-                revalidate()
-            }
+        override fun mouseReleased(e: MouseEvent) {
+            targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
         }
 
-        private fun snap(position: Int, max: Int): Int {
+        private fun snapToEdge(position: Int, max: Int): Int {
             if (abs(position) < snapDistance) return 0
             if (abs(position - max) < snapDistance) return max
+
+            val parent = targetPanel.parent
+            for (component in parent.components) {
+                if (component === targetPanel) continue
+
+                val other = component.bounds
+                if (abs(position - other.x) < snapDistance) return other.x
+                if (abs(position - (other.x + other.width)) < snapDistance) return other.x + other.width
+                if (abs(position - other.y) < snapDistance) return other.y
+                if (abs(position - (other.y + other.height)) < snapDistance) return other.y + other.height
+            }
+
             return position
         }
 
-        private fun snapToPanel(x: Int, y: Int): Pair<Int, Int> {
-            panels.forEach {
-                if (abs(x - it.x) <= snapDistance && abs(y - it.y) <= snapDistance) return it.x to it.y
-                if (abs(x - it.x + it.width) <= snapDistance && abs(y - it.y + it.height) <= snapDistance) return it.x + it.width to it.y + it.height
-                if (abs(x - it.x) <= snapDistance) return it.x to y
-                if (abs(x - it.x + it.width) <= snapDistance) return it.x + it.width to y
-                if (abs(y - it.y) <= snapDistance) return x to it.y
-                if (abs(y - it.y + it.height) <= snapDistance) return x to it.y + it.height
-            }
-
-            return x to y
+        private fun isNearCorner(x: Int, y: Int): Boolean {
+            return (x in 0 until snapDistance || x in targetPanel.width - snapDistance until targetPanel.width) &&
+                    (y in 0 until snapDistance || y in targetPanel.height - snapDistance until targetPanel.height)
         }
     }
 
     private fun createDraggablePanel(): JPanel {
         val panel = JPanel()
 
-        panel.border = LineBorder(Color.GRAY, 1)
+        panel.border = LineBorder(Color.WHITE, 1)
         panel.background = Color.GRAY
         panel.bounds = Rectangle(600, 400)
 
@@ -322,7 +285,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun focusToPanel(targetPanel: JPanel) {
-        panels.forEach { it.border = LineBorder(Color.GRAY, 1) }
+        panels.forEach { it.border = LineBorder(Color.WHITE, 1) }
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(Color.CYAN, 1)
     }
