@@ -186,7 +186,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     val newWidth = snap(e.x, appWidth)
                     val newHeight = snap(e.y, appHeight)
 
-                    targetPanel.size = Dimension(newWidth, newHeight)
+                    val snapped = snapToPanel(newWidth, newHeight)
+
+                    targetPanel.size = Dimension(snapped.first, snapped.second)
                 } else {
                     val panelX = targetPanel.x
                     val panelY = targetPanel.y
@@ -219,6 +221,18 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             if (abs(position) < snapDistance) return 0
             if (abs(position - max) < snapDistance) return max
             return position
+        }
+
+        private fun snapToPanel(x: Int, y: Int): Pair<Int, Int> {
+            panels.forEach {
+                if (abs(x - it.x) <= snapDistance && abs(y - it.y) <= snapDistance) return it.x to it.y
+                if (abs(x - it.x + it.width) <= snapDistance && abs(y - it.y + it.height) <= snapDistance) return it.x + it.width to it.y + it.height
+                if (abs(x - it.x) <= snapDistance) return it.x to y
+                if (abs(x - it.x + it.width) <= snapDistance) return it.x + it.width to y
+                if (abs(y - it.y) <= snapDistance) return x to it.y
+                if (abs(y - it.y + it.height) <= snapDistance) return x to it.y + it.height
+            }
+            return x to y
         }
     }
 
