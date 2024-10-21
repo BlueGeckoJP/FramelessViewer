@@ -76,9 +76,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         focusedPanel = panels[0]
         focusToPanel(panels[0])
 
-        addComponentListener(ResizeListener())
-        addWindowListener(CloseListener())
-        addKeyListener(ArrowKeyListener())
+        addComponentListener(AppComponentListener())
+        addWindowListener(AppWindowListener())
+        addKeyListener(AppKeyListener())
 
         SwingUtilities.invokeLater {
             updateAppSize()
@@ -92,7 +92,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class ResizeListener : ComponentListener {
+    inner class AppComponentListener : ComponentListener {
         override fun componentMoved(e: ComponentEvent?) {}
         override fun componentShown(e: ComponentEvent?) {}
         override fun componentHidden(e: ComponentEvent?) {}
@@ -103,7 +103,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class CloseListener : WindowListener {
+    inner class AppWindowListener : WindowListener {
         override fun windowOpened(e: WindowEvent?) {}
         override fun windowClosed(e: WindowEvent?) {}
         override fun windowIconified(e: WindowEvent?) {}
@@ -119,7 +119,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class ArrowKeyListener : KeyListener {
+    inner class AppKeyListener : KeyListener {
         override fun keyTyped(e: KeyEvent?) {}
         override fun keyPressed(e: KeyEvent?) {}
 
