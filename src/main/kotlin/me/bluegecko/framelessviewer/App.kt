@@ -16,6 +16,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
+    private var isLocked = true
+    private val defaultColor = Color.WHITE
+    private val focusedColor = Color.CYAN
+    private val lockedColor = Color.GRAY
 
     init {
         title = "FramelessViewer"
@@ -31,6 +35,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         val itemNewWidget = JMenuItem("New Widget")
         val itemOpen = JMenuItem("Open")
         val itemClone = JMenuItem("Clone")
+        val itemLock = JMenuItem("Lock To Window")
         val itemToggleTitle = JMenuItem("Toggle Title")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
@@ -38,14 +43,15 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         itemNewWidget.addActionListener { itemNewWidgetFun() }
         itemOpen.addActionListener { itemOpenFun() }
         itemClone.addActionListener { itemCloneFun() }
+        itemLock.addActionListener { itemLockFun() }
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
-
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWidget)
         popupMenu.add(itemOpen)
         popupMenu.add(itemClone)
+        popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
@@ -84,6 +90,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             updateAppSize()
 
             focusedPanel.size = Dimension(appWidth, appHeight)
+            focusedPanel.border = LineBorder(lockedColor, 1)
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
@@ -95,6 +102,13 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     inner class AppComponentAdapter : ComponentAdapter() {
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
+
+            if (isLocked) {
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                repaint()
+                revalidate()
+            }
+
             panels.forEach { getWidget(it).updateImage() }
         }
     }
@@ -110,6 +124,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     inner class AppKeyAdapter : KeyAdapter() {
         override fun keyPressed(e: KeyEvent?) {
+            if (isLocked) return
+
             if (e != null) {
                 if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
             }
@@ -122,6 +138,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 val widget = getWidget(focusedPanel)
 
                 if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
+                    if (isLocked) return
+
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
                         Rectangle(0, focusedPanel.y, appWidth / 2, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
@@ -134,6 +152,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     repaint()
                     revalidate()
                 } else if (e.modifiersEx and KeyEvent.ALT_DOWN_MASK != 0) {
+                    if (isLocked) return
+
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
                         Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width / 2, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
@@ -189,16 +209,20 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         override fun mousePressed(e: MouseEvent) {
             initClick = e.point
 
-            focusToPanel(targetPanel)
+            if (!isLocked) focusToPanel(targetPanel)
 
             if (SwingUtilities.isRightMouseButton(e)) {
                 popupMenu.show(e.component, e.x, e.y)
             } else if (isNearCorner(e.x, e.y)) {
+                if (isLocked) return
+
                 targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
             }
         }
 
         override fun mouseDragged(e: MouseEvent) {
+            if (isLocked) return
+
             if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
                 val newWidth = snapToEdge(e.x, targetPanel.parent.width - targetPanel.x)
                 val newHeight = snapToEdge(e.y, targetPanel.parent.height - targetPanel.y)
@@ -243,7 +267,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private fun createDraggablePanel(): JPanel {
         val panel = JPanel()
 
-        panel.border = LineBorder(Color.WHITE, 1)
+        panel.border = LineBorder(defaultColor, 1)
         panel.background = Color.GRAY
         panel.bounds = Rectangle(600, 400)
 
@@ -304,9 +328,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun focusToPanel(targetPanel: JPanel) {
-        panels.forEach { it.border = LineBorder(Color.WHITE, 1) }
+        panels.forEach { it.border = LineBorder(defaultColor, 1) }
         focusedPanel = targetPanel
-        targetPanel.border = LineBorder(Color.CYAN, 1)
+        targetPanel.border = LineBorder(focusedColor, 1)
     }
 
     private fun itemNewFun() {
@@ -338,6 +362,15 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     private fun itemCloneFun() {
         channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = convertToPanelData())))
+    }
+
+    private fun itemLockFun() {
+        isLocked = !isLocked
+        focusedPanel.border = if (isLocked) LineBorder(lockedColor, 1) else LineBorder(focusedColor, 1)
+        focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+
+        repaint()
+        revalidate()
     }
 
     private fun itemToggleTitleFun() {
