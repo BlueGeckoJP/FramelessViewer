@@ -20,7 +20,9 @@ plugins {
 }
 
 group = "me.bluegecko"
-version = "${runCommand("git rev-parse --short HEAD")}-${DateTimeFormatter.ofPattern("HHmm").withZone(ZoneId.systemDefault()).format(Instant.now())}"
+version = "${runCommand("git rev-parse --short HEAD")}-${
+    DateTimeFormatter.ofPattern("HHmm").withZone(ZoneId.systemDefault()).format(Instant.now())
+}"
 
 repositories {
     mavenCentral()
@@ -48,6 +50,6 @@ kotlin {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "me.bluegecko.MainKt"
+        attributes["Main-Class"] = "me.bluegecko.framelessviewer.MainKt"
     }
 }
