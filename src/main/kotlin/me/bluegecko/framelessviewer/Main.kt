@@ -1,7 +1,7 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
-import me.bluegecko.ChannelMessage.*
+import me.bluegecko.framelessviewer.ChannelMessage.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.UIManager

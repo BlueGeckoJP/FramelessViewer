@@ -1,6 +1,5 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
-import PanelData
 import java.awt.Rectangle
 
 data class AppData(

@@ -1,4 +1,4 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
 import java.awt.Component
 import java.awt.event.MouseAdapter

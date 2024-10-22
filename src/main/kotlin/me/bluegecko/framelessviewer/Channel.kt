@@ -1,4 +1,4 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
 data class Channel(var message: ChannelMessage, var initAppData: AppData)
 

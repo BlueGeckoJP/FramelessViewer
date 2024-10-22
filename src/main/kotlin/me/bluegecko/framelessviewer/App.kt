@@ -1,6 +1,5 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
-import PanelData
 import java.awt.*
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
