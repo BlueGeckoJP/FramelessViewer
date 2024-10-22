@@ -133,6 +133,28 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                     repaint()
                     revalidate()
+                } else if (e.modifiersEx and KeyEvent.ALT_DOWN_MASK != 0) {
+                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
+                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width / 2, focusedPanel.height)
+                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
+                        Rectangle(
+                            appWidth - focusedPanel.width / 2,
+                            focusedPanel.y,
+                            focusedPanel.width / 2,
+                            focusedPanel.height
+                        )
+                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
+                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width, focusedPanel.height / 2)
+                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
+                        Rectangle(
+                            focusedPanel.x,
+                            appHeight - focusedPanel.height / 2,
+                            focusedPanel.width,
+                            focusedPanel.height / 2
+                        )
+
+                    repaint()
+                    revalidate()
                 } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
