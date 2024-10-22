@@ -286,8 +286,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             appWidth = width
             appHeight = height
         }
-
-        println("$appWidth, $appHeight        $width, $height")
     }
 
     private fun createNewPanel(path: String = ""): JPanel {

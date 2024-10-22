@@ -62,7 +62,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
             ImageIO.getImageReadersByFormatName("webp").next()
 
             if (data.imagePath.isEmpty()) {
-                println("updateImage: image path is empty. ignored.")
                 return
             }
 
@@ -119,8 +118,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         try {
             data.parent.title =
                 "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
-        } catch (e: Exception) {
-            println("Ignored updateTitle")
+        } catch (_: Exception) {
         }
     }
 
