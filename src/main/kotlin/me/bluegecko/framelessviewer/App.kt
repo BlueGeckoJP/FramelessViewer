@@ -121,7 +121,19 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                 val widget = getWidget(focusedPanel)
 
-                if (widget.data.imagePath.isNotEmpty()) {
+                if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
+                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
+                        Rectangle(0, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
+                        Rectangle(appWidth / 2, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
+                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / 2)
+                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
+                        Rectangle(focusedPanel.x, appHeight / 2, focusedPanel.width, appHeight / 2)
+
+                    repaint()
+                    revalidate()
+                } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
                     if (e.keyCode == KeyEvent.VK_LEFT) {
