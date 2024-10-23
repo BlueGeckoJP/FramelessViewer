@@ -1,4 +1,4 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
 import java.awt.Rectangle
 
@@ -8,5 +8,6 @@ data class AppData(
     var initPath: String = "",
     var frameWidth: Int = 0,
     var frameHeight: Int = 0,
-    var imageDataList: MutableList<ImageWidgetData> = mutableListOf()
+    var imageDataList: MutableList<ImageWidgetData> = mutableListOf(),
+    var panelDataList: MutableList<PanelData> = mutableListOf()
 )

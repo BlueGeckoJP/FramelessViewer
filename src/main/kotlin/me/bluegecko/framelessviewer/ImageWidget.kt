@@ -1,36 +1,26 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
-import javax.swing.SwingUtilities
 import javax.swing.TransferHandler
-import javax.swing.border.LineBorder
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
-    var gridx = 1
-    var gridwidth = 1
-
 
     init {
         this.horizontalAlignment = CENTER
         this.verticalAlignment = CENTER
 
-        border = LineBorder(Color.GRAY, 1)
         minimumSize = Dimension()
 
-        addMouseListener(ClickEventListener())
         transferHandler = DropFileHandler()
     }
 
@@ -65,20 +55,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         }
     }
 
-    inner class ClickEventListener : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent?) {
-            if (e != null) {
-                data.parent.focusedWidget.border = LineBorder(Color.GRAY, 1)
-                data.parent.focusedWidget = this@ImageWidget
-                border = LineBorder(Color.CYAN, 1)
-                updateTitle()
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    data.parent.popupMenu.show(e.component, e.x, e.y)
-                }
-            }
-        }
-    }
-
     fun updateImage() {
         try {
             // add support for webp
@@ -86,7 +62,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
             ImageIO.getImageReadersByFormatName("webp").next()
 
             if (data.imagePath.isEmpty()) {
-                println("updateImage: image path is empty. ignored.")
                 return
             }
 
@@ -121,6 +96,9 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
             }
 
             updateFileList()
+
+            repaint()
+            revalidate()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -140,8 +118,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         try {
             data.parent.title =
                 "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
-        } catch (e: Exception) {
-            println("Ignored updateTitle")
+        } catch (_: Exception) {
         }
     }
 
