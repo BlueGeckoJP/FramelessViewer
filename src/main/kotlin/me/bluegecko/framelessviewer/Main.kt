@@ -1,18 +1,22 @@
-package me.bluegecko
+package me.bluegecko.framelessviewer
 
-import me.bluegecko.ChannelMessage.*
-import java.util.UUID
+import com.formdev.flatlaf.themes.FlatMacDarkLaf
+import me.bluegecko.framelessviewer.ChannelMessage.*
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import javax.swing.UIManager
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val channelMap = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
     var isFirstTime = true
 
+    UIManager.setLookAndFeel(FlatMacDarkLaf())
+
     while (true) {
         if (isFirstTime) {
             val returnValue = if (args.size == 1) {
-                runApp(AppData(filePath = args[0]))
+                runApp(AppData(initPath = args[0]))
             } else {
                 runApp()
             }
@@ -74,8 +78,7 @@ fun main(args: Array<String>) {
 fun runApp(initAppData: AppData = AppData()): Pair<String, Pair<Thread, AtomicReference<Channel>>> {
     val channel = AtomicReference(Channel(Normal, initAppData))
     val thread = Thread {
-        val app = App(channel)
-        app.isVisible = true
+        App(channel)
     }
     thread.start()
     return UUID.randomUUID().toString() to (thread to channel)
