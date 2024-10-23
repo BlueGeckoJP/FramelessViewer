@@ -175,6 +175,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                     repaint()
                     revalidate()
+                } else if (e.keyCode == KeyEvent.VK_UP) {
+                    focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                    repaint()
+                    revalidate()
                 } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
