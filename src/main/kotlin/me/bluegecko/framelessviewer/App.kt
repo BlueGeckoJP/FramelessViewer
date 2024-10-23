@@ -158,7 +158,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                         Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width / 2, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
                         Rectangle(
-                            appWidth - focusedPanel.width / 2,
+                            focusedPanel.x + focusedPanel.width / 2,
                             focusedPanel.y,
                             focusedPanel.width / 2,
                             focusedPanel.height
@@ -168,7 +168,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
                         Rectangle(
                             focusedPanel.x,
-                            appHeight - focusedPanel.height / 2,
+                            focusedPanel.y + focusedPanel.height / 2,
                             focusedPanel.width,
                             focusedPanel.height / 2
                         )
