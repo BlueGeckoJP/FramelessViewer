@@ -49,8 +49,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         itemExit.addActionListener { itemExitFun() }
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWidget)
+        popupMenu.addSeparator()
         popupMenu.add(itemOpen)
         popupMenu.add(itemClone)
+        popupMenu.addSeparator()
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
         popupMenu.addSeparator()
