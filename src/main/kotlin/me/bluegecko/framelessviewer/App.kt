@@ -4,6 +4,7 @@ import java.awt.*
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
+import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
 import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.math.abs
@@ -19,7 +20,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var isLocked = true
     private val defaultColor = Color.WHITE
     private val focusedColor = Color.CYAN
-    private val lockedColor = Color.GRAY
 
     init {
         title = "FramelessViewer"
@@ -90,7 +90,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             updateAppSize()
 
             focusedPanel.size = Dimension(appWidth, appHeight)
-            focusedPanel.border = LineBorder(lockedColor, 1)
+            focusedPanel.border = EmptyBorder(0, 0, 0, 0)
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
@@ -368,7 +368,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     private fun itemLockFun() {
         isLocked = !isLocked
-        focusedPanel.border = if (isLocked) LineBorder(lockedColor, 1) else LineBorder(focusedColor, 1)
+        focusedPanel.border = if (isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
         focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
         repaint()
