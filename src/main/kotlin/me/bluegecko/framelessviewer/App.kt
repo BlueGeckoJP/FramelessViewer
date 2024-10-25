@@ -10,15 +10,14 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appData = channel.get().initAppData
-    var panels = arrayListOf<JPanel>()
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
     var isLocked = true
-    val defaultColor = Color.WHITE
-    val focusedColor = Color.CYAN
+    val defaultColor: Color = Color.WHITE
+    private val focusedColor: Color = Color.CYAN
 
     init {
         title = "FramelessViewer"
@@ -72,7 +71,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             createNewPanel(appData.initPath)
         }
 
-        if (panels.isEmpty()) {
+        if (getPanels().isEmpty()) {
             if (appData.imageDataList.isEmpty()) {
                 createNewPanel()
             } else {
@@ -80,8 +79,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             }
         }
 
-        focusedPanel = panels[0]
-        focusToPanel(panels[0])
+        focusedPanel = getPanels()[0]
+        focusToPanel(getPanels()[0])
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
@@ -110,7 +109,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 revalidate()
             }
 
-            panels.forEach { getWidget(it).updateImage() }
+            getPanels().forEach { getWidget(it).updateImage() }
         }
     }
 
@@ -233,7 +232,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         panel.layout = GridBagLayout()
         panel.add(widget, gbc)
-        panels.add(panel)
         this.add(panel)
 
         this.repaint()
@@ -247,16 +245,20 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return widget
     }
 
+    private fun getPanels(): List<ImagePanel> {
+        return this.contentPane.components.map { it as ImagePanel }
+    }
+
     private fun convertToPanelData(): MutableList<PanelData> {
         val panelDataList = mutableListOf<PanelData>()
-        panels.forEach {
+        getPanels().forEach {
             panelDataList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
         }
         return panelDataList
     }
 
     fun focusToPanel(targetPanel: JPanel) {
-        panels.forEach { it.border = LineBorder(defaultColor, 1) }
+        getPanels().forEach { it.border = LineBorder(defaultColor, 1) }
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(focusedColor, 1)
     }
@@ -284,7 +286,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         if (file != null) {
             getWidget(focusedPanel).data.imagePath = file.absolutePath
-            panels.forEach { getWidget(it).updateImage() }
+            getPanels().forEach { getWidget(it).updateImage() }
         }
     }
 
@@ -311,13 +313,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     private fun itemRemoveWidgetFun() {
         this.remove(focusedPanel)
-        panels.remove(focusedPanel)
 
-        if (panels.isEmpty()) {
+        if (getPanels().isEmpty()) {
             createNewPanel()
         }
 
-        focusToPanel(panels[0])
+        focusToPanel(getPanels()[0])
     }
 
     private fun itemExitFun() {
