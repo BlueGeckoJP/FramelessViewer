@@ -7,7 +7,6 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
 import javax.swing.filechooser.FileNameExtensionFilter
-import kotlin.math.abs
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appData = channel.get().initAppData
@@ -17,9 +16,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
-    private var isLocked = true
-    private val defaultColor = Color.WHITE
-    private val focusedColor = Color.CYAN
+    var isLocked = true
+    val defaultColor = Color.WHITE
+    val focusedColor = Color.CYAN
 
     init {
         title = "FramelessViewer"
@@ -205,83 +204,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class DraggableListener(panel: JPanel) : MouseAdapter() {
-        private val snapDistance = 20
-        private val minimumSize = 50
-
-        private var targetPanel: JPanel = panel
-        private lateinit var initClick: Point
-
-        override fun mousePressed(e: MouseEvent) {
-            initClick = e.point
-
-            if (!isLocked) focusToPanel(targetPanel)
-
-            if (SwingUtilities.isRightMouseButton(e)) {
-                popupMenu.show(e.component, e.x, e.y)
-            } else if (isNearCorner(e.x, e.y)) {
-                if (isLocked) return
-
-                targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
-            }
-        }
-
-        override fun mouseDragged(e: MouseEvent) {
-            if (isLocked) return
-
-            if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                val newWidth = snapToEdge(e.x, targetPanel.parent.width - targetPanel.x)
-                val newHeight = snapToEdge(e.y, targetPanel.parent.height - targetPanel.y)
-                targetPanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
-            } else {
-                val newX = snapToEdge(targetPanel.x + e.x - initClick.x, targetPanel.parent.width - targetPanel.width)
-                val newY = snapToEdge(targetPanel.y + e.y - initClick.y, targetPanel.parent.height - targetPanel.height)
-                targetPanel.location = Point(newX, newY)
-            }
-            targetPanel.repaint()
-            targetPanel.revalidate()
-        }
-
-        override fun mouseReleased(e: MouseEvent) {
-            targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
-        }
-
-        private fun snapToEdge(position: Int, max: Int): Int {
-            if (abs(position) < snapDistance) return 0
-            if (abs(position - max) < snapDistance) return max
-
-            val parent = targetPanel.parent
-            for (component in parent.components) {
-                if (component === targetPanel) continue
-
-                val other = component.bounds
-                if (abs(position - other.x) < snapDistance) return other.x
-                if (abs(position - (other.x + other.width)) < snapDistance) return other.x + other.width
-                if (abs(position - other.y) < snapDistance) return other.y
-                if (abs(position - (other.y + other.height)) < snapDistance) return other.y + other.height
-            }
-
-            return position
-        }
-
-        private fun isNearCorner(x: Int, y: Int): Boolean {
-            return (x in 0 until snapDistance || x in targetPanel.width - snapDistance until targetPanel.width) &&
-                    (y in 0 until snapDistance || y in targetPanel.height - snapDistance until targetPanel.height)
-        }
-    }
-
     private fun createDraggablePanel(): JPanel {
-        val panel = JPanel()
-
-        panel.border = LineBorder(defaultColor, 1)
-        panel.background = Color.GRAY
-        panel.bounds = Rectangle(600, 400)
-
-        val listener = DraggableListener(panel)
-        panel.addMouseListener(listener)
-        panel.addMouseMotionListener(listener)
-
-        return panel
+        return ImagePanel(this)
     }
 
     private fun updateAppSize() {
@@ -331,7 +255,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return panelDataList
     }
 
-    private fun focusToPanel(targetPanel: JPanel) {
+    fun focusToPanel(targetPanel: JPanel) {
         panels.forEach { it.border = LineBorder(defaultColor, 1) }
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(focusedColor, 1)
