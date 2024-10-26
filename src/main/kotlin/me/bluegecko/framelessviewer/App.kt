@@ -203,10 +203,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    private fun createDraggablePanel(): JPanel {
-        return ImagePanel(this)
-    }
-
     private fun updateAppSize() {
         if (!appData.isUndecorated) {
             appWidth = width - insets.left - insets.right
@@ -218,7 +214,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun createNewPanel(path: String = ""): JPanel {
-        val panel = createDraggablePanel()
+        val panel = ImagePanel(this)
         val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
 
         val gbc = GridBagConstraints()

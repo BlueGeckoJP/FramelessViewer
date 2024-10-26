@@ -13,7 +13,7 @@ class ImagePanel(val app: App) : JPanel() {
         border = LineBorder(app.defaultColor, 1)
         background = Color.GRAY
         bounds = Rectangle(600, 400)
-        
+
         val listener = DraggableListener()
         addMouseListener(listener)
         addMouseMotionListener(listener)
@@ -22,7 +22,7 @@ class ImagePanel(val app: App) : JPanel() {
     inner class DraggableListener() : MouseAdapter() {
         private val snapDistance = 20
         private val minimumSize = 50
-        
+
         private lateinit var initClick: Point
 
         override fun mousePressed(e: MouseEvent) {
@@ -47,22 +47,28 @@ class ImagePanel(val app: App) : JPanel() {
                 val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
                 this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
             } else {
-                val newX = snapToEdge(this@ImagePanel.x + e.x - initClick.x, this@ImagePanel.parent.width - this@ImagePanel.width)
-                val newY = snapToEdge(this@ImagePanel.y + e.y - initClick.y, this@ImagePanel.parent.height - this@ImagePanel.height)
+                val newX = snapToEdge(
+                    this@ImagePanel.x + e.x - initClick.x,
+                    this@ImagePanel.parent.width - this@ImagePanel.width
+                )
+                val newY = snapToEdge(
+                    this@ImagePanel.y + e.y - initClick.y,
+                    this@ImagePanel.parent.height - this@ImagePanel.height
+                )
                 this@ImagePanel.location = Point(newX, newY)
             }
             this@ImagePanel.repaint()
             this@ImagePanel.revalidate()
         }
 
-        override fun mouseReleased(e: MouseEvent) { 
+        override fun mouseReleased(e: MouseEvent) {
             this@ImagePanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
         }
 
         private fun snapToEdge(position: Int, max: Int): Int {
             if (abs(position) < snapDistance) return 0
             if (abs(position - max) < snapDistance) return max
-            
+
             for (component in app.components) {
                 if (component === this@ImagePanel) continue
 
