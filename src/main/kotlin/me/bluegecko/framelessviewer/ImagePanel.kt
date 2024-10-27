@@ -63,6 +63,7 @@ class ImagePanel(val app: App) : JPanel() {
 
         override fun mouseReleased(e: MouseEvent) {
             this@ImagePanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
+            app.getWidget(this@ImagePanel).updateImageSize()
         }
 
         private fun snapToEdge(position: Int, max: Int): Int {

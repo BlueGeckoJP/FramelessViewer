@@ -3,6 +3,7 @@ package me.bluegecko.framelessviewer
 import java.awt.Dimension
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
+import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
@@ -14,6 +15,7 @@ import javax.swing.TransferHandler
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: MutableList<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
+    private lateinit var image: BufferedImage
 
     init {
         this.horizontalAlignment = CENTER
@@ -55,47 +57,55 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         }
     }
 
+    fun updateImageSize() {
+        if (data.imagePath.isEmpty()) return
+        if (!::image.isInitialized) return
+
+        if (image.width > width || image.height > height) {
+            val widthStandardSize = Pair(
+                width, scaledSize(image.width, image.height, width)
+            )
+            val heightStandardSize = Pair(
+                scaledSize(image.height, image.width, height), height
+            )
+
+            if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
+                val scaledImage = image.getScaledInstance(
+                    widthStandardSize.first,
+                    widthStandardSize.second,
+                    Image.SCALE_SMOOTH
+                )
+                this.icon = ImageIcon(scaledImage)
+            } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
+                val scaledImage = image.getScaledInstance(
+                    heightStandardSize.first,
+                    heightStandardSize.second,
+                    Image.SCALE_SMOOTH
+                )
+                this.icon = ImageIcon(scaledImage)
+            }
+        } else {
+            this.icon = ImageIcon(image)
+        }
+
+        repaint()
+        revalidate()
+    }
+
     fun updateImage() {
         try {
             // add support for webp
             ImageIO.scanForPlugins()
             ImageIO.getImageReadersByFormatName("webp").next()
 
-            if (data.imagePath.isEmpty()) {
-                return
-            }
+            if (data.imagePath.isEmpty()) return
 
             val file = File(data.imagePath)
-            val image = ImageIO.read(file)
+            image = ImageIO.read(file)
 
-            if (image.width > width || image.height > height) {
-                val widthStandardSize = Pair(
-                    width, scaledSize(image.width, image.height, width)
-                )
-                val heightStandardSize = Pair(
-                    scaledSize(image.height, image.width, height), height
-                )
-
-                if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
-                    val scaledImage = image.getScaledInstance(
-                        widthStandardSize.first,
-                        widthStandardSize.second,
-                        Image.SCALE_SMOOTH
-                    )
-                    this.icon = ImageIcon(scaledImage)
-                } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
-                    val scaledImage = image.getScaledInstance(
-                        heightStandardSize.first,
-                        heightStandardSize.second,
-                        Image.SCALE_SMOOTH
-                    )
-                    this.icon = ImageIcon(scaledImage)
-                }
-            } else {
-                this.icon = ImageIcon(image)
-            }
-
+            updateImageSize()
             updateFileList()
+            updateTitle()
 
             repaint()
             revalidate()
@@ -117,8 +127,9 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     fun updateTitle() {
         try {
             data.parent.title =
-                "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] | FramelessViewer"
-        } catch (_: Exception) {
+                "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] PD[${data.parent.panelDivisor}] | FramelessViewer"
+        } catch (e: Exception) {
+            data.parent.title = "FramelessViewer"
         }
     }
 

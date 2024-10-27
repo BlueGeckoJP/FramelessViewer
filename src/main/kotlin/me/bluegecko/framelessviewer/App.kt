@@ -18,6 +18,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     var isLocked = true
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
+    var panelDivisor = 2
 
     init {
         title = "FramelessViewer"
@@ -141,13 +142,23 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(0, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                        Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(appWidth / 2, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                        Rectangle(
+                            appWidth / panelDivisor * (panelDivisor - 1),
+                            focusedPanel.y,
+                            appWidth / panelDivisor,
+                            focusedPanel.height
+                        )
                     if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / 2)
+                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, appHeight / 2, focusedPanel.width, appHeight / 2)
+                        Rectangle(
+                            focusedPanel.x,
+                            appHeight / panelDivisor * (panelDivisor - 1),
+                            focusedPanel.width,
+                            appHeight / panelDivisor
+                        )
 
                     repaint()
                     revalidate()
@@ -155,22 +166,32 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width / 2, focusedPanel.height)
+                        Rectangle(
+                            focusedPanel.x,
+                            focusedPanel.y,
+                            focusedPanel.width / panelDivisor,
+                            focusedPanel.height
+                        )
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
                         Rectangle(
-                            focusedPanel.x + focusedPanel.width / 2,
+                            focusedPanel.x + focusedPanel.width / panelDivisor,
                             focusedPanel.y,
-                            focusedPanel.width / 2,
+                            focusedPanel.width / panelDivisor,
                             focusedPanel.height
                         )
                     if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width, focusedPanel.height / 2)
+                        Rectangle(
+                            focusedPanel.x,
+                            focusedPanel.y,
+                            focusedPanel.width,
+                            focusedPanel.height / panelDivisor
+                        )
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
                         Rectangle(
                             focusedPanel.x,
-                            focusedPanel.y + focusedPanel.height / 2,
+                            focusedPanel.y + focusedPanel.height / panelDivisor,
                             focusedPanel.width,
-                            focusedPanel.height / 2
+                            focusedPanel.height / panelDivisor
                         )
 
                     repaint()
@@ -179,6 +200,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                     repaint()
                     revalidate()
+                } else if (e.keyCode == KeyEvent.VK_DOWN) {
+                    panelDivisor = if (panelDivisor == 2) 3
+                    else 2
+                    getWidget(focusedPanel).updateTitle()
                 } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
@@ -236,7 +261,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return panel
     }
 
-    private fun getWidget(panel: JPanel): ImageWidget {
+    fun getWidget(panel: JPanel): ImageWidget {
         val widget = panel.components.filter { it.javaClass == ImageWidget::class.java }[0] as ImageWidget
         return widget
     }
