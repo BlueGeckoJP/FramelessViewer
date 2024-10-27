@@ -334,6 +334,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
         appData.panelDataList = convertToPanelData()
+        appData.isLocked = isLocked
         channel.set(Channel(ChannelMessage.Reinit, appData))
         this.dispose()
     }
