@@ -335,6 +335,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private fun itemRemoveWidgetFun() {
         this.remove(focusedPanel)
 
+        isLocked = false
+
         if (getPanels().isEmpty()) {
             createNewPanel()
         }
