@@ -8,7 +8,6 @@ data class AppData(
     var initPath: String = "",
     var frameWidth: Int = 0,
     var frameHeight: Int = 0,
-    var imageDataList: MutableList<ImageWidgetData> = mutableListOf(),
     var panelDataList: MutableList<PanelData> = mutableListOf(),
     var isLocked: Boolean = true
 )

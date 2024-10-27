@@ -76,11 +76,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
 
         if (getPanels().isEmpty()) {
-            if (appData.imageDataList.isEmpty()) {
-                createNewPanel()
-            } else {
-                appData.imageDataList.forEach { createNewPanel(it.imagePath) }
-            }
+            createNewPanel()
         }
 
         focusedPanel = getPanels()[0]
