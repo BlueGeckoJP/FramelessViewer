@@ -271,10 +271,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return this.contentPane.components.map { it as ImagePanel }
     }
 
-    private fun convertToPanelData(): MutableList<PanelData> {
-        val panelDataList = mutableListOf<PanelData>()
+    private fun convertToPanelData(): MutableList<ImagePanelData> {
+        val panelDataList = mutableListOf<ImagePanelData>()
         getPanels().forEach {
-            panelDataList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
+            panelDataList.add(ImagePanelData(it.bounds, getWidget(it).data.imagePath))
         }
         return panelDataList
     }
