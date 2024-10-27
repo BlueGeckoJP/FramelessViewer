@@ -1,6 +1,9 @@
 package me.bluegecko.framelessviewer
 
-import java.awt.*
+import java.awt.Color
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Rectangle
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
@@ -15,7 +18,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
-    var isLocked = true
+    var isLocked = appData.isLocked
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
@@ -81,7 +84,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
 
         focusedPanel = getPanels()[0]
-        focusToPanel(getPanels()[0])
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
@@ -90,8 +92,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            focusedPanel.size = Dimension(appWidth, appHeight)
-            focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+            if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+            else focusToPanel(getPanels()[0])
+
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
@@ -312,7 +315,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemCloneFun() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = convertToPanelData())))
+        val exportData = appData
+        exportData.isLocked = isLocked
+        exportData.panelDataList = convertToPanelData()
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, exportData))
     }
 
     private fun itemLockFun() {
