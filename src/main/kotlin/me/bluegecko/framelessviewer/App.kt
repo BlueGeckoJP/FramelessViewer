@@ -1,25 +1,27 @@
 package me.bluegecko.framelessviewer
 
-import java.awt.*
+import java.awt.Color
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Rectangle
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
 import javax.swing.filechooser.FileNameExtensionFilter
-import kotlin.math.abs
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appData = channel.get().initAppData
-    var panels = arrayListOf<JPanel>()
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
-    private var isLocked = true
-    private val defaultColor = Color.WHITE
-    private val focusedColor = Color.CYAN
+    var isLocked = appData.isLocked
+    val defaultColor: Color = Color.WHITE
+    private val focusedColor: Color = Color.CYAN
+    var panelDivisor = 2
 
     init {
         title = "FramelessViewer"
@@ -73,16 +75,11 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             createNewPanel(appData.initPath)
         }
 
-        if (panels.isEmpty()) {
-            if (appData.imageDataList.isEmpty()) {
-                createNewPanel()
-            } else {
-                appData.imageDataList.forEach { createNewPanel(it.imagePath) }
-            }
+        if (getPanels().isEmpty()) {
+            createNewPanel()
         }
 
-        focusedPanel = panels[0]
-        focusToPanel(panels[0])
+        focusedPanel = getPanels()[0]
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
@@ -91,8 +88,11 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            focusedPanel.size = Dimension(appWidth, appHeight)
-            focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+            if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+            else focusToPanel(getPanels()[0])
+
+            if (appData.isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
@@ -111,7 +111,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 revalidate()
             }
 
-            panels.forEach { getWidget(it).updateImage() }
+            getPanels().forEach { getWidget(it).updateImage() }
         }
     }
 
@@ -143,13 +143,23 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(0, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                        Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(appWidth / 2, focusedPanel.y, appWidth / 2, focusedPanel.height)
+                        Rectangle(
+                            appWidth / panelDivisor * (panelDivisor - 1),
+                            focusedPanel.y,
+                            appWidth / panelDivisor,
+                            focusedPanel.height
+                        )
                     if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / 2)
+                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, appHeight / 2, focusedPanel.width, appHeight / 2)
+                        Rectangle(
+                            focusedPanel.x,
+                            appHeight / panelDivisor * (panelDivisor - 1),
+                            focusedPanel.width,
+                            appHeight / panelDivisor
+                        )
 
                     repaint()
                     revalidate()
@@ -157,22 +167,32 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     if (isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width / 2, focusedPanel.height)
+                        Rectangle(
+                            focusedPanel.x,
+                            focusedPanel.y,
+                            focusedPanel.width / panelDivisor,
+                            focusedPanel.height
+                        )
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
                         Rectangle(
-                            focusedPanel.x + focusedPanel.width / 2,
+                            focusedPanel.x + focusedPanel.width / panelDivisor,
                             focusedPanel.y,
-                            focusedPanel.width / 2,
+                            focusedPanel.width / panelDivisor,
                             focusedPanel.height
                         )
                     if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.width, focusedPanel.height / 2)
+                        Rectangle(
+                            focusedPanel.x,
+                            focusedPanel.y,
+                            focusedPanel.width,
+                            focusedPanel.height / panelDivisor
+                        )
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
                         Rectangle(
                             focusedPanel.x,
-                            focusedPanel.y + focusedPanel.height / 2,
+                            focusedPanel.y + focusedPanel.height / panelDivisor,
                             focusedPanel.width,
-                            focusedPanel.height / 2
+                            focusedPanel.height / panelDivisor
                         )
 
                     repaint()
@@ -181,6 +201,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                     repaint()
                     revalidate()
+                } else if (e.keyCode == KeyEvent.VK_DOWN) {
+                    panelDivisor = if (panelDivisor == 2) 3
+                    else 2
+                    getWidget(focusedPanel).updateTitle()
                 } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
@@ -205,85 +229,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
-    inner class DraggableListener(panel: JPanel) : MouseAdapter() {
-        private val snapDistance = 20
-        private val minimumSize = 50
-
-        private var targetPanel: JPanel = panel
-        private lateinit var initClick: Point
-
-        override fun mousePressed(e: MouseEvent) {
-            initClick = e.point
-
-            if (!isLocked) focusToPanel(targetPanel)
-
-            if (SwingUtilities.isRightMouseButton(e)) {
-                popupMenu.show(e.component, e.x, e.y)
-            } else if (isNearCorner(e.x, e.y)) {
-                if (isLocked) return
-
-                targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
-            }
-        }
-
-        override fun mouseDragged(e: MouseEvent) {
-            if (isLocked) return
-
-            if (targetPanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
-                val newWidth = snapToEdge(e.x, targetPanel.parent.width - targetPanel.x)
-                val newHeight = snapToEdge(e.y, targetPanel.parent.height - targetPanel.y)
-                targetPanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
-            } else {
-                val newX = snapToEdge(targetPanel.x + e.x - initClick.x, targetPanel.parent.width - targetPanel.width)
-                val newY = snapToEdge(targetPanel.y + e.y - initClick.y, targetPanel.parent.height - targetPanel.height)
-                targetPanel.location = Point(newX, newY)
-            }
-            targetPanel.repaint()
-            targetPanel.revalidate()
-        }
-
-        override fun mouseReleased(e: MouseEvent) {
-            targetPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
-        }
-
-        private fun snapToEdge(position: Int, max: Int): Int {
-            if (abs(position) < snapDistance) return 0
-            if (abs(position - max) < snapDistance) return max
-
-            val parent = targetPanel.parent
-            for (component in parent.components) {
-                if (component === targetPanel) continue
-
-                val other = component.bounds
-                if (abs(position - other.x) < snapDistance) return other.x
-                if (abs(position - (other.x + other.width)) < snapDistance) return other.x + other.width
-                if (abs(position - other.y) < snapDistance) return other.y
-                if (abs(position - (other.y + other.height)) < snapDistance) return other.y + other.height
-            }
-
-            return position
-        }
-
-        private fun isNearCorner(x: Int, y: Int): Boolean {
-            return (x in 0 until snapDistance || x in targetPanel.width - snapDistance until targetPanel.width) &&
-                    (y in 0 until snapDistance || y in targetPanel.height - snapDistance until targetPanel.height)
-        }
-    }
-
-    private fun createDraggablePanel(): JPanel {
-        val panel = JPanel()
-
-        panel.border = LineBorder(defaultColor, 1)
-        panel.background = Color.GRAY
-        panel.bounds = Rectangle(600, 400)
-
-        val listener = DraggableListener(panel)
-        panel.addMouseListener(listener)
-        panel.addMouseMotionListener(listener)
-
-        return panel
-    }
-
     private fun updateAppSize() {
         if (!appData.isUndecorated) {
             appWidth = width - insets.left - insets.right
@@ -295,7 +240,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun createNewPanel(path: String = ""): JPanel {
-        val panel = createDraggablePanel()
+        val panel = ImagePanel(this)
         val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
 
         val gbc = GridBagConstraints()
@@ -309,7 +254,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         panel.layout = GridBagLayout()
         panel.add(widget, gbc)
-        panels.add(panel)
         this.add(panel)
 
         this.repaint()
@@ -318,21 +262,25 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return panel
     }
 
-    private fun getWidget(panel: JPanel): ImageWidget {
+    fun getWidget(panel: JPanel): ImageWidget {
         val widget = panel.components.filter { it.javaClass == ImageWidget::class.java }[0] as ImageWidget
         return widget
     }
 
-    private fun convertToPanelData(): MutableList<PanelData> {
-        val panelDataList = mutableListOf<PanelData>()
-        panels.forEach {
-            panelDataList.add(PanelData(it.bounds, getWidget(it).data.imagePath))
+    private fun getPanels(): List<ImagePanel> {
+        return this.contentPane.components.map { it as ImagePanel }
+    }
+
+    private fun convertToPanelData(): MutableList<ImagePanelData> {
+        val panelDataList = mutableListOf<ImagePanelData>()
+        getPanels().forEach {
+            panelDataList.add(ImagePanelData(it.bounds, getWidget(it).data.imagePath))
         }
         return panelDataList
     }
 
-    private fun focusToPanel(targetPanel: JPanel) {
-        panels.forEach { it.border = LineBorder(defaultColor, 1) }
+    fun focusToPanel(targetPanel: JPanel) {
+        getPanels().forEach { it.border = LineBorder(defaultColor, 1) }
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(focusedColor, 1)
     }
@@ -360,12 +308,15 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
         if (file != null) {
             getWidget(focusedPanel).data.imagePath = file.absolutePath
-            panels.forEach { getWidget(it).updateImage() }
+            getPanels().forEach { getWidget(it).updateImage() }
         }
     }
 
     private fun itemCloneFun() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, AppData(panelDataList = convertToPanelData())))
+        val exportData = appData
+        exportData.isLocked = isLocked
+        exportData.panelDataList = convertToPanelData()
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, exportData))
     }
 
     private fun itemLockFun() {
@@ -381,19 +332,21 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         appData.isUndecorated = !appData.isUndecorated
         appData.bounds = bounds
         appData.panelDataList = convertToPanelData()
+        appData.isLocked = isLocked
         channel.set(Channel(ChannelMessage.Reinit, appData))
         this.dispose()
     }
 
     private fun itemRemoveWidgetFun() {
         this.remove(focusedPanel)
-        panels.remove(focusedPanel)
 
-        if (panels.isEmpty()) {
+        isLocked = false
+
+        if (getPanels().isEmpty()) {
             createNewPanel()
         }
 
-        focusToPanel(panels[0])
+        focusToPanel(getPanels()[0])
     }
 
     private fun itemExitFun() {
