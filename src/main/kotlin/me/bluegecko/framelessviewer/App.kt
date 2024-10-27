@@ -95,6 +95,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
             if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
             else focusToPanel(getPanels()[0])
 
+            if (appData.isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+
             val widget = getWidget(focusedPanel)
             widget.updateImage()
 
