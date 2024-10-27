@@ -15,7 +15,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private var appWidth = this.width
     private var appHeight = this.height
     private var isPressedShiftKey = false
-    var isLocked = true
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
@@ -104,7 +103,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
 
-            if (isLocked) {
+            if (appData.isLocked) {
                 focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                 repaint()
                 revalidate()
@@ -125,7 +124,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
     inner class AppKeyAdapter : KeyAdapter() {
         override fun keyPressed(e: KeyEvent?) {
-            if (isLocked) return
+            if (appData.isLocked) return
 
             if (e != null) {
                 if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
@@ -139,7 +138,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 val widget = getWidget(focusedPanel)
 
                 if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
-                    if (isLocked) return
+                    if (appData.isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
                         Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
@@ -163,7 +162,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     repaint()
                     revalidate()
                 } else if (e.modifiersEx and KeyEvent.ALT_DOWN_MASK != 0) {
-                    if (isLocked) return
+                    if (appData.isLocked) return
 
                     if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
                         Rectangle(
@@ -316,8 +315,8 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemLockFun() {
-        isLocked = !isLocked
-        focusedPanel.border = if (isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
+        appData.isLocked != appData.isLocked
+        focusedPanel.border = if (appData.isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
         focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
         repaint()
@@ -335,7 +334,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     private fun itemRemoveWidgetFun() {
         this.remove(focusedPanel)
 
-        isLocked = false
+        appData.isLocked = false
 
         if (getPanels().isEmpty()) {
             createNewPanel()
