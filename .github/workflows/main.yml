@@ -1,0 +1,38 @@
+name: Kotlin/Gradle build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: "17"
+        distribution: "temurin"
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles("**/*.gradle*", "**/gradle-wrapper.properties") }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Build with Gradle
+      run: ./gradlew shadowJar
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: FramelessViewer.jar
+        path: build/libs/FramelessViewer-latest-all.jar
