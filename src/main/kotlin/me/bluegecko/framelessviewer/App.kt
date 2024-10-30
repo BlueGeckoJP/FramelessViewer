@@ -201,6 +201,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                     focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                     repaint()
                     revalidate()
+                    getWidget(focusedPanel).updateImageSize()
                 } else if (e.keyCode == KeyEvent.VK_DOWN) {
                     panelDivisor = if (panelDivisor == 2) 3
                     else 2
