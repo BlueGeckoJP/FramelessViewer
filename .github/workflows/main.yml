@@ -15,13 +15,13 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup JDK
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: "17"
         distribution: "temurin"
 
     - name: Cache Gradle packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
@@ -32,7 +32,7 @@ jobs:
       run: ./gradlew shadowJar
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: FramelessViewer.jar
         path: build/libs/FramelessViewer-latest-all.jar
