@@ -286,6 +286,15 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         targetPanel.border = LineBorder(focusedColor, 1)
     }
 
+    private fun createExportAppData(): AppData {
+        val exportAppData = appData
+        exportAppData.isUndecorated = isUndecorated
+        exportAppData.bounds = bounds
+        exportAppData.panelDataList = convertToPanelData()
+        exportAppData.isLocked = isLocked
+        return exportAppData
+    }
+
     private fun itemNewFun() {
         channel.set(Channel(ChannelMessage.NewWindow))
     }
@@ -314,10 +323,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemCloneFun() {
-        val exportData = appData
-        exportData.isLocked = isLocked
-        exportData.panelDataList = convertToPanelData()
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, exportData))
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, createExportAppData()))
     }
 
     private fun itemLockFun() {
@@ -330,12 +336,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemToggleTitleFun() {
-        val exportData = appData
-        exportData.isUndecorated = !isUndecorated
-        exportData.bounds = bounds
-        exportData.panelDataList = convertToPanelData()
-        exportData.isLocked = isLocked
-        channel.set(Channel(ChannelMessage.Reinit, exportData))
+        val exportAppData = createExportAppData()
+        exportAppData.isUndecorated = !isUndecorated
+        channel.set(Channel(ChannelMessage.Reinit, exportAppData))
         this.dispose()
     }
 
