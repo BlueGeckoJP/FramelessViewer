@@ -1,10 +1,9 @@
 package me.bluegecko.framelessviewer
 
-import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 data class ThreadData(
-    val uuid: String = UUID.randomUUID().toString(),
+    val uuid: String,
     val thread: Thread,
     val channel: AtomicReference<Channel>
 )

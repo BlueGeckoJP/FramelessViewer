@@ -13,7 +13,7 @@ import javax.swing.event.MenuEvent
 import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class App(private val channel: AtomicReference<Channel>) : JFrame() {
+class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFrame() {
     private var appData = channel.get().appData
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
@@ -59,7 +59,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
                 getThreadUUIDs().forEach {
                     val uuid = it
-                    val item = JMenuItem("${uuid.substringBefore("-")}..")
+                    val item = JMenuItem(getShortUUID(uuid))
                     item.addActionListener { sendImageTo(uuid) }
                     menuSendImageTo.add(item)
                 }
@@ -348,6 +348,10 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
                 )
             )
         }
+    }
+
+    fun getShortUUID(uuid: String): String {
+        return "${uuid.substringBefore("-")}.."
     }
 
     private fun itemNewFun() {

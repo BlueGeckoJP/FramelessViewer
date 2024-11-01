@@ -2,6 +2,7 @@ package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
 import me.bluegecko.framelessviewer.ChannelMessage.*
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.UIManager
 import kotlin.system.exitProcess
@@ -82,9 +83,10 @@ fun main(args: Array<String>) {
 
 fun runApp(initAppData: AppData = AppData()): ThreadData {
     val channel = AtomicReference(Channel(appData = initAppData))
-    val thread = Thread { App(channel) }
+    val uuid = UUID.randomUUID().toString()
+    val thread = Thread { App(channel, uuid) }
     thread.start()
-    return ThreadData(thread = thread, channel = channel)
+    return ThreadData(uuid, thread, channel)
 }
 
 fun getThreadUUIDs(): List<String> {

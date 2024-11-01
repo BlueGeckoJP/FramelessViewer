@@ -105,12 +105,13 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
             updateImageSize()
             updateFileList()
-            updateTitle()
 
             repaint()
             revalidate()
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            updateTitle()
         }
     }
 
@@ -126,10 +127,18 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
     fun updateTitle() {
         try {
+            val imageName = File(data.imagePath).name
+            val nameStr = if (imageName.length < 8) imageName else "${imageName.substring(0, 8)}.."
+
             data.parent.title =
-                "${File(data.imagePath).name} [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] PD[${data.parent.panelDivisor}] | FramelessViewer"
+                "$nameStr [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] UUID:${
+                    data.parent.getShortUUID(
+                        data.parent.uuid
+                    )
+                } PD:${data.parent.panelDivisor} | FramelessViewer"
         } catch (e: Exception) {
-            data.parent.title = "FramelessViewer"
+            data.parent.title =
+                "UUID:${data.parent.getShortUUID(data.parent.uuid)} PD:${data.parent.panelDivisor} | FramelessViewer"
         }
     }
 
