@@ -331,12 +331,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun createExportAppData(): AppData {
-        val exportAppData = appData
-        exportAppData.isUndecorated = isUndecorated
-        exportAppData.bounds = bounds
-        exportAppData.panelDataList = convertToPanelData()
-        exportAppData.isLocked = isLocked
-        return exportAppData
+        return appData.copy(
+            isUndecorated = isUndecorated,
+            bounds = bounds,
+            panelDataList = convertToPanelData(),
+            isLocked = isLocked
+        )
     }
 
     private fun sendImageTo(target: String) {
