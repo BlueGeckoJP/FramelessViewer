@@ -111,7 +111,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            updateTitle()
+            data.parent.updateTitle()
         }
     }
 
@@ -123,23 +123,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
                 ?.filter { it.contains(extensionRegex) }
         fileList?.let { Collections.sort(it, String.CASE_INSENSITIVE_ORDER) }
         this.fileList = fileList as MutableList<String>
-    }
-
-    fun updateTitle() {
-        try {
-            val imageName = File(data.imagePath).name
-            val nameStr = if (imageName.length < 8) imageName else "${imageName.substring(0, 8)}.."
-
-            data.parent.title =
-                "$nameStr [${fileList.indexOf(data.imagePath) + 1}/${fileList.size}] UUID:${
-                    data.parent.getShortUUID(
-                        data.parent.uuid
-                    )
-                } PD:${data.parent.panelDivisor} | FramelessViewer"
-        } catch (e: Exception) {
-            data.parent.title =
-                "UUID:${data.parent.getShortUUID(data.parent.uuid)} PD:${data.parent.panelDivisor} | FramelessViewer"
-        }
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900

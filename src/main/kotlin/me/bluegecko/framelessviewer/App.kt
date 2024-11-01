@@ -5,6 +5,7 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Rectangle
 import java.awt.event.*
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
@@ -13,7 +14,7 @@ import javax.swing.event.MenuEvent
 import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFrame() {
+class App(private val channel: AtomicReference<Channel>, private val uuid: String) : JFrame() {
     private var appData = channel.get().appData
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
@@ -229,7 +230,7 @@ class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFr
                 } else if (e.keyCode == KeyEvent.VK_DOWN) {
                     panelDivisor = if (panelDivisor == 2) 3
                     else 2
-                    getWidget(focusedPanel).updateTitle()
+                    updateTitle()
                 } else if (widget.data.imagePath.isNotEmpty()) {
                     val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
 
@@ -248,7 +249,7 @@ class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFr
                     }
 
                     widget.updateImage()
-                    widget.updateTitle()
+                    updateTitle()
                 }
             }
         }
@@ -354,6 +355,22 @@ class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFr
 
     fun getShortUUID(uuid: String): String {
         return "${uuid.substringBefore("-")}.."
+    }
+
+    fun updateTitle() {
+        try {
+            val widget = getWidget(focusedPanel)
+            val imageName = File(widget.data.imagePath).name
+            val nameStr = if (imageName.length < 8) imageName else "${imageName.substring(0, 8)}.."
+
+            title =
+                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.size}] UUID:${
+                    getShortUUID(uuid)
+                } PD:${panelDivisor} | FramelessViewer"
+        } catch (e: Exception) {
+            title =
+                "UUID:${getShortUUID(uuid)} PD:${panelDivisor} | FramelessViewer"
+        }
     }
 
     private fun itemNewFun() {
