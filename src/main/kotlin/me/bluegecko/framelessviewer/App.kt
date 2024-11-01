@@ -302,6 +302,8 @@ class App(private val channel: AtomicReference<Channel>, val uuid: String) : JFr
         this.repaint()
         this.revalidate()
 
+        widget.updateImage()
+
         return panel
     }
 
