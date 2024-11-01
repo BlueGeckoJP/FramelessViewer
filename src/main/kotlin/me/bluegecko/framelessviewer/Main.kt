@@ -64,7 +64,6 @@ fun main(args: Array<String>) {
 
                 SendImage -> {
                     val itemChannel = item.channel.get()
-                    println(itemChannel)
                     val targetThreadData = threadDataList.filter { it.uuid == itemChannel.sendImageTo }[0]
                     val targetChannel = targetThreadData.channel.get()
                     targetChannel.receivedImagePath = itemChannel.sendImagePath

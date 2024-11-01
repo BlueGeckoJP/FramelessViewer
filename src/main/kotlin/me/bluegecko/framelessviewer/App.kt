@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
+import javax.swing.event.MenuEvent
+import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
@@ -39,7 +41,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         val itemClone = JMenuItem("Clone")
         val itemLock = JMenuItem("Lock To Window")
         val itemToggleTitle = JMenuItem("Toggle Title")
-        val itemSendImage = JMenuItem("Send Image")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -48,9 +49,26 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         itemClone.addActionListener { itemCloneFun() }
         itemLock.addActionListener { itemLockFun() }
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
-        itemSendImage.addActionListener { itemSendImageFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
+
+        val menuSendImageTo = JMenu("Send Image To")
+        menuSendImageTo.addMenuListener(object : MenuListener {
+            override fun menuSelected(e: MenuEvent) {
+                menuSendImageTo.removeAll()
+
+                getThreadUUIDs().forEach {
+                    val uuid = it
+                    val item = JMenuItem("${uuid.substringBefore("-")}..")
+                    item.addActionListener { sendImageTo(uuid) }
+                    menuSendImageTo.add(item)
+                }
+            }
+
+            override fun menuDeselected(e: MenuEvent?) {}
+            override fun menuCanceled(e: MenuEvent?) {}
+        })
+
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWidget)
         popupMenu.addSeparator()
@@ -59,7 +77,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         popupMenu.addSeparator()
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
-        popupMenu.add(itemSendImage)
+        popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
@@ -319,6 +337,19 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         return exportAppData
     }
 
+    private fun sendImageTo(target: String) {
+        val uuids = getThreadUUIDs()
+        if (uuids.contains(target)) {
+            channel.set(
+                Channel(
+                    message = ChannelMessage.SendImage,
+                    sendImageTo = target,
+                    sendImagePath = getWidget(focusedPanel).data.imagePath
+                )
+            )
+        }
+    }
+
     private fun itemNewFun() {
         channel.set(Channel(ChannelMessage.NewWindow))
     }
@@ -364,20 +395,6 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         exportAppData.isUndecorated = !isUndecorated
         channel.set(Channel(ChannelMessage.Reinit, exportAppData))
         this.dispose()
-    }
-
-    private fun itemSendImageFun() {
-        val uuids = getThreadUUIDs()
-        val target = uuids[0]
-        println(target)
-        println(uuids)
-        channel.set(
-            Channel(
-                message = ChannelMessage.SendImage,
-                sendImageTo = target,
-                sendImagePath = getWidget(focusedPanel).data.imagePath
-            )
-        )
     }
 
     private fun itemRemoveWidgetFun() {
