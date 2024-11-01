@@ -360,7 +360,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         try {
             val widget = getWidget(focusedPanel)
             val imageName = File(widget.data.imagePath).name
-            val nameStr = if (imageName.length < 32) imageName else "${imageName.substring(0, 24)}.."
+            val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
                 "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.size}] | ${
