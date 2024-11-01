@@ -27,7 +27,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     var panelDivisor = 2
 
     init {
-        title = "FramelessViewer"
         defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.isUndecorated
         bounds = appData.bounds
@@ -354,22 +353,22 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     fun getShortUUID(uuid: String): String {
-        return "${uuid.substringBefore("-")}.."
+        return uuid.substringBefore("-")
     }
 
     fun updateTitle() {
         try {
             val widget = getWidget(focusedPanel)
             val imageName = File(widget.data.imagePath).name
-            val nameStr = if (imageName.length < 8) imageName else "${imageName.substring(0, 8)}.."
+            val nameStr = if (imageName.length < 32) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.size}] UUID:${
+                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.size}] | ${
                     getShortUUID(uuid)
-                } PD:${panelDivisor} | FramelessViewer"
+                } | PD:${panelDivisor}"
         } catch (e: Exception) {
             title =
-                "UUID:${getShortUUID(uuid)} PD:${panelDivisor} | FramelessViewer"
+                "${getShortUUID(uuid)} | PD:${panelDivisor}"
         }
     }
 
