@@ -11,7 +11,11 @@ data class ThreadData(
 
 data class Channel(
     var message: ChannelMessage = ChannelMessage.Normal,
-    var appData: AppData = AppData()
+    var appData: AppData = AppData(),
+    var sendImagePath: String = "",
+    var sendImageTo: String = "",
+    var isReceived: Boolean = false,
+    var receivedImagePath: String = ""
 )
 
 enum class ChannelMessage {
@@ -19,5 +23,6 @@ enum class ChannelMessage {
     Exit,
     NewWindow,
     Reinit,
-    NewWindowWithImage
+    NewWindowWithImage,
+    SendImage
 }

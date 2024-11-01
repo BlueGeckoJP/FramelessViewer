@@ -6,10 +6,10 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.swing.UIManager
 import kotlin.system.exitProcess
 
-fun main(args: Array<String>) {
-    val threadDataList = mutableListOf<ThreadData>()
-    var isFirstTime = true
+val threadDataList = mutableListOf<ThreadData>()
+var isFirstTime = true
 
+fun main(args: Array<String>) {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
 
     while (true) {
@@ -62,6 +62,17 @@ fun main(args: Array<String>) {
                     println("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
                 }
 
+                SendImage -> {
+                    val itemChannel = item.channel.get()
+                    println(itemChannel)
+                    val targetThreadData = threadDataList.filter { it.uuid == itemChannel.sendImageTo }[0]
+                    val targetChannel = targetThreadData.channel.get()
+                    targetChannel.receivedImagePath = itemChannel.sendImagePath
+                    targetChannel.isReceived = true
+                    item.channel.set(Channel())
+                    println("SendImage ${item.uuid} -> ${targetThreadData.uuid}")
+                }
+
                 Normal -> {}
             }
         }
@@ -75,4 +86,8 @@ fun runApp(initAppData: AppData = AppData()): ThreadData {
     val thread = Thread { App(channel) }
     thread.start()
     return ThreadData(thread = thread, channel = channel)
+}
+
+fun getThreadUUIDs(): List<String> {
+    return threadDataList.map { it.uuid }
 }
