@@ -118,7 +118,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     inner class AppWindowAdapter : WindowAdapter() {
         override fun windowClosing(e: WindowEvent?) {
             if (e != null) {
-                channel.set(Channel(ChannelMessage.Exit, AppData()))
+                channel.set(Channel(ChannelMessage.Exit))
                 this@App.dispose()
             }
         }
@@ -231,7 +231,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun updateAppSize() {
-        if (!appData.isUndecorated) {
+        if (!isUndecorated) {
             appWidth = width - insets.left - insets.right
             appHeight = height - insets.top - insets.bottom
         } else {
@@ -287,7 +287,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemNewFun() {
-        channel.set(Channel(ChannelMessage.NewWindow, AppData()))
+        channel.set(Channel(ChannelMessage.NewWindow))
     }
 
     private fun itemNewWidgetFun() {
@@ -330,11 +330,12 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemToggleTitleFun() {
-        appData.isUndecorated = !appData.isUndecorated
-        appData.bounds = bounds
-        appData.panelDataList = convertToPanelData()
-        appData.isLocked = isLocked
-        channel.set(Channel(ChannelMessage.Reinit, appData))
+        val exportData = appData
+        exportData.isUndecorated = !isUndecorated
+        exportData.bounds = bounds
+        exportData.panelDataList = convertToPanelData()
+        exportData.isLocked = isLocked
+        channel.set(Channel(ChannelMessage.Reinit, exportData))
         this.dispose()
     }
 
@@ -351,7 +352,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemExitFun() {
-        channel.set(Channel(ChannelMessage.Exit, AppData()))
+        channel.set(Channel(ChannelMessage.Exit))
         this.dispose()
     }
 }
