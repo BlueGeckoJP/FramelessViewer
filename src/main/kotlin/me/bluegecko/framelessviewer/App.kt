@@ -326,9 +326,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     fun focusToPanel(targetPanel: JPanel) {
-        getPanels().forEach { it.border = LineBorder(defaultColor, 1) }
+        getPanels().forEach {
+            it.border = LineBorder(defaultColor, 1)
+        }
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(focusedColor, 1)
+        this.contentPane.setComponentZOrder(targetPanel, 0)
     }
 
     private fun createExportAppData(): AppData {
