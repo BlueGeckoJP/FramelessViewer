@@ -135,7 +135,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 revalidate()
             }
 
-            getPanels().forEach { getWidget(it).updateImage() }
+            getPanels().forEach { getWidget(it).updateImageSize() }
         }
     }
 
@@ -231,19 +231,20 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     else 2
                     updateTitle()
                 } else if (widget.data.imagePath.isNotEmpty()) {
-                    val fileListIndex = widget.fileList.indexOf(widget.data.imagePath)
+                    val fileList = widget.fileList.toList()
+                    val fileListIndex = fileList.indexOf(widget.data.imagePath)
 
                     if (e.keyCode == KeyEvent.VK_LEFT) {
                         if (fileListIndex - 1 < 0) {
-                            widget.data.imagePath = widget.fileList[widget.fileList.size - 1]
+                            widget.data.imagePath = fileList[fileList.size - 1]
                         } else {
-                            widget.data.imagePath = widget.fileList[fileListIndex - 1]
+                            widget.data.imagePath = fileList[fileListIndex - 1]
                         }
                     } else if (e.keyCode == KeyEvent.VK_RIGHT) {
-                        if (fileListIndex + 1 >= widget.fileList.size) {
-                            widget.data.imagePath = widget.fileList[0]
+                        if (fileListIndex + 1 >= fileList.size) {
+                            widget.data.imagePath = fileList[0]
                         } else {
-                            widget.data.imagePath = widget.fileList[fileListIndex + 1]
+                            widget.data.imagePath = fileList[fileListIndex + 1]
                         }
                     }
 
@@ -363,7 +364,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.size}] | ${
+                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.toList().size}] | ${
                     getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
@@ -395,7 +396,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
         if (file != null) {
             getWidget(focusedPanel).data.imagePath = file.absolutePath
-            getPanels().forEach { getWidget(it).updateImage() }
+            getWidget(focusedPanel).updateImage()
         }
     }
 

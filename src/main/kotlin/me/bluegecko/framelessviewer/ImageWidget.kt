@@ -6,14 +6,13 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Paths
-import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.TransferHandler
 
 class ImageWidget(val data: ImageWidgetData) : JLabel() {
-    lateinit var fileList: MutableList<String>
+    lateinit var fileList: Sequence<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     private lateinit var image: BufferedImage
 
@@ -58,8 +57,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     }
 
     fun updateImageSize() {
-        if (data.imagePath.isEmpty()) return
-        if (!::image.isInitialized) return
+        if (data.imagePath.isEmpty() || !::image.isInitialized) return
 
         if (image.width > width || image.height > height) {
             val widthStandardSize = Pair(
@@ -94,10 +92,6 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
     fun updateImage() {
         try {
-            // add support for webp
-            ImageIO.scanForPlugins()
-            ImageIO.getImageReadersByFormatName("webp").next()
-
             if (data.imagePath.isEmpty()) return
 
             val file = File(data.imagePath)
@@ -116,13 +110,11 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     }
 
     private fun updateFileList() {
-        val parentDir = Paths.get(data.imagePath).parent.toString()
-        val dir = File(parentDir)
-        val fileList =
-            dir.listFiles()?.filter { it.isFile }?.map { it.absolutePath.toString() }
-                ?.filter { it.contains(extensionRegex) }
-        fileList?.let { Collections.sort(it, String.CASE_INSENSITIVE_ORDER) }
-        this.fileList = fileList as MutableList<String>
+        val dir = Paths.get(data.imagePath).parent.toFile()
+        fileList = dir.walk()
+            .filter { it.isFile && it.name.contains(extensionRegex) }
+            .map { it.absolutePath }
+            .sortedWith(String.CASE_INSENSITIVE_ORDER)
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900

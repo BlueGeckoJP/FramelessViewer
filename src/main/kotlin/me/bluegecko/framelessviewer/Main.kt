@@ -4,6 +4,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf
 import me.bluegecko.framelessviewer.ChannelMessage.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import javax.imageio.ImageIO
 import javax.swing.UIManager
 import kotlin.system.exitProcess
 
@@ -12,6 +13,8 @@ var isFirstTime = true
 
 fun main(args: Array<String>) {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
+    ImageIO.scanForPlugins()
+    ImageIO.getImageReadersByFormatName("webp").next()
 
     while (true) {
         if (isFirstTime) {
