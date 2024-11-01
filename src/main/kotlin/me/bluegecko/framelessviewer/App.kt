@@ -12,7 +12,7 @@ import javax.swing.border.LineBorder
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
-    private var appData = channel.get().initAppData
+    private var appData = channel.get().appData
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
     private var appWidth = this.width

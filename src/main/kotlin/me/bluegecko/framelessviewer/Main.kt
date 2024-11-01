@@ -2,13 +2,12 @@ package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
 import me.bluegecko.framelessviewer.ChannelMessage.*
-import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.UIManager
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val channelMap = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
+    val threadDataList = mutableListOf<ThreadData>()
     var isFirstTime = true
 
     UIManager.setLookAndFeel(FlatMacDarkLaf())
@@ -20,66 +19,60 @@ fun main(args: Array<String>) {
             } else {
                 runApp()
             }
-            channelMap[returnValue.first] = returnValue.second
+            threadDataList.add(returnValue)
             isFirstTime = false
         }
 
-        if (channelMap.isEmpty()) {
+        if (threadDataList.isEmpty()) {
             exitProcess(0)
         }
 
-        val channelMapAdd = mutableMapOf<String, Pair<Thread, AtomicReference<Channel>>>()
+        val addList = mutableListOf<ThreadData>()
 
-        val iter = channelMap.iterator()
-        while (iter.hasNext()) {
-            val (k, v) = iter.next()
-            val message = v.second.get().message
+        val iterator = threadDataList.iterator()
+        while (iterator.hasNext()) {
+            val item = iterator.next()
+            val message = item.channel.get().message
             when (message) {
                 Exit -> {
-                    iter.remove()
-                    v.first.interrupt()
-                    println("Exited $k")
+                    iterator.remove()
+                    item.thread.interrupt()
+                    println("Exited ${item.uuid}")
                 }
 
                 NewWindow -> {
                     val returnValue = runApp()
-                    channelMapAdd[returnValue.first] = returnValue.second
-                    v.second.set(Channel(Normal, AppData()))
-                    println("New $k -> ${returnValue.first}")
+                    addList.add(returnValue)
+                    item.channel.set(Channel())
+                    println("New ${item.uuid} -> ${returnValue.uuid}")
                 }
 
                 Reinit -> {
-                    val returnValue = runApp(v.second.get().initAppData)
-                    channelMapAdd[returnValue.first] = returnValue.second
-                    iter.remove()
-                    v.first.interrupt()
-                    println("Reinit $k -> ${returnValue.first}")
+                    val returnValue = runApp(item.channel.get().appData)
+                    addList.add(returnValue)
+                    iterator.remove()
+                    item.thread.interrupt()
+                    println("Reinit ${item.uuid} -> ${returnValue.uuid}")
                 }
 
                 NewWindowWithImage -> {
-                    val returnValue = runApp(v.second.get().initAppData)
-                    channelMapAdd[returnValue.first] = returnValue.second
-                    v.second.set(Channel(Normal, AppData()))
-                    println("NewWindowWithImage $k -> ${returnValue.first}")
+                    val returnValue = runApp(item.channel.get().appData)
+                    addList.add(returnValue)
+                    item.channel.set(Channel())
+                    println("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
                 }
 
                 Normal -> {}
             }
         }
-
-        for (item in channelMapAdd) {
-            channelMap[item.key] = item.value
-        }
-
+        threadDataList.addAll(addList)
         Thread.sleep(500)
     }
 }
 
-fun runApp(initAppData: AppData = AppData()): Pair<String, Pair<Thread, AtomicReference<Channel>>> {
-    val channel = AtomicReference(Channel(Normal, initAppData))
-    val thread = Thread {
-        App(channel)
-    }
+fun runApp(initAppData: AppData = AppData()): ThreadData {
+    val channel = AtomicReference(Channel(appData = initAppData))
+    val thread = Thread { App(channel) }
     thread.start()
-    return UUID.randomUUID().toString() to (thread to channel)
+    return ThreadData(thread = thread, channel = channel)
 }
