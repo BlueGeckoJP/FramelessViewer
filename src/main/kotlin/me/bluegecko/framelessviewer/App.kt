@@ -9,10 +9,12 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
+import javax.swing.event.MenuEvent
+import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(private val channel: AtomicReference<Channel>) : JFrame() {
-    private var appData = channel.get().initAppData
+    private var appData = channel.get().appData
     val popupMenu = PopupMenu(this)
     private var focusedPanel: JPanel
     private var appWidth = this.width
@@ -49,6 +51,24 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
+
+        val menuSendImageTo = JMenu("Send Image To")
+        menuSendImageTo.addMenuListener(object : MenuListener {
+            override fun menuSelected(e: MenuEvent) {
+                menuSendImageTo.removeAll()
+
+                getThreadUUIDs().forEach {
+                    val uuid = it
+                    val item = JMenuItem("${uuid.substringBefore("-")}..")
+                    item.addActionListener { sendImageTo(uuid) }
+                    menuSendImageTo.add(item)
+                }
+            }
+
+            override fun menuDeselected(e: MenuEvent?) {}
+            override fun menuCanceled(e: MenuEvent?) {}
+        })
+
         popupMenu.add(itemNew)
         popupMenu.add(itemNewWidget)
         popupMenu.addSeparator()
@@ -57,6 +77,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         popupMenu.addSeparator()
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
+        popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
@@ -98,6 +119,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
 
             repaint()
             revalidate()
+
+            val timer = Timer(1000, ImageReceiver())
+            timer.start()
         }
     }
 
@@ -118,7 +142,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     inner class AppWindowAdapter : WindowAdapter() {
         override fun windowClosing(e: WindowEvent?) {
             if (e != null) {
-                channel.set(Channel(ChannelMessage.Exit, AppData()))
+                channel.set(Channel(ChannelMessage.Exit))
                 this@App.dispose()
             }
         }
@@ -230,8 +254,26 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         }
     }
 
+    inner class ImageReceiver : ActionListener {
+        override fun actionPerformed(e: ActionEvent) {
+            if (channel.get().isReceived) {
+                val receivedImagePath = channel.get().receivedImagePath
+                if (isLocked) {
+                    val widget = getWidget(focusedPanel)
+                    widget.data.imagePath = receivedImagePath
+                    widget.updateImage()
+                } else {
+                    createNewPanel(receivedImagePath)
+                }
+
+                channel.get().isReceived = false
+                channel.get().receivedImagePath = ""
+            }
+        }
+    }
+
     private fun updateAppSize() {
-        if (!appData.isUndecorated) {
+        if (!isUndecorated) {
             appWidth = width - insets.left - insets.right
             appHeight = height - insets.top - insets.bottom
         } else {
@@ -286,8 +328,30 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
         targetPanel.border = LineBorder(focusedColor, 1)
     }
 
+    private fun createExportAppData(): AppData {
+        val exportAppData = appData
+        exportAppData.isUndecorated = isUndecorated
+        exportAppData.bounds = bounds
+        exportAppData.panelDataList = convertToPanelData()
+        exportAppData.isLocked = isLocked
+        return exportAppData
+    }
+
+    private fun sendImageTo(target: String) {
+        val uuids = getThreadUUIDs()
+        if (uuids.contains(target)) {
+            channel.set(
+                Channel(
+                    message = ChannelMessage.SendImage,
+                    sendImageTo = target,
+                    sendImagePath = getWidget(focusedPanel).data.imagePath
+                )
+            )
+        }
+    }
+
     private fun itemNewFun() {
-        channel.set(Channel(ChannelMessage.NewWindow, AppData()))
+        channel.set(Channel(ChannelMessage.NewWindow))
     }
 
     private fun itemNewWidgetFun() {
@@ -314,10 +378,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemCloneFun() {
-        val exportData = appData
-        exportData.isLocked = isLocked
-        exportData.panelDataList = convertToPanelData()
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, exportData))
+        channel.set(Channel(ChannelMessage.NewWindowWithImage, createExportAppData()))
     }
 
     private fun itemLockFun() {
@@ -330,11 +391,9 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemToggleTitleFun() {
-        appData.isUndecorated = !appData.isUndecorated
-        appData.bounds = bounds
-        appData.panelDataList = convertToPanelData()
-        appData.isLocked = isLocked
-        channel.set(Channel(ChannelMessage.Reinit, appData))
+        val exportAppData = createExportAppData()
+        exportAppData.isUndecorated = !isUndecorated
+        channel.set(Channel(ChannelMessage.Reinit, exportAppData))
         this.dispose()
     }
 
@@ -351,7 +410,7 @@ class App(private val channel: AtomicReference<Channel>) : JFrame() {
     }
 
     private fun itemExitFun() {
-        channel.set(Channel(ChannelMessage.Exit, AppData()))
+        channel.set(Channel(ChannelMessage.Exit))
         this.dispose()
     }
 }
