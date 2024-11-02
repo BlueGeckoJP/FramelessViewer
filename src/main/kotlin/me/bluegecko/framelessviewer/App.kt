@@ -58,10 +58,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 menuSendImageTo.removeAll()
 
                 getThreadUUIDs().forEach {
-                    val uuid = it
-                    val item = JMenuItem(getShortUUID(uuid))
-                    item.addActionListener { sendImageTo(uuid) }
-                    menuSendImageTo.add(item)
+                    if (it != uuid) {
+                        val otherUUID = it
+                        val item = JMenuItem(getShortUUID(otherUUID))
+                        item.addActionListener { sendImageTo(otherUUID) }
+                        menuSendImageTo.add(item)
+                    }
                 }
             }
 
