@@ -19,7 +19,7 @@ class ImagePanel(val app: App) : JPanel() {
         addMouseMotionListener(listener)
     }
 
-    inner class DraggableListener() : MouseAdapter() {
+    inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20
         private val minimumSize = 50
 
@@ -47,14 +47,27 @@ class ImagePanel(val app: App) : JPanel() {
                 val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
                 this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
             } else {
-                val newX = snapToEdge(
+                var newX = snapToEdge(
                     this@ImagePanel.x + e.x - initClick.x,
                     this@ImagePanel.parent.width - this@ImagePanel.width
                 )
-                val newY = snapToEdge(
+                var newY = snapToEdge(
                     this@ImagePanel.y + e.y - initClick.y,
                     this@ImagePanel.parent.height - this@ImagePanel.height
                 )
+
+                val sto = snapToOther(
+                    this@ImagePanel.x + e.x - initClick.x,
+                    this@ImagePanel.y + e.y - initClick.y,
+                    this@ImagePanel.width,
+                    this@ImagePanel.height
+                )
+
+                if (sto != null) {
+                    newX = sto.first
+                    newY = sto.second
+                }
+
                 this@ImagePanel.location = Point(newX, newY)
             }
             this@ImagePanel.repaint()
@@ -69,18 +82,29 @@ class ImagePanel(val app: App) : JPanel() {
         private fun snapToEdge(position: Int, max: Int): Int {
             if (abs(position) < snapDistance) return 0
             if (abs(position - max) < snapDistance) return max
+            return position
+        }
 
-            for (component in app.components) {
+        private fun snapToOther(x: Int, y: Int, width: Int, height: Int): Pair<Int, Int>? {
+            for (component in app.getPanels()) {
                 if (component === this@ImagePanel) continue
 
                 val other = component.bounds
-                if (abs(position - other.x) < snapDistance) return other.x
-                if (abs(position - (other.x + other.width)) < snapDistance) return other.x + other.width
-                if (abs(position - other.y) < snapDistance) return other.y
-                if (abs(position - (other.y + other.height)) < snapDistance) return other.y + other.height
-            }
+                var newX = x
+                var newY = y
 
-            return position
+                if ((other.y <= y && y <= other.height + other.y) || (other.y <= y + height && y + height <= other.height + other.y) || (y < other.y && other.y + other.height < y + height)) {
+                    if (abs(x - other.x + width) < snapDistance) newX = other.x - width
+                    if (abs(x - (other.x + other.width)) < snapDistance) newX = other.x + other.width
+                }
+                if ((other.x <= x && x <= other.width + other.x) || (other.x <= x + width && x + width <= other.width + other.x) || (x <= other.x && other.x + other.width < x + width)) {
+                    if (abs(y - other.y + height) < snapDistance) newY = other.y - height
+                    if (abs(y - (other.y + other.height)) < snapDistance) newY = other.y + other.height
+                }
+
+                if (newX != x || newY != y) return newX to newY
+            }
+            return null
         }
 
         private fun isNearCorner(x: Int, y: Int): Boolean {

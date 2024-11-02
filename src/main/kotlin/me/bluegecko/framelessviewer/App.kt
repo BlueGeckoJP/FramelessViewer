@@ -313,7 +313,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         return widget
     }
 
-    private fun getPanels(): List<ImagePanel> {
+    fun getPanels(): List<ImagePanel> {
         return this.contentPane.components.map { it as ImagePanel }
     }
 
@@ -332,6 +332,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         focusedPanel = targetPanel
         targetPanel.border = LineBorder(focusedColor, 1)
         this.contentPane.setComponentZOrder(targetPanel, 0)
+        updateTitle()
     }
 
     private fun createExportAppData(): AppData {
