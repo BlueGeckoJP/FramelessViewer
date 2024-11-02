@@ -313,7 +313,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         return widget
     }
 
-    private fun getPanels(): List<ImagePanel> {
+    fun getPanels(): List<ImagePanel> {
         return this.contentPane.components.map { it as ImagePanel }
     }
 
