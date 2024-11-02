@@ -19,7 +19,7 @@ class ImagePanel(val app: App) : JPanel() {
         addMouseMotionListener(listener)
     }
 
-    inner class DraggableListener() : MouseAdapter() {
+    inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20
         private val minimumSize = 50
 
@@ -92,14 +92,15 @@ class ImagePanel(val app: App) : JPanel() {
                 val other = component.bounds
                 var newX = x
                 var newY = y
+
                 if ((other.y <= y && y <= other.height + other.y) || (other.y <= y + height && y + height <= other.height + other.y) || (y < other.y && other.y + other.height < y + height)) {
                     if (abs(x - other.x + width) < snapDistance) newX = other.x - width
                     if (abs(x - (other.x + other.width)) < snapDistance) newX = other.x + other.width
                 }
-                /*if (abs(y - other.y) < snapDistance && abs(x - other.x) < snapDistance) newY =
-                    other.y
-                if (abs(y - (other.y + other.height)) < snapDistance && abs(x - other.x) < snapDistance) newY =
-                    other.y + other.height*/
+                if ((other.x <= x && x <= other.width + other.x) || (other.x <= x + width && x + width <= other.width + other.x) || (x <= other.x && other.x + other.width < x + width)) {
+                    if (abs(y - other.y + height) < snapDistance) newY = other.y - height
+                    if (abs(y - (other.y + other.height)) < snapDistance) newY = other.y + other.height
+                }
 
                 if (newX != x || newY != y) return newX to newY
             }
