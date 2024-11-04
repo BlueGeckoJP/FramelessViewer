@@ -3,6 +3,8 @@ package me.bluegecko.framelessviewer
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseWheelEvent
+import java.awt.event.MouseWheelListener
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.border.LineBorder
@@ -34,6 +36,8 @@ class ImagePanel(val app: App, path: String = "") : JPanel() {
         addMouseListener(listener)
         addMouseMotionListener(listener)
 
+        addMouseWheelListener(ZoomListener())
+
         widget.updateImage()
     }
 
@@ -50,6 +54,9 @@ class ImagePanel(val app: App, path: String = "") : JPanel() {
 
             if (SwingUtilities.isRightMouseButton(e)) {
                 app.popupMenu.show(e.component, e.x, e.y)
+            } else if (SwingUtilities.isMiddleMouseButton(e)) {
+                widget.zoomRatio = 1.0
+                widget.updateImageSize()
             } else if (isNearCorner(e.x, e.y)) {
                 if (app.isLocked) return
 
@@ -127,6 +134,16 @@ class ImagePanel(val app: App, path: String = "") : JPanel() {
         private fun isNearCorner(x: Int, y: Int): Boolean {
             return (x in 0 until snapDistance || x in this@ImagePanel.width - snapDistance until this@ImagePanel.width) &&
                     (y in 0 until snapDistance || y in this@ImagePanel.height - snapDistance until this@ImagePanel.height)
+        }
+    }
+
+    inner class ZoomListener : MouseWheelListener {
+        override fun mouseWheelMoved(e: MouseWheelEvent) {
+            when {
+                e.preciseWheelRotation < 0 -> widget.zoomRatio *= 1.1
+                else -> widget.zoomRatio /= 1.1
+            }
+            widget.updateImageSize()
         }
     }
 }

@@ -15,6 +15,7 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
     lateinit var fileList: Sequence<String>
     private val extensionRegex: Regex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     private lateinit var image: BufferedImage
+    var zoomRatio = 1.0
 
     init {
         this.horizontalAlignment = CENTER
@@ -69,21 +70,27 @@ class ImageWidget(val data: ImageWidgetData) : JLabel() {
 
             if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
                 val scaledImage = image.getScaledInstance(
-                    widthStandardSize.first,
-                    widthStandardSize.second,
+                    (widthStandardSize.first * zoomRatio).toInt(),
+                    (widthStandardSize.second * zoomRatio).toInt(),
                     Image.SCALE_SMOOTH
                 )
                 this.icon = ImageIcon(scaledImage)
             } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
                 val scaledImage = image.getScaledInstance(
-                    heightStandardSize.first,
-                    heightStandardSize.second,
+                    (heightStandardSize.first * zoomRatio).toInt(),
+                    (heightStandardSize.second * zoomRatio).toInt(),
                     Image.SCALE_SMOOTH
                 )
                 this.icon = ImageIcon(scaledImage)
             }
         } else {
-            this.icon = ImageIcon(image)
+            val scaledImage =
+                image.getScaledInstance(
+                    (image.width * zoomRatio).toInt(),
+                    (image.height * zoomRatio).toInt(),
+                    Image.SCALE_SMOOTH
+                )
+            this.icon = ImageIcon(scaledImage)
         }
 
         repaint()

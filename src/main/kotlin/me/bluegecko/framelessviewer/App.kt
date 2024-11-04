@@ -383,8 +383,10 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val file = chooser.selectedFile
 
         if (file != null) {
-            getWidget(focusedPanel).data.imagePath = file.absolutePath
-            getWidget(focusedPanel).updateImage()
+            val widget = getWidget(focusedPanel)
+            widget.data.imagePath = file.absolutePath
+            widget.zoomRatio = 1.0
+            widget.updateImage()
         }
     }
 
