@@ -8,15 +8,33 @@ import javax.swing.SwingUtilities
 import javax.swing.border.LineBorder
 import kotlin.math.abs
 
-class ImagePanel(val app: App) : JPanel() {
+class ImagePanel(val app: App, path: String = "") : JPanel() {
+    val widget: ImageWidget
+
     init {
         border = LineBorder(app.defaultColor, 1)
         background = Color.GRAY
         bounds = Rectangle(600, 400)
+        layout = GridBagLayout()
+
+        widget = ImageWidget(ImageWidgetData(app, path, app.appWidth, app.appHeight))
+
+        val gbc = GridBagConstraints()
+        gbc.fill = GridBagConstraints.BOTH
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.weightx = 1.0
+        gbc.weighty = 1.0
+        gbc.gridwidth = 1
+        gbc.gridheight = 1
+
+        add(widget, gbc)
 
         val listener = DraggableListener()
         addMouseListener(listener)
         addMouseMotionListener(listener)
+
+        widget.updateImage()
     }
 
     inner class DraggableListener : MouseAdapter() {

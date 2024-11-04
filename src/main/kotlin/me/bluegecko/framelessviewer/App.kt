@@ -1,8 +1,6 @@
 package me.bluegecko.framelessviewer
 
 import java.awt.Color
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
@@ -17,9 +15,9 @@ import javax.swing.filechooser.FileNameExtensionFilter
 class App(private val channel: AtomicReference<Channel>, private val uuid: String) : JFrame() {
     private var appData = channel.get().appData
     val popupMenu = PopupMenu(this)
-    private var focusedPanel: JPanel
-    private var appWidth = this.width
-    private var appHeight = this.height
+    private var focusedPanel: ImagePanel
+    var appWidth = this.width
+    var appHeight = this.height
     private var isPressedShiftKey = false
     var isLocked = appData.isLocked
     val defaultColor: Color = Color.WHITE
@@ -285,34 +283,18 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
     }
 
-    private fun createNewPanel(path: String = ""): JPanel {
-        val panel = ImagePanel(this)
-        val widget = ImageWidget(ImageWidgetData(this, path, appWidth, appHeight))
+    private fun createNewPanel(path: String = ""): ImagePanel {
+        val panel = ImagePanel(this, path)
 
-        val gbc = GridBagConstraints()
-        gbc.fill = GridBagConstraints.BOTH
-        gbc.gridx = 0
-        gbc.gridy = 0
-        gbc.weightx = 1.0
-        gbc.weighty = 1.0
-        gbc.gridwidth = 1
-        gbc.gridheight = 1
-
-        panel.layout = GridBagLayout()
-        panel.add(widget, gbc)
         this.add(panel)
-
         this.repaint()
         this.revalidate()
-
-        widget.updateImage()
 
         return panel
     }
 
-    fun getWidget(panel: JPanel): ImageWidget {
-        val widget = panel.components.filter { it.javaClass == ImageWidget::class.java }[0] as ImageWidget
-        return widget
+    fun getWidget(panel: ImagePanel): ImageWidget {
+        return panel.widget
     }
 
     fun getPanels(): List<ImagePanel> {
@@ -327,7 +309,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         return panelDataList
     }
 
-    fun focusToPanel(targetPanel: JPanel) {
+    fun focusToPanel(targetPanel: ImagePanel) {
         getPanels().forEach {
             it.border = LineBorder(defaultColor, 1)
         }
