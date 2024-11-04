@@ -57,8 +57,7 @@ class ImagePanel(val app: App) : JPanel() {
                 )
 
                 val sto = snapToOther(
-                    this@ImagePanel.x + e.x - initClick.x,
-                    this@ImagePanel.y + e.y - initClick.y,
+                    newX, newY,
                     this@ImagePanel.width,
                     this@ImagePanel.height
                 )
