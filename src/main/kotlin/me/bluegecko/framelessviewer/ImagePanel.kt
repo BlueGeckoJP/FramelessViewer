@@ -104,12 +104,15 @@ class ImagePanel(val app: App, path: String = "") : JPanel() {
         }
 
         private fun snapToEdge(position: Int, max: Int): Int {
+            if (app.isPressedShiftKey) return position
             if (abs(position) < snapDistance) return 0
             if (abs(position - max) < snapDistance) return max
             return position
         }
 
         private fun snapToOther(x: Int, y: Int, width: Int, height: Int): Pair<Int, Int>? {
+            if (app.isPressedShiftKey) return null
+
             for (component in app.getPanels()) {
                 if (component === this@ImagePanel) continue
 

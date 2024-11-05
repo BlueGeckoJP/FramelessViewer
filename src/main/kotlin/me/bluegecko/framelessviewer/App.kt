@@ -18,7 +18,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     private var focusedPanel: ImagePanel
     var appWidth = this.width
     var appHeight = this.height
-    private var isPressedShiftKey = false
+    var isPressedShiftKey = false
     var isLocked = appData.isLocked
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
