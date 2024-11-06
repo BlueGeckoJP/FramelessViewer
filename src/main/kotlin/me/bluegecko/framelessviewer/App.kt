@@ -114,7 +114,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
             if (appData.isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
-            focusedPanel.updateImage()
+            getPanels().forEach { it.updateImage() }
 
             repaint()
             revalidate()
@@ -283,8 +283,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val panel = ImagePanel(this, ImagePanelData(Rectangle(appWidth, appHeight), path))
 
         this.add(panel)
-        this.repaint()
-        this.revalidate()
+        panel.repaint()
+        panel.revalidate()
 
         return panel
     }
@@ -294,11 +294,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun convertToPanelData(): MutableList<ImagePanelData> {
-        val panelDataList = mutableListOf<ImagePanelData>()
-        getPanels().forEach {
-            panelDataList.add(ImagePanelData(it.bounds, focusedPanel.data.imagePath))
-        }
-        return panelDataList
+        return getPanels().map { ImagePanelData(it.bounds, it.data.imagePath) }.toMutableList()
     }
 
     fun focusToPanel(targetPanel: ImagePanel) {
