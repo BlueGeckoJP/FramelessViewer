@@ -114,8 +114,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
             if (appData.isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
-            val widget = getWidget(focusedPanel)
-            widget.updateImage()
+            focusedPanel.updateImage()
 
             repaint()
             revalidate()
@@ -135,7 +134,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 revalidate()
             }
 
-            getPanels().forEach { getWidget(it).updateImageSize() }
+            getPanels().forEach { it.updateImageSize() }
         }
     }
 
@@ -160,8 +159,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         override fun keyReleased(e: KeyEvent?) {
             if (e != null) {
                 if (isPressedShiftKey) isPressedShiftKey = false
-
-                val widget = getWidget(focusedPanel)
 
                 if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
                     if (isLocked) return
@@ -225,30 +222,30 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                     repaint()
                     revalidate()
-                    getWidget(focusedPanel).updateImageSize()
+                    focusedPanel.updateImageSize()
                 } else if (e.keyCode == KeyEvent.VK_DOWN) {
                     panelDivisor = if (panelDivisor == 2) 3
                     else 2
                     updateTitle()
-                } else if (widget.data.imagePath.isNotEmpty()) {
-                    val fileList = widget.fileList.toList()
-                    val fileListIndex = fileList.indexOf(widget.data.imagePath)
+                } else if (focusedPanel.data.imagePath.isNotEmpty()) {
+                    val fileList = focusedPanel.fileList.toList()
+                    val fileListIndex = fileList.indexOf(focusedPanel.data.imagePath)
 
                     if (e.keyCode == KeyEvent.VK_LEFT) {
                         if (fileListIndex - 1 < 0) {
-                            widget.data.imagePath = fileList[fileList.size - 1]
+                            focusedPanel.data.imagePath = fileList[fileList.size - 1]
                         } else {
-                            widget.data.imagePath = fileList[fileListIndex - 1]
+                            focusedPanel.data.imagePath = fileList[fileListIndex - 1]
                         }
                     } else if (e.keyCode == KeyEvent.VK_RIGHT) {
                         if (fileListIndex + 1 >= fileList.size) {
-                            widget.data.imagePath = fileList[0]
+                            focusedPanel.data.imagePath = fileList[0]
                         } else {
-                            widget.data.imagePath = fileList[fileListIndex + 1]
+                            focusedPanel.data.imagePath = fileList[fileListIndex + 1]
                         }
                     }
 
-                    widget.updateImage()
+                    focusedPanel.updateImage()
                     updateTitle()
                 }
             }
@@ -260,9 +257,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             if (channel.get().isReceived) {
                 val receivedImagePath = channel.get().receivedImagePath
                 if (isLocked) {
-                    val widget = getWidget(focusedPanel)
-                    widget.data.imagePath = receivedImagePath
-                    widget.updateImage()
+                    focusedPanel.data.imagePath = receivedImagePath
+                    focusedPanel.updateImage()
                 } else {
                     createNewPanel(receivedImagePath)
                 }
@@ -284,17 +280,13 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun createNewPanel(path: String = ""): ImagePanel {
-        val panel = ImagePanel(this, path)
+        val panel = ImagePanel(ImageWidgetData(this, path, appWidth, appHeight))
 
         this.add(panel)
         this.repaint()
         this.revalidate()
 
         return panel
-    }
-
-    fun getWidget(panel: ImagePanel): ImageWidget {
-        return panel.widget
     }
 
     fun getPanels(): List<ImagePanel> {
@@ -304,7 +296,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     private fun convertToPanelData(): MutableList<ImagePanelData> {
         val panelDataList = mutableListOf<ImagePanelData>()
         getPanels().forEach {
-            panelDataList.add(ImagePanelData(it.bounds, getWidget(it).data.imagePath))
+            panelDataList.add(ImagePanelData(it.bounds, focusedPanel.data.imagePath))
         }
         return panelDataList
     }
@@ -335,7 +327,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 Channel(
                     message = ChannelMessage.SendImage,
                     sendImageTo = target,
-                    sendImagePath = getWidget(focusedPanel).data.imagePath
+                    sendImagePath = focusedPanel.data.imagePath
                 )
             )
         }
@@ -347,12 +339,11 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
     fun updateTitle() {
         try {
-            val widget = getWidget(focusedPanel)
-            val imageName = File(widget.data.imagePath).name
+            val imageName = File(focusedPanel.data.imagePath).name
             val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${widget.fileList.indexOf(widget.data.imagePath) + 1}/${widget.fileList.toList().size}] | ${
+                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.data.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
                     getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
@@ -383,10 +374,9 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val file = chooser.selectedFile
 
         if (file != null) {
-            val widget = getWidget(focusedPanel)
-            widget.data.imagePath = file.absolutePath
-            widget.zoomRatio = 1.0
-            widget.updateImage()
+            focusedPanel.data.imagePath = file.absolutePath
+            focusedPanel.zoomRatio = 1.0
+            focusedPanel.updateImage()
         }
     }
 
