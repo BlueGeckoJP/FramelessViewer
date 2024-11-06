@@ -280,7 +280,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun createNewPanel(path: String = ""): ImagePanel {
-        val panel = ImagePanel(ImageWidgetData(this, path, appWidth, appHeight))
+        val panel = ImagePanel(this, ImagePanelData(Rectangle(appWidth, appHeight), path))
 
         this.add(panel)
         this.repaint()

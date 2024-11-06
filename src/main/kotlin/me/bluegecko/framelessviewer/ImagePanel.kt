@@ -16,8 +16,7 @@ import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 import kotlin.math.abs
 
-class ImagePanel(val data: ImageWidgetData) : JPanel() {
-    val app = data.parent
+class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
     lateinit var fileList: Sequence<String>
     lateinit var image: BufferedImage
     lateinit var scaledImage: BufferedImage
@@ -27,7 +26,7 @@ class ImagePanel(val data: ImageWidgetData) : JPanel() {
     init {
         border = LineBorder(app.defaultColor, 1)
         background = Color.GRAY
-        bounds = Rectangle(600, 400)
+        bounds = data.bounds
         layout = GridBagLayout()
 
         val listener = DraggableListener()
@@ -116,7 +115,7 @@ class ImagePanel(val data: ImageWidgetData) : JPanel() {
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            data.parent.updateTitle()
+            app.updateTitle()
         }
     }
 
