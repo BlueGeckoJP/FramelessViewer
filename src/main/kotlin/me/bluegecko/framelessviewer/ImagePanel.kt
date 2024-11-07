@@ -22,6 +22,8 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
     lateinit var scaledImage: BufferedImage
     val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
+    var translateX = 0
+    var translateY = 0
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -43,8 +45,8 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
         if (data.imagePath.isNotEmpty() && ::scaledImage.isInitialized) {
-            val x = (width - scaledImage.width) / 2
-            val y = (height - scaledImage.height) / 2
+            val x = (width - scaledImage.width) / 2 + translateX
+            val y = (height - scaledImage.height) / 2 + translateY
 
             g2d.drawImage(
                 scaledImage,
@@ -167,6 +169,8 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
                 app.popupMenu.show(e.component, e.x, e.y)
             } else if (SwingUtilities.isMiddleMouseButton(e)) {
                 zoomRatio = 1.0
+                translateX = 0
+                translateY = 0
                 updateImageSize()
             } else if (isNearCorner(e.x, e.y)) {
                 if (app.isLocked) return
@@ -176,13 +180,20 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
         }
 
         override fun mouseDragged(e: MouseEvent) {
-            if (app.isLocked) return
-
-            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR) {
+            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.isLocked) {
                 val newWidth = snapToEdge(e.x, this@ImagePanel.parent.width - this@ImagePanel.x)
                 val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
                 this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
-            } else {
+            } else if (zoomRatio > 1.0) {
+                val dx = e.x - initClick.x
+                val dy = e.y - initClick.y
+                translateX += dx
+                translateY += dy
+                initClick = e.point
+                this@ImagePanel.repaint()
+                this@ImagePanel.revalidate()
+                return
+            } else if (!app.isLocked) {
                 var newX = snapToEdge(
                     this@ImagePanel.x + e.x - initClick.x,
                     this@ImagePanel.parent.width - this@ImagePanel.width
