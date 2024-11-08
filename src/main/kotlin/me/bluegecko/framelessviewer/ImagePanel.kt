@@ -16,7 +16,8 @@ import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 import kotlin.math.abs
 
-class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
+class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
+    var imagePath = data.imagePath
     lateinit var fileList: Sequence<String>
     lateinit var image: BufferedImage
     lateinit var scaledImage: BufferedImage
@@ -44,7 +45,7 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
         val g2d = g as Graphics2D
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
-        if (data.imagePath.isNotEmpty() && ::scaledImage.isInitialized) {
+        if (imagePath.isNotEmpty() && ::scaledImage.isInitialized) {
             val x = (width - scaledImage.width) / 2 + translateX
             val y = (height - scaledImage.height) / 2 + translateY
 
@@ -60,7 +61,7 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
     }
 
     fun updateImageSize() {
-        if (data.imagePath.isEmpty() || !::image.isInitialized) return
+        if (imagePath.isEmpty() || !::image.isInitialized) return
 
         var img: Image? = null
 
@@ -104,9 +105,9 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
 
     fun updateImage() {
         try {
-            if (data.imagePath.isEmpty()) return
+            if (imagePath.isEmpty()) return
 
-            val file = File(data.imagePath)
+            val file = File(imagePath)
             image = ImageIO.read(file)
 
             updateImageSize()
@@ -122,7 +123,7 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
     }
 
     private fun updateFileList() {
-        val dir = Paths.get(data.imagePath).parent.toFile()
+        val dir = Paths.get(imagePath).parent.toFile()
         fileList = dir.walk()
             .filter { it.isFile && it.name.contains(extensionRegex) }
             .map { it.absolutePath }
@@ -298,7 +299,7 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
                 if (!filePath.contains(extensionRegex)) {
                     return false
                 }
-                data.imagePath = filePath
+                imagePath = filePath
                 updateImage()
             } catch (e: Exception) {
                 e.printStackTrace()

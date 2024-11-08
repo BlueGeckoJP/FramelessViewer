@@ -227,21 +227,21 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     panelDivisor = if (panelDivisor == 2) 3
                     else 2
                     updateTitle()
-                } else if (focusedPanel.data.imagePath.isNotEmpty()) {
+                } else if (focusedPanel.imagePath.isNotEmpty()) {
                     val fileList = focusedPanel.fileList.toList()
-                    val fileListIndex = fileList.indexOf(focusedPanel.data.imagePath)
+                    val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
 
                     if (e.keyCode == KeyEvent.VK_LEFT) {
                         if (fileListIndex - 1 < 0) {
-                            focusedPanel.data.imagePath = fileList[fileList.size - 1]
+                            focusedPanel.imagePath = fileList[fileList.size - 1]
                         } else {
-                            focusedPanel.data.imagePath = fileList[fileListIndex - 1]
+                            focusedPanel.imagePath = fileList[fileListIndex - 1]
                         }
                     } else if (e.keyCode == KeyEvent.VK_RIGHT) {
                         if (fileListIndex + 1 >= fileList.size) {
-                            focusedPanel.data.imagePath = fileList[0]
+                            focusedPanel.imagePath = fileList[0]
                         } else {
-                            focusedPanel.data.imagePath = fileList[fileListIndex + 1]
+                            focusedPanel.imagePath = fileList[fileListIndex + 1]
                         }
                     }
 
@@ -257,7 +257,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             if (channel.get().isReceived) {
                 val receivedImagePath = channel.get().receivedImagePath
                 if (isLocked) {
-                    focusedPanel.data.imagePath = receivedImagePath
+                    focusedPanel.imagePath = receivedImagePath
                     focusedPanel.updateImage()
                 } else {
                     createNewPanel(receivedImagePath)
@@ -294,7 +294,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun convertToPanelData(): MutableList<ImagePanelData> {
-        return getPanels().map { ImagePanelData(it.bounds, it.data.imagePath) }.toMutableList()
+        return getPanels().map { ImagePanelData(it.bounds, it.imagePath) }.toMutableList()
     }
 
     fun focusToPanel(targetPanel: ImagePanel) {
@@ -323,7 +323,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 Channel(
                     message = ChannelMessage.SendImage,
                     sendImageTo = target,
-                    sendImagePath = focusedPanel.data.imagePath
+                    sendImagePath = focusedPanel.imagePath
                 )
             )
         }
@@ -335,11 +335,11 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
     fun updateTitle() {
         try {
-            val imageName = File(focusedPanel.data.imagePath).name
+            val imageName = File(focusedPanel.imagePath).name
             val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.data.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
+                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
                     getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
@@ -370,7 +370,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val file = chooser.selectedFile
 
         if (file != null) {
-            focusedPanel.data.imagePath = file.absolutePath
+            focusedPanel.imagePath = file.absolutePath
             focusedPanel.zoomRatio = 1.0
             focusedPanel.updateImage()
         }
