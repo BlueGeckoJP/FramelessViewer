@@ -112,7 +112,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
             else focusToPanel(getPanels()[0])
 
-            if (isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
             getPanels().forEach { it.updateImage() }
 

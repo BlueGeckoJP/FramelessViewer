@@ -37,6 +37,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         addMouseMotionListener(listener)
         addMouseWheelListener(ZoomListener())
         transferHandler = DropFileHandler()
+
+        updateImage()
     }
 
     override fun paintComponent(g: Graphics) {
