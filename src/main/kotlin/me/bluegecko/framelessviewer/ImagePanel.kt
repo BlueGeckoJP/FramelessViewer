@@ -268,6 +268,10 @@ class ImagePanel(val app: App, val data: ImagePanelData) : JPanel() {
                 e.preciseWheelRotation < 0 -> zoomRatio += 0.1
                 else -> zoomRatio -= 0.1
             }
+            if (zoomRatio <= 1.0) {
+                translateX = 0
+                translateY = 0
+            }
             updateImageSize()
         }
     }
