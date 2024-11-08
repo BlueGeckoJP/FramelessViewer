@@ -109,10 +109,10 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
-            else focusToPanel(getPanels()[0])
-
-            focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            if (isLocked) {
+                focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            } else focusToPanel(getPanels()[0])
 
             getPanels().forEach { it.updateImage() }
 
