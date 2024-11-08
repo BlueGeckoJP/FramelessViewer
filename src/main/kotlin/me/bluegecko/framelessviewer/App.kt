@@ -13,7 +13,7 @@ import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(private val channel: AtomicReference<Channel>, private val uuid: String) : JFrame() {
-    private var appData = channel.get().appData
+    private val appData = channel.get().appData
     val popupMenu = PopupMenu(this)
     private var focusedPanel: ImagePanel
     var appWidth = this.width
@@ -112,7 +112,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
             else focusToPanel(getPanels()[0])
 
-            if (appData.isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            if (isUndecorated && isLocked) focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
             getPanels().forEach { it.updateImage() }
 
