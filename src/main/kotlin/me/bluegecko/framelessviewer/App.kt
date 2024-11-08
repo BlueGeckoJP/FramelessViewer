@@ -406,6 +406,9 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
 
         focusToPanel(getPanels()[0])
+
+        repaint()
+        revalidate()
     }
 
     private fun itemExitFun() {
