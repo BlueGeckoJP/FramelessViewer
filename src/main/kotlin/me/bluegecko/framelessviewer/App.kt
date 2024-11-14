@@ -39,6 +39,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val itemClone = JMenuItem("Clone")
         val itemLock = JMenuItem("Lock To Window")
         val itemToggleTitle = JMenuItem("Toggle Title")
+        val itemFitToImage = JMenuItem("Fit To Image")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -47,6 +48,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         itemClone.addActionListener { itemCloneFun() }
         itemLock.addActionListener { itemLockFun() }
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
+        itemFitToImage.addActionListener { itemFitToImageFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -77,6 +79,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.addSeparator()
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
+        popupMenu.add(itemFitToImage)
         popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
@@ -387,6 +390,15 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
         repaint()
         revalidate()
+    }
+
+    private fun itemFitToImageFun() {
+        focusedPanel.bounds =
+            Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.scaledImage.width, focusedPanel.scaledImage.height)
+        focusedPanel.zoomRatio = 1.0
+        focusedPanel.translateX = 0
+        focusedPanel.translateY = 0
+        focusedPanel.updateImageSize()
     }
 
     private fun itemToggleTitleFun() {
