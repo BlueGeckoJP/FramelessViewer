@@ -40,6 +40,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val itemLock = JMenuItem("Lock To Window")
         val itemToggleTitle = JMenuItem("Toggle Title")
         val itemFitToImage = JMenuItem("Fit To Image")
+        val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -49,6 +50,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         itemLock.addActionListener { itemLockFun() }
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemFitToImage.addActionListener { itemFitToImageFun() }
+        itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -80,6 +82,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
         popupMenu.add(itemFitToImage)
+        popupMenu.add(itemSetZoomRatioToAuto)
         popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
@@ -399,6 +402,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         focusedPanel.translateX = 0
         focusedPanel.translateY = 0
         focusedPanel.updateImageSize()
+    }
+
+    private fun itemSetZoomRatioToAutoFun() {
+        focusedPanel.scaledImage = focusedPanel.image
+        focusedPanel.repaint()
+        focusedPanel.revalidate()
     }
 
     private fun itemToggleTitleFun() {
