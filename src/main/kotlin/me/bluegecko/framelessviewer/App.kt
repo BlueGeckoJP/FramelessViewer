@@ -167,7 +167,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                         Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
                         Rectangle(
-                            appWidth / panelDivisor * (panelDivisor - 1),
+                            appWidth - appWidth / panelDivisor,
                             focusedPanel.y,
                             appWidth / panelDivisor,
                             focusedPanel.height
@@ -177,7 +177,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
                         Rectangle(
                             focusedPanel.x,
-                            appHeight / panelDivisor * (panelDivisor - 1),
+                            appHeight - appHeight / panelDivisor,
                             focusedPanel.width,
                             appHeight / panelDivisor
                         )
