@@ -39,6 +39,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val itemClone = JMenuItem("Clone")
         val itemLock = JMenuItem("Lock To Window")
         val itemToggleTitle = JMenuItem("Toggle Title")
+        val itemFitToImage = JMenuItem("Fit To Image")
+        val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -47,6 +49,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         itemClone.addActionListener { itemCloneFun() }
         itemLock.addActionListener { itemLockFun() }
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
+        itemFitToImage.addActionListener { itemFitToImageFun() }
+        itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -77,6 +81,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.addSeparator()
         popupMenu.add(itemLock)
         popupMenu.add(itemToggleTitle)
+        popupMenu.add(itemFitToImage)
+        popupMenu.add(itemSetZoomRatioToAuto)
         popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
@@ -109,10 +115,10 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            if (isLocked) focusedPanel.border = EmptyBorder(0, 0, 0, 0)
-            else focusToPanel(getPanels()[0])
-
-            focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            if (isLocked) {
+                focusedPanel.border = EmptyBorder(0, 0, 0, 0)
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            } else focusToPanel(getPanels()[0])
 
             getPanels().forEach { it.updateImage() }
 
@@ -167,7 +173,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                         Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                     if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
                         Rectangle(
-                            appWidth / panelDivisor * (panelDivisor - 1),
+                            appWidth - appWidth / panelDivisor,
                             focusedPanel.y,
                             appWidth / panelDivisor,
                             focusedPanel.height
@@ -177,7 +183,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
                         Rectangle(
                             focusedPanel.x,
-                            appHeight / panelDivisor * (panelDivisor - 1),
+                            appHeight - appHeight / panelDivisor,
                             focusedPanel.width,
                             appHeight / panelDivisor
                         )
@@ -389,6 +395,21 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         revalidate()
     }
 
+    private fun itemFitToImageFun() {
+        focusedPanel.bounds =
+            Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.scaledImage.width, focusedPanel.scaledImage.height)
+        focusedPanel.zoomRatio = 1.0
+        focusedPanel.translateX = 0
+        focusedPanel.translateY = 0
+        focusedPanel.updateImageSize()
+    }
+
+    private fun itemSetZoomRatioToAutoFun() {
+        focusedPanel.scaledImage = focusedPanel.image
+        focusedPanel.repaint()
+        focusedPanel.revalidate()
+    }
+
     private fun itemToggleTitleFun() {
         val exportAppData = createExportAppData()
         exportAppData.isUndecorated = !isUndecorated
@@ -406,6 +427,9 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
 
         focusToPanel(getPanels()[0])
+
+        repaint()
+        revalidate()
     }
 
     private fun itemExitFun() {
