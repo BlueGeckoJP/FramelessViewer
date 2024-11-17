@@ -154,6 +154,123 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     inner class AppKeyAdapter : KeyAdapter() {
+        private val keyBindMap: MutableMap<KeyInfo, Runnable> = mutableMapOf()
+
+        init {
+            keyBindMap[KeyInfo(KeyEvent.VK_LEFT, ctrl = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT, ctrl = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        appWidth - appWidth / panelDivisor,
+                        focusedPanel.y,
+                        appWidth / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_UP, ctrl = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_DOWN, ctrl = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        appHeight - appHeight / panelDivisor,
+                        focusedPanel.width,
+                        appHeight / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_LEFT, alt = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT, alt = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x + focusedPanel.width / panelDivisor,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_UP, alt = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_DOWN, alt = true)] = Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y + focusedPanel.height / panelDivisor,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_UP)] = Runnable {
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                repaint()
+                revalidate()
+                focusedPanel.updateImageSize()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_DOWN)] = Runnable {
+                panelDivisor = 5 - panelDivisor
+                updateTitle()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_LEFT)] = Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex - 1 < 0) {
+                    focusedPanel.imagePath = fileList[fileList.size - 1]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex - 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
+            }
+            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT)] = Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex + 1 >= fileList.size) {
+                    focusedPanel.imagePath = fileList[0]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex + 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
+            }
+        }
+
         override fun keyPressed(e: KeyEvent?) {
             if (isLocked) return
 
@@ -162,99 +279,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             }
         }
 
-        override fun keyReleased(e: KeyEvent?) {
-            if (e != null) {
-                if (isPressedShiftKey) isPressedShiftKey = false
+        override fun keyReleased(e: KeyEvent) {
+            if (isPressedShiftKey) isPressedShiftKey = false
 
-                if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
-                    if (isLocked) return
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
-                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(
-                            appWidth - appWidth / panelDivisor,
-                            focusedPanel.y,
-                            appWidth / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
-                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            appHeight - appHeight / panelDivisor,
-                            focusedPanel.width,
-                            appHeight / panelDivisor
-                        )
-
-                    repaint()
-                    revalidate()
-                } else if (e.modifiersEx and KeyEvent.ALT_DOWN_MASK != 0) {
-                    if (isLocked) return
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y,
-                            focusedPanel.width / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x + focusedPanel.width / panelDivisor,
-                            focusedPanel.y,
-                            focusedPanel.width / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y,
-                            focusedPanel.width,
-                            focusedPanel.height / panelDivisor
-                        )
-                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y + focusedPanel.height / panelDivisor,
-                            focusedPanel.width,
-                            focusedPanel.height / panelDivisor
-                        )
-
-                    repaint()
-                    revalidate()
-                } else if (e.keyCode == KeyEvent.VK_UP) {
-                    focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
-                    repaint()
-                    revalidate()
-                    focusedPanel.updateImageSize()
-                } else if (e.keyCode == KeyEvent.VK_DOWN) {
-                    panelDivisor = if (panelDivisor == 2) 3
-                    else 2
-                    updateTitle()
-                } else if (focusedPanel.imagePath.isNotEmpty()) {
-                    val fileList = focusedPanel.fileList.toList()
-                    val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) {
-                        if (fileListIndex - 1 < 0) {
-                            focusedPanel.imagePath = fileList[fileList.size - 1]
-                        } else {
-                            focusedPanel.imagePath = fileList[fileListIndex - 1]
-                        }
-                    } else if (e.keyCode == KeyEvent.VK_RIGHT) {
-                        if (fileListIndex + 1 >= fileList.size) {
-                            focusedPanel.imagePath = fileList[0]
-                        } else {
-                            focusedPanel.imagePath = fileList[fileListIndex + 1]
-                        }
-                    }
-
-                    focusedPanel.updateImage()
-                    updateTitle()
-                }
-            }
+            val input = KeyInfo(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
+            val value = keyBindMap[input]
+            value?.run()
         }
     }
 
