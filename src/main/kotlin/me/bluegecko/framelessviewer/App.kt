@@ -1,5 +1,6 @@
 package me.bluegecko.framelessviewer
 
+import me.bluegecko.framelessviewer.data.*
 import java.awt.Color
 import java.awt.Rectangle
 import java.awt.event.*
@@ -154,7 +155,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     inner class AppKeyAdapter : KeyAdapter() {
-        private val keyBindMap: MutableMap<KeyInfo, Runnable> = mutableMapOf()
+        private val keyBindMap: MutableMap<KeyData, Runnable> = mutableMapOf()
 
         private val runnableLeftCtrl = Runnable {
             if (isLocked) return@Runnable
@@ -270,18 +271,18 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
 
         init {
-            keyBindMap[KeyInfo(KeyEvent.VK_LEFT, ctrl = true)] = runnableLeftCtrl
-            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT, ctrl = true)] = runnableRightCtrl
-            keyBindMap[KeyInfo(KeyEvent.VK_UP, ctrl = true)] = runnableUpCtrl
-            keyBindMap[KeyInfo(KeyEvent.VK_DOWN, ctrl = true)] = runnableDownCtrl
-            keyBindMap[KeyInfo(KeyEvent.VK_LEFT, alt = true)] = runnableLeftAlt
-            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT, alt = true)] = runnableRightAlt
-            keyBindMap[KeyInfo(KeyEvent.VK_UP, alt = true)] = runnableUpAlt
-            keyBindMap[KeyInfo(KeyEvent.VK_DOWN, alt = true)] = runnableDownAlt
-            keyBindMap[KeyInfo(KeyEvent.VK_UP)] = runnableUp
-            keyBindMap[KeyInfo(KeyEvent.VK_DOWN)] = runnableDown
-            keyBindMap[KeyInfo(KeyEvent.VK_LEFT)] = runnableLeft
-            keyBindMap[KeyInfo(KeyEvent.VK_RIGHT)] = runnableRight
+            keyBindMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = runnableLeftCtrl
+            keyBindMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = runnableRightCtrl
+            keyBindMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = runnableUpCtrl
+            keyBindMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = runnableDownCtrl
+            keyBindMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = runnableLeftAlt
+            keyBindMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = runnableRightAlt
+            keyBindMap[KeyData(KeyEvent.VK_UP, alt = true)] = runnableUpAlt
+            keyBindMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = runnableDownAlt
+            keyBindMap[KeyData(KeyEvent.VK_UP)] = runnableUp
+            keyBindMap[KeyData(KeyEvent.VK_DOWN)] = runnableDown
+            keyBindMap[KeyData(KeyEvent.VK_LEFT)] = runnableLeft
+            keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = runnableRight
         }
 
         override fun keyPressed(e: KeyEvent?) {
@@ -295,7 +296,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         override fun keyReleased(e: KeyEvent) {
             if (isPressedShiftKey) isPressedShiftKey = false
 
-            val input = KeyInfo(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
+            val input = KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
             val value = keyBindMap[input]
             value?.run()
         }

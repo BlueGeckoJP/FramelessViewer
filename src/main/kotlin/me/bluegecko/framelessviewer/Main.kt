@@ -1,7 +1,10 @@
 package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
-import me.bluegecko.framelessviewer.ChannelMessage.*
+import me.bluegecko.framelessviewer.data.ChannelMessage.*
+import me.bluegecko.framelessviewer.data.AppData
+import me.bluegecko.framelessviewer.data.Channel
+import me.bluegecko.framelessviewer.data.ThreadData
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO

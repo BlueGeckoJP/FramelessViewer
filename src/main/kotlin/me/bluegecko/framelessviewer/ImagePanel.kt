@@ -1,5 +1,6 @@
 package me.bluegecko.framelessviewer
 
+import me.bluegecko.framelessviewer.data.ImagePanelData
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.MouseAdapter

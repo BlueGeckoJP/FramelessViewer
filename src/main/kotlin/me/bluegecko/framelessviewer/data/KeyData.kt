@@ -1,6 +1,6 @@
-package me.bluegecko.framelessviewer
+package me.bluegecko.framelessviewer.data
 
-data class KeyInfo(
+data class KeyData(
     val keyCode: Int,
     val ctrl: Boolean = false,
     val shift: Boolean = false,
