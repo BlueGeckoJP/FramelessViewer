@@ -319,6 +319,13 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
                 }
                 println(keybindingOverrides)
+
+                keybindingOverrides.forEach {
+                    if (runnableMap.containsKey(it.key)) {
+                        keyBindMap.values.remove(runnableMap[it.key])
+                        runnableMap[it.key]?.let { runnable -> keyBindMap.put(it.value, runnable) }
+                    }
+                }
             } catch (_: Exception) {
                 println("Keybinding overrides is empty")
             }
