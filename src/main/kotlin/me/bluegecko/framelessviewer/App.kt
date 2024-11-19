@@ -287,15 +287,15 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = runnableRight
 
             val yaml = Yaml()
-            val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybind-override.yml")
-                ?: throw IllegalStateException("keybind-override.yml not found")
+            val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybinding-override.yml")
+                ?: throw IllegalStateException("keybinding-override.yml not found")
             try {
-                val keyBindOverrides: Map<String, Any> = inputStream.use { stream ->
+                val keybindingOverrides: Map<String, Any> = inputStream.use { stream ->
                     yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
                 }
-                println(keyBindOverrides)
+                println(keybindingOverrides)
             } catch (_: Exception) {
-                println("Keybind overrides is empty")
+                println("Keybinding overrides is empty")
             }
         }
 
