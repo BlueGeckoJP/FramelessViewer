@@ -292,12 +292,24 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             runnableMap["runnableRightAlt"]?.let {
                 keyBindMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = it
             }
-            keyBindMap[KeyData(KeyEvent.VK_UP, alt = true)] = runnableUpAlt
-            keyBindMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = runnableDownAlt
-            keyBindMap[KeyData(KeyEvent.VK_UP)] = runnableUp
-            keyBindMap[KeyData(KeyEvent.VK_DOWN)] = runnableDown
-            keyBindMap[KeyData(KeyEvent.VK_LEFT)] = runnableLeft
-            keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = runnableRight
+            runnableMap["runnableUpAlt"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_UP, alt = true)] = it
+            }
+            runnableMap["runnableDownAlt"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = it
+            }
+            runnableMap["runnableUp"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_UP)] = it
+            }
+            runnableMap["runnableDown"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_DOWN)] = it
+            }
+            runnableMap["runnableLeft"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_LEFT)] = it
+            }
+            runnableMap["runnableRight"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = it
+            }
 
             val yaml = Yaml()
             val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybinding-override.yml")
