@@ -158,127 +158,140 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
     inner class AppKeyAdapter : KeyAdapter() {
         private val keyBindMap: MutableMap<KeyData, Runnable> = mutableMapOf()
-
-        private val runnableLeftCtrl = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
-            focusedPanel.updateImageSize()
-        }
-        private val runnableRightCtrl = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    appWidth - appWidth / panelDivisor,
-                    focusedPanel.y,
-                    appWidth / panelDivisor,
-                    focusedPanel.height
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableUpCtrl = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
-            focusedPanel.updateImageSize()
-        }
-        private val runnableDownCtrl = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    focusedPanel.x,
-                    appHeight - appHeight / panelDivisor,
-                    focusedPanel.width,
-                    appHeight / panelDivisor
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableLeftAlt = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    focusedPanel.x,
-                    focusedPanel.y,
-                    focusedPanel.width / panelDivisor,
-                    focusedPanel.height
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableRightAlt = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    focusedPanel.x + focusedPanel.width / panelDivisor,
-                    focusedPanel.y,
-                    focusedPanel.width / panelDivisor,
-                    focusedPanel.height
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableUpAlt = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    focusedPanel.x,
-                    focusedPanel.y,
-                    focusedPanel.width,
-                    focusedPanel.height / panelDivisor
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableDownAlt = Runnable {
-            if (isLocked) return@Runnable
-            focusedPanel.bounds =
-                Rectangle(
-                    focusedPanel.x,
-                    focusedPanel.y + focusedPanel.height / panelDivisor,
-                    focusedPanel.width,
-                    focusedPanel.height / panelDivisor
-                )
-            focusedPanel.updateImageSize()
-        }
-        private val runnableUp = Runnable {
-            focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
-            repaint()
-            revalidate()
-            focusedPanel.updateImageSize()
-        }
-        private val runnableDown = Runnable {
-            panelDivisor = 5 - panelDivisor
-            updateTitle()
-        }
-        private val runnableLeft = Runnable {
-            if (focusedPanel.imagePath.isEmpty()) return@Runnable
-            val fileList = focusedPanel.fileList.toList()
-            val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-            if (fileListIndex - 1 < 0) {
-                focusedPanel.imagePath = fileList[fileList.size - 1]
-            } else {
-                focusedPanel.imagePath = fileList[fileListIndex - 1]
+        private val runnableMap: Map<String, Runnable> = mapOf(
+            "runnableLeftCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
+                focusedPanel.updateImageSize()
+            },
+            "runnableRightCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        appWidth - appWidth / panelDivisor,
+                        focusedPanel.y,
+                        appWidth / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUpCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
+                focusedPanel.updateImageSize()
+            },
+            "runnableDownCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        appHeight - appHeight / panelDivisor,
+                        focusedPanel.width,
+                        appHeight / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableLeftAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableRightAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x + focusedPanel.width / panelDivisor,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUpAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableDownAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y + focusedPanel.height / panelDivisor,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUp" to Runnable {
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                repaint()
+                revalidate()
+                focusedPanel.updateImageSize()
+            },
+            "runnableDown" to Runnable {
+                panelDivisor = 5 - panelDivisor
+                updateTitle()
+            },
+            "runnableLeft" to Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex - 1 < 0) {
+                    focusedPanel.imagePath = fileList[fileList.size - 1]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex - 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
+            },
+            "runnableRight" to Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex + 1 >= fileList.size) {
+                    focusedPanel.imagePath = fileList[0]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex + 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
             }
-            focusedPanel.updateImage()
-            updateTitle()
-        }
-        private val runnableRight = Runnable {
-            if (focusedPanel.imagePath.isEmpty()) return@Runnable
-            val fileList = focusedPanel.fileList.toList()
-            val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-            if (fileListIndex + 1 >= fileList.size) {
-                focusedPanel.imagePath = fileList[0]
-            } else {
-                focusedPanel.imagePath = fileList[fileListIndex + 1]
-            }
-            focusedPanel.updateImage()
-            updateTitle()
-        }
+        )
 
         init {
-            keyBindMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = runnableLeftCtrl
-            keyBindMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = runnableRightCtrl
-            keyBindMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = runnableUpCtrl
-            keyBindMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = runnableDownCtrl
-            keyBindMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = runnableLeftAlt
-            keyBindMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = runnableRightAlt
+            runnableMap["runnableLeftCtrl"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = it
+            }
+            runnableMap["runnableRightCtrl"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = it
+            }
+            runnableMap["runnableUpCtrl"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = it
+            }
+            runnableMap["runnableDownCtrl"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = it
+            }
+            runnableMap["runnableLeftAlt"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = it
+            }
+            runnableMap["runnableRightAlt"]?.let {
+                keyBindMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = it
+            }
             keyBindMap[KeyData(KeyEvent.VK_UP, alt = true)] = runnableUpAlt
             keyBindMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = runnableDownAlt
             keyBindMap[KeyData(KeyEvent.VK_UP)] = runnableUp
@@ -290,7 +303,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybinding-override.yml")
                 ?: throw IllegalStateException("keybinding-override.yml not found")
             try {
-                val keybindingOverrides: Map<String, Any> = inputStream.use { stream ->
+                val keybindingOverrides: Map<String, KeyData> = inputStream.use { stream ->
                     yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
                 }
                 println(keybindingOverrides)
