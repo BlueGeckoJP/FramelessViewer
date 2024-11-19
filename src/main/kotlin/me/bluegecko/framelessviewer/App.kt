@@ -157,7 +157,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     inner class AppKeyAdapter : KeyAdapter() {
-        private val keyBindMap: MutableMap<KeyData, Runnable> = mutableMapOf()
+        private val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
         private val runnableMap: Map<String, Runnable> = mapOf(
             "runnableLeftCtrl" to Runnable {
                 if (isLocked) return@Runnable
@@ -275,40 +275,40 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
         init {
             runnableMap["runnableLeftCtrl"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = it
             }
             runnableMap["runnableRightCtrl"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = it
             }
             runnableMap["runnableUpCtrl"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = it
             }
             runnableMap["runnableDownCtrl"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = it
             }
             runnableMap["runnableLeftAlt"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = it
             }
             runnableMap["runnableRightAlt"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = it
             }
             runnableMap["runnableUpAlt"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_UP, alt = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_UP, alt = true)] = it
             }
             runnableMap["runnableDownAlt"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = it
+                keybindingMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = it
             }
             runnableMap["runnableUp"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_UP)] = it
+                keybindingMap[KeyData(KeyEvent.VK_UP)] = it
             }
             runnableMap["runnableDown"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_DOWN)] = it
+                keybindingMap[KeyData(KeyEvent.VK_DOWN)] = it
             }
             runnableMap["runnableLeft"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_LEFT)] = it
+                keybindingMap[KeyData(KeyEvent.VK_LEFT)] = it
             }
             runnableMap["runnableRight"]?.let {
-                keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = it
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT)] = it
             }
 
             val yaml = Yaml()
@@ -322,8 +322,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
                 keybindingOverrides.forEach {
                     if (runnableMap.containsKey(it.key)) {
-                        keyBindMap.values.remove(runnableMap[it.key])
-                        runnableMap[it.key]?.let { runnable -> keyBindMap.put(it.value, runnable) }
+                        keybindingMap.values.remove(runnableMap[it.key])
+                        runnableMap[it.key]?.let { runnable -> keybindingMap.put(it.value, runnable) }
                     }
                 }
             } catch (_: Exception) {
@@ -343,7 +343,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             if (isPressedShiftKey) isPressedShiftKey = false
 
             val input = KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
-            val value = keyBindMap[input]
+            val value = keybindingMap[input]
             value?.run()
         }
     }
