@@ -1,10 +1,12 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.*
+import org.yaml.snakeyaml.Yaml
 import java.awt.Color
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
@@ -283,6 +285,18 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             keyBindMap[KeyData(KeyEvent.VK_DOWN)] = runnableDown
             keyBindMap[KeyData(KeyEvent.VK_LEFT)] = runnableLeft
             keyBindMap[KeyData(KeyEvent.VK_RIGHT)] = runnableRight
+
+            val yaml = Yaml()
+            val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybind-override.yml")
+                ?: throw IllegalStateException("keybind-override.yml not found")
+            try {
+                val keyBindOverrides: Map<String, Any> = inputStream.use { stream ->
+                    yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
+                }
+                println(keyBindOverrides)
+            } catch (_: Exception) {
+                println("Keybind overrides is empty")
+            }
         }
 
         override fun keyPressed(e: KeyEvent?) {
