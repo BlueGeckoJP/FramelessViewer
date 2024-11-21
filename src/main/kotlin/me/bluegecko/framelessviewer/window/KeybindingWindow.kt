@@ -1,13 +1,13 @@
 package me.bluegecko.framelessviewer.window
 
 import me.bluegecko.framelessviewer.App
-import java.awt.BorderLayout
-import java.awt.Dimension
+import java.awt.*
 import java.awt.event.KeyEvent
-import javax.swing.JDialog
-import javax.swing.JScrollPane
-import javax.swing.JTable
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.*
 import javax.swing.table.DefaultTableModel
+import javax.swing.table.TableCellRenderer
 
 class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config | FramelessViewer", true) {
     private val columnNames = arrayOf("Function", "Keybinding")
@@ -22,6 +22,20 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
 
         val tableModel = DefaultTableModel(tableData, columnNames)
         val table = JTable(tableModel)
+        table.columnModel.getColumn(1).apply {
+            cellRenderer = KeybindingRenderer()
+            cellEditor = KeybindingEditor {
+                TODO()
+                /*
+                JOptionPane.showMessageDialog(
+                    this@KeybindingWindow,
+                    "Button clicked",
+                    "Button clicked",
+                    JOptionPane.INFORMATION_MESSAGE,
+                )
+                 */
+            }
+        }
 
         val scrollPane = JScrollPane(table)
         contentPane.add(scrollPane, BorderLayout.CENTER)
@@ -46,6 +60,62 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
         tableData = tableItemList.sortedBy { it.functionName }.map {
             arrayOf(it.functionName, it.keybinding)
         }.toTypedArray()
+    }
+
+    inner class KeybindingRenderer : TableCellRenderer {
+        private val label = JLabel()
+
+        override fun getTableCellRendererComponent(
+            table: JTable,
+            value: Any?,
+            isSelected: Boolean,
+            hasFocus: Boolean,
+            row: Int,
+            column: Int
+        ): Component {
+            label.text = value?.toString() ?: ""
+
+            label.background = if (isSelected) table.selectionBackground else table.background
+
+            label.apply {
+                foreground = Color.CYAN.darker()
+                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                border = BorderFactory.createEmptyBorder(0, 5, 0, 0)
+            }
+
+            return label
+        }
+    }
+
+    inner class KeybindingEditor(val onClick: () -> Unit) : DefaultCellEditor(JCheckBox()) {
+        private val label = JLabel()
+
+        init {
+            label.apply {
+                foreground = Color.CYAN
+                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+
+                addMouseListener(object : MouseAdapter() {
+                    override fun mouseClicked(e: MouseEvent?) {
+                        onClick()
+                    }
+                })
+            }
+        }
+
+        override fun getTableCellEditorComponent(
+            table: JTable?,
+            value: Any?,
+            isSelected: Boolean,
+            row: Int,
+            column: Int
+        ): Component {
+            label.text = value?.toString() ?: ""
+            label.border = BorderFactory.createEmptyBorder(0, 5, 0, 0)
+            return label
+        }
+
+        override fun getCellEditorValue(): Any = label.text
     }
 }
 
