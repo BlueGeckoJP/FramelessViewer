@@ -1,0 +1,5 @@
+runnableLeftCtrl:
+  keyCode: 48
+  ctrl: false
+  shift: false
+  alt: false

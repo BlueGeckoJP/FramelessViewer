@@ -43,7 +43,7 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
             }
         }
 
-        tableData = tableItemList.map {
+        tableData = tableItemList.sortedBy { it.functionName }.map {
             arrayOf(it.functionName, it.keybinding)
         }.toTypedArray()
     }
