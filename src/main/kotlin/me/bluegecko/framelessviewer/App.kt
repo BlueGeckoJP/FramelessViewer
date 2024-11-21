@@ -1,6 +1,7 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.*
+import me.bluegecko.framelessviewer.window.KeybindingWindow
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
 import java.awt.Rectangle
@@ -26,6 +27,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
+    val appKeyAdapter: AppKeyAdapter
 
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
@@ -44,6 +46,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val itemToggleTitle = JMenuItem("Toggle Title")
         val itemFitToImage = JMenuItem("Fit To Image")
         val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
+        val itemOpenKeybindingWindow = JMenuItem("Open Keybinding Window")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -54,6 +57,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemFitToImage.addActionListener { itemFitToImageFun() }
         itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
+        itemOpenKeybindingWindow.addActionListener { itemOpenKeybindingWindowFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -88,6 +92,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.add(itemSetZoomRatioToAuto)
         popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
+        popupMenu.add(itemOpenKeybindingWindow)
+        popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
 
@@ -113,7 +119,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
-        addKeyListener(AppKeyAdapter())
+        appKeyAdapter = AppKeyAdapter()
+        addKeyListener(appKeyAdapter)
 
         SwingUtilities.invokeLater {
             updateAppSize()
@@ -157,8 +164,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     inner class AppKeyAdapter : KeyAdapter() {
-        private val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
-        private val runnableMap: Map<String, Runnable> = mapOf(
+        val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
+        val runnableMap: Map<String, Runnable> = mapOf(
             "runnableLeftCtrl" to Runnable {
                 if (isLocked) return@Runnable
                 focusedPanel.bounds =
@@ -512,6 +519,11 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         exportAppData.isUndecorated = !isUndecorated
         channel.set(Channel(ChannelMessage.Reinit, exportAppData))
         this.dispose()
+    }
+
+    private fun itemOpenKeybindingWindowFun() {
+        val window = KeybindingWindow(this)
+        window.isVisible = true
     }
 
     private fun itemRemoveWidgetFun() {
