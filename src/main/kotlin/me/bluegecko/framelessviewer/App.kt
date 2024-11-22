@@ -1,9 +1,13 @@
 package me.bluegecko.framelessviewer
 
+import me.bluegecko.framelessviewer.data.*
+import me.bluegecko.framelessviewer.window.KeybindingWindow
+import org.yaml.snakeyaml.Yaml
 import java.awt.Color
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.*
 import javax.swing.border.EmptyBorder
@@ -23,6 +27,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
+    val appKeyAdapter: AppKeyAdapter
 
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
@@ -41,6 +46,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val itemToggleTitle = JMenuItem("Toggle Title")
         val itemFitToImage = JMenuItem("Fit To Image")
         val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
+        val itemOpenKeybindingWindow = JMenuItem("Open Keybinding Window")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
         itemNew.addActionListener { itemNewFun() }
@@ -51,6 +57,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemFitToImage.addActionListener { itemFitToImageFun() }
         itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
+        itemOpenKeybindingWindow.addActionListener { itemOpenKeybindingWindowFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -85,6 +92,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.add(itemSetZoomRatioToAuto)
         popupMenu.add(menuSendImageTo)
         popupMenu.addSeparator()
+        popupMenu.add(itemOpenKeybindingWindow)
+        popupMenu.addSeparator()
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
 
@@ -110,7 +119,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
-        addKeyListener(AppKeyAdapter())
+        appKeyAdapter = AppKeyAdapter()
+        addKeyListener(appKeyAdapter)
 
         SwingUtilities.invokeLater {
             updateAppSize()
@@ -154,6 +164,187 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     inner class AppKeyAdapter : KeyAdapter() {
+        val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
+        val runnableMap: Map<String, Runnable> = mapOf(
+            "runnableLeftCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
+                focusedPanel.updateImageSize()
+            },
+            "runnableRightCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        appWidth - appWidth / panelDivisor,
+                        focusedPanel.y,
+                        appWidth / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUpCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
+                focusedPanel.updateImageSize()
+            },
+            "runnableDownCtrl" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        appHeight - appHeight / panelDivisor,
+                        focusedPanel.width,
+                        appHeight / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableLeftAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableRightAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x + focusedPanel.width / panelDivisor,
+                        focusedPanel.y,
+                        focusedPanel.width / panelDivisor,
+                        focusedPanel.height
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUpAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableDownAlt" to Runnable {
+                if (isLocked) return@Runnable
+                focusedPanel.bounds =
+                    Rectangle(
+                        focusedPanel.x,
+                        focusedPanel.y + focusedPanel.height / panelDivisor,
+                        focusedPanel.width,
+                        focusedPanel.height / panelDivisor
+                    )
+                focusedPanel.updateImageSize()
+            },
+            "runnableUp" to Runnable {
+                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                repaint()
+                revalidate()
+                focusedPanel.updateImageSize()
+            },
+            "runnableDown" to Runnable {
+                panelDivisor = 5 - panelDivisor
+                updateTitle()
+            },
+            "runnableLeft" to Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex - 1 < 0) {
+                    focusedPanel.imagePath = fileList[fileList.size - 1]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex - 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
+            },
+            "runnableRight" to Runnable {
+                if (focusedPanel.imagePath.isEmpty()) return@Runnable
+                val fileList = focusedPanel.fileList.toList()
+                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+                if (fileListIndex + 1 >= fileList.size) {
+                    focusedPanel.imagePath = fileList[0]
+                } else {
+                    focusedPanel.imagePath = fileList[fileListIndex + 1]
+                }
+                focusedPanel.updateImage()
+                updateTitle()
+            }
+        )
+
+        init {
+            runnableMap["runnableLeftCtrl"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_LEFT, ctrl = true)] = it
+            }
+            runnableMap["runnableRightCtrl"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT, ctrl = true)] = it
+            }
+            runnableMap["runnableUpCtrl"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_UP, ctrl = true)] = it
+            }
+            runnableMap["runnableDownCtrl"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_DOWN, ctrl = true)] = it
+            }
+            runnableMap["runnableLeftAlt"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_LEFT, alt = true)] = it
+            }
+            runnableMap["runnableRightAlt"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT, alt = true)] = it
+            }
+            runnableMap["runnableUpAlt"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_UP, alt = true)] = it
+            }
+            runnableMap["runnableDownAlt"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_DOWN, alt = true)] = it
+            }
+            runnableMap["runnableUp"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_UP)] = it
+            }
+            runnableMap["runnableDown"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_DOWN)] = it
+            }
+            runnableMap["runnableLeft"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_LEFT)] = it
+            }
+            runnableMap["runnableRight"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_RIGHT)] = it
+            }
+
+            val yaml = Yaml()
+            val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybinding-override.yml")
+                ?: throw IllegalStateException("keybinding-override.yml not found")
+            try {
+                val keybindingOverrides: Map<String, Any> = inputStream.use { stream ->
+                    yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
+                }
+                println(keybindingOverrides)
+
+                keybindingOverrides.forEach { keybinding ->
+                    val value = keybinding.value as Map<*, *>
+                    val keyCode = value["keyCode"] as Int
+                    val ctrl = value["ctrl"] as Boolean
+                    val shift = value["shift"] as Boolean
+                    val alt = value["alt"] as Boolean
+
+                    val runnable = runnableMap[keybinding.key]
+                    if (runnable != null) {
+                        keybindingMap.remove(keybindingMap.entries.find { it.value == runnable }?.key)
+                        keybindingMap[KeyData(keyCode, ctrl, shift, alt)] = runnable
+                    }
+                }
+            } catch (_: Exception) {
+                println("Keybinding overrides is empty")
+            }
+        }
+
         override fun keyPressed(e: KeyEvent?) {
             if (isLocked) return
 
@@ -162,99 +353,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             }
         }
 
-        override fun keyReleased(e: KeyEvent?) {
-            if (e != null) {
-                if (isPressedShiftKey) isPressedShiftKey = false
+        override fun keyReleased(e: KeyEvent) {
+            if (isPressedShiftKey) isPressedShiftKey = false
 
-                if (e.modifiersEx and KeyEvent.CTRL_DOWN_MASK != 0) {
-                    if (isLocked) return
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
-                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(
-                            appWidth - appWidth / panelDivisor,
-                            focusedPanel.y,
-                            appWidth / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
-                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            appHeight - appHeight / panelDivisor,
-                            focusedPanel.width,
-                            appHeight / panelDivisor
-                        )
-
-                    repaint()
-                    revalidate()
-                } else if (e.modifiersEx and KeyEvent.ALT_DOWN_MASK != 0) {
-                    if (isLocked) return
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y,
-                            focusedPanel.width / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_RIGHT) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x + focusedPanel.width / panelDivisor,
-                            focusedPanel.y,
-                            focusedPanel.width / panelDivisor,
-                            focusedPanel.height
-                        )
-                    if (e.keyCode == KeyEvent.VK_UP) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y,
-                            focusedPanel.width,
-                            focusedPanel.height / panelDivisor
-                        )
-                    if (e.keyCode == KeyEvent.VK_DOWN) focusedPanel.bounds =
-                        Rectangle(
-                            focusedPanel.x,
-                            focusedPanel.y + focusedPanel.height / panelDivisor,
-                            focusedPanel.width,
-                            focusedPanel.height / panelDivisor
-                        )
-
-                    repaint()
-                    revalidate()
-                } else if (e.keyCode == KeyEvent.VK_UP) {
-                    focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
-                    repaint()
-                    revalidate()
-                    focusedPanel.updateImageSize()
-                } else if (e.keyCode == KeyEvent.VK_DOWN) {
-                    panelDivisor = if (panelDivisor == 2) 3
-                    else 2
-                    updateTitle()
-                } else if (focusedPanel.imagePath.isNotEmpty()) {
-                    val fileList = focusedPanel.fileList.toList()
-                    val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-
-                    if (e.keyCode == KeyEvent.VK_LEFT) {
-                        if (fileListIndex - 1 < 0) {
-                            focusedPanel.imagePath = fileList[fileList.size - 1]
-                        } else {
-                            focusedPanel.imagePath = fileList[fileListIndex - 1]
-                        }
-                    } else if (e.keyCode == KeyEvent.VK_RIGHT) {
-                        if (fileListIndex + 1 >= fileList.size) {
-                            focusedPanel.imagePath = fileList[0]
-                        } else {
-                            focusedPanel.imagePath = fileList[fileListIndex + 1]
-                        }
-                    }
-
-                    focusedPanel.updateImage()
-                    updateTitle()
-                }
-            }
+            val input = KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
+            val value = keybindingMap[input]
+            value?.run()
         }
     }
 
@@ -415,6 +519,11 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         exportAppData.isUndecorated = !isUndecorated
         channel.set(Channel(ChannelMessage.Reinit, exportAppData))
         this.dispose()
+    }
+
+    private fun itemOpenKeybindingWindowFun() {
+        val window = KeybindingWindow(this)
+        window.isVisible = true
     }
 
     private fun itemRemoveWidgetFun() {

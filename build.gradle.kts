@@ -21,6 +21,8 @@ dependencies {
     implementation("com.twelvemonkeys.imageio:imageio-webp:3.11.0")
     // https://mvnrepository.com/artifact/com.formdev/flatlaf
     implementation("com.formdev:flatlaf:3.5.1")
+    // https://mvnrepository.com/artifact/org.yaml/snakeyaml
+    implementation("org.yaml:snakeyaml:2.3")
 }
 
 tasks.test {

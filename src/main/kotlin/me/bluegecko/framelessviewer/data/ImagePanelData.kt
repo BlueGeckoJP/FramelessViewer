@@ -1,4 +1,4 @@
-package me.bluegecko.framelessviewer
+package me.bluegecko.framelessviewer.data
 
 import java.awt.Rectangle
 
