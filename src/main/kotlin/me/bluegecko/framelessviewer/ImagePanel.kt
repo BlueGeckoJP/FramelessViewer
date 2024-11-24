@@ -10,6 +10,7 @@ import java.awt.event.MouseWheelListener
 import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Paths
+import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
@@ -28,6 +29,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var translateY = 0
     var resizedWidth = 0
     var resizedHeight = 0
+    val uuid = UUID.randomUUID()
 
     init {
         border = LineBorder(app.defaultColor, 1)
