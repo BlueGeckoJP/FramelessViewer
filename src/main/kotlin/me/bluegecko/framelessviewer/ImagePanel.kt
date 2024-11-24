@@ -63,10 +63,21 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         }
     }
 
+    private fun resizeBufferedImage(
+        originalImage: BufferedImage,
+        resizedWidth: Int,
+        resizedHeight: Int
+    ): BufferedImage {
+        val resizedImage = BufferedImage(resizedWidth, resizedHeight, BufferedImage.TYPE_INT_ARGB)
+        val g2d = resizedImage.createGraphics()
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g2d.drawImage(originalImage, 0, 0, resizedWidth, resizedHeight, null)
+        g2d.dispose()
+        return resizedImage
+    }
+
     fun updateImageSize() {
         if (imagePath.isEmpty() || !::image.isInitialized) return
-
-        var img: Image? = null
 
         if (image.width > width || image.height > height) {
             val widthStandardSize = Pair(
@@ -77,29 +88,19 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             )
 
             if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
-                img = image.getScaledInstance(
-                    (widthStandardSize.first * zoomRatio).toInt(),
-                    (widthStandardSize.second * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
+                scaledImage = resizeBufferedImage(
+                    image, (widthStandardSize.first * zoomRatio).toInt(), (widthStandardSize.second * zoomRatio).toInt()
                 )
             } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
-                img = image.getScaledInstance(
+                scaledImage = resizeBufferedImage(
+                    image,
                     (heightStandardSize.first * zoomRatio).toInt(),
-                    (heightStandardSize.second * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
+                    (heightStandardSize.second * zoomRatio).toInt()
                 )
             }
         } else {
-            img =
-                image.getScaledInstance(
-                    (image.width * zoomRatio).toInt(),
-                    (image.height * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
-                )
-        }
-
-        if (img != null) {
-            scaledImage = toBufferedImage(img)
+            scaledImage =
+                resizeBufferedImage(image, (image.width * zoomRatio).toInt(), (image.height * zoomRatio).toInt())
         }
 
         repaint()
@@ -146,16 +147,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         val aspectRatio = size1 / x to size2 / x
 
         return (standardSize * aspectRatio.second) / aspectRatio.first
-    }
-
-    private fun toBufferedImage(img: Image): BufferedImage {
-        val bufferedImage = BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB)
-
-        val graphics = bufferedImage.createGraphics()
-        graphics.drawImage(img, 0, 0, null)
-        graphics.dispose()
-
-        return bufferedImage
     }
 
     inner class DraggableListener : MouseAdapter() {
