@@ -130,10 +130,12 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
     private fun updateFileList() {
         val dir = Paths.get(imagePath).parent.toFile()
-        fileList = dir.walk()
-            .filter { it.isFile && it.name.contains(extensionRegex) }
-            .map { it.absolutePath }
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+        dir.listFiles()?.let { files ->
+            fileList =
+                files.filter { it.isFile && it.name.contains(extensionRegex) }
+                    .map { it.absolutePath }
+                    .sortedWith(String.CASE_INSENSITIVE_ORDER).asSequence()
+        }
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
