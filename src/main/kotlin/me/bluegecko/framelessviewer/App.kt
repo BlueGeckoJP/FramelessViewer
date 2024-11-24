@@ -264,7 +264,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     focusedPanel.imagePath = fileList[fileListIndex - 1]
                 }
                 focusedPanel.updateImage()
-                updateTitle()
             },
             "runnableRight" to Runnable {
                 if (focusedPanel.imagePath.isEmpty()) return@Runnable
@@ -276,7 +275,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     focusedPanel.imagePath = fileList[fileListIndex + 1]
                 }
                 focusedPanel.updateImage()
-                updateTitle()
             }
         )
 
