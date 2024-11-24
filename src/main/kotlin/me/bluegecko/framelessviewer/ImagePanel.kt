@@ -29,7 +29,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var translateY = 0
     var resizedWidth = 0
     var resizedHeight = 0
-    val uuid = UUID.randomUUID()
+    val uuid: UUID = UUID.randomUUID()
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -52,7 +52,10 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         if (imagePath.isEmpty() || !::image.isInitialized) return
 
         val g2d = g as Graphics2D
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
         val x = (width - resizedWidth) / 2 + translateX
         val y = (height - resizedHeight) / 2 + translateY
