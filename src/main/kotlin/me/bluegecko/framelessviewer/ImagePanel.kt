@@ -146,7 +146,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
         val aspectRatio = size1 / x to size2 / x
 
-        return (standardSize * aspectRatio.second) / aspectRatio.first
+        return standardSize * aspectRatio.second / aspectRatio.first
     }
 
     inner class DraggableListener : MouseAdapter() {
