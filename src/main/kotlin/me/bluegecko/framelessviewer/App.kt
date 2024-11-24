@@ -415,6 +415,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         targetPanel.border = LineBorder(focusedColor, 1)
         this.contentPane.setComponentZOrder(targetPanel, 0)
         updateTitle()
+        repaint()
+        revalidate()
     }
 
     private fun createExportAppData(): AppData {
@@ -501,7 +503,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
     private fun itemFitToImageFun() {
         focusedPanel.bounds =
-            Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.scaledImage.width, focusedPanel.scaledImage.height)
+            Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.resizedWidth, focusedPanel.resizedHeight)
         focusedPanel.zoomRatio = 1.0
         focusedPanel.translateX = 0
         focusedPanel.translateY = 0
@@ -509,7 +511,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun itemSetZoomRatioToAutoFun() {
-        focusedPanel.scaledImage = focusedPanel.image
+        focusedPanel.resizedWidth = focusedPanel.image.width
+        focusedPanel.resizedHeight = focusedPanel.image.height
         focusedPanel.repaint()
         focusedPanel.revalidate()
     }

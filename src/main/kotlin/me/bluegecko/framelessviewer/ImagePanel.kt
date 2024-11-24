@@ -13,6 +13,7 @@ import java.nio.file.Paths
 import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
+import javax.swing.SwingWorker
 import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 import kotlin.math.abs
@@ -21,11 +22,12 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var imagePath = data.imagePath
     lateinit var fileList: Sequence<String>
     lateinit var image: BufferedImage
-    lateinit var scaledImage: BufferedImage
     val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
+    var resizedWidth = 0
+    var resizedHeight = 0
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -45,28 +47,26 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
+        if (imagePath.isEmpty() || !::image.isInitialized) return
+
         val g2d = g as Graphics2D
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
-        if (imagePath.isNotEmpty() && ::scaledImage.isInitialized) {
-            val x = (width - scaledImage.width) / 2 + translateX
-            val y = (height - scaledImage.height) / 2 + translateY
+        val x = (width - resizedWidth) / 2 + translateX
+        val y = (height - resizedHeight) / 2 + translateY
 
-            g2d.drawImage(
-                scaledImage,
-                x,
-                y,
-                scaledImage.width,
-                scaledImage.height,
-                this
-            )
-        }
+        g2d.drawImage(
+            image,
+            x,
+            y,
+            resizedWidth,
+            resizedHeight,
+            this
+        )
     }
 
     fun updateImageSize() {
         if (imagePath.isEmpty() || !::image.isInitialized) return
-
-        var img: Image? = null
 
         if (image.width > width || image.height > height) {
             val widthStandardSize = Pair(
@@ -77,29 +77,15 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             )
 
             if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
-                img = image.getScaledInstance(
-                    (widthStandardSize.first * zoomRatio).toInt(),
-                    (widthStandardSize.second * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
-                )
+                resizedWidth = (widthStandardSize.first * zoomRatio).toInt()
+                resizedHeight = (widthStandardSize.second * zoomRatio).toInt()
             } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
-                img = image.getScaledInstance(
-                    (heightStandardSize.first * zoomRatio).toInt(),
-                    (heightStandardSize.second * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
-                )
+                resizedWidth = (heightStandardSize.first * zoomRatio).toInt()
+                resizedHeight = (heightStandardSize.second * zoomRatio).toInt()
             }
         } else {
-            img =
-                image.getScaledInstance(
-                    (image.width * zoomRatio).toInt(),
-                    (image.height * zoomRatio).toInt(),
-                    Image.SCALE_SMOOTH
-                )
-        }
-
-        if (img != null) {
-            scaledImage = toBufferedImage(img)
+            resizedWidth = (image.width * zoomRatio).toInt()
+            resizedHeight = (image.height * zoomRatio).toInt()
         }
 
         repaint()
@@ -107,21 +93,38 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     }
 
     fun updateImage() {
-        try {
-            if (imagePath.isEmpty()) return
+        object : SwingWorker<BufferedImage?, Void>() {
+            override fun doInBackground(): BufferedImage? {
+                return try {
+                    ImageIO.read(File(imagePath))
+                } catch (e: Exception) {
+                    null
+                }
+            }
 
-            val file = File(imagePath)
-            image = ImageIO.read(file)
+            override fun done() {
+                try {
+                    if (imagePath.isEmpty()) return
 
-            updateImageSize()
-            updateFileList()
+                    val img = get()
+                    img?.let {
+                        image = it
 
-            repaint()
-            revalidate()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            app.updateTitle()
+                        updateImageSize()
+                        updateFileList()
+
+                        repaint()
+                        revalidate()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    app.updateTitle()
+                }
+            }
+        }.also {
+            app.title = "Loading.. ".plus(app.title)
+            it.execute()
         }
     }
 
@@ -145,17 +148,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
         val aspectRatio = size1 / x to size2 / x
 
-        return (standardSize * aspectRatio.second) / aspectRatio.first
-    }
-
-    private fun toBufferedImage(img: Image): BufferedImage {
-        val bufferedImage = BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB)
-
-        val graphics = bufferedImage.createGraphics()
-        graphics.drawImage(img, 0, 0, null)
-        graphics.dispose()
-
-        return bufferedImage
+        return standardSize * aspectRatio.second / aspectRatio.first
     }
 
     inner class DraggableListener : MouseAdapter() {
