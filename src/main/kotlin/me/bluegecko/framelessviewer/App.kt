@@ -415,6 +415,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         targetPanel.border = LineBorder(focusedColor, 1)
         this.contentPane.setComponentZOrder(targetPanel, 0)
         updateTitle()
+        repaint()
+        revalidate()
     }
 
     private fun createExportAppData(): AppData {
