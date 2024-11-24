@@ -50,7 +50,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         if (imagePath.isEmpty() || !::image.isInitialized) return
 
         val g2d = g as Graphics2D
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         val x = (width - resizedWidth) / 2 + translateX
         val y = (height - resizedHeight) / 2 + translateY
