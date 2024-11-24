@@ -21,11 +21,12 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var imagePath = data.imagePath
     lateinit var fileList: Sequence<String>
     lateinit var image: BufferedImage
-    lateinit var scaledImage: BufferedImage
     val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
+    var resizedWidth = 0
+    var resizedHeight = 0
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -45,35 +46,22 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
+        if (imagePath.isEmpty() || !::image.isInitialized) return
+
         val g2d = g as Graphics2D
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
-        if (imagePath.isNotEmpty() && ::scaledImage.isInitialized) {
-            val x = (width - scaledImage.width) / 2 + translateX
-            val y = (height - scaledImage.height) / 2 + translateY
+        val x = (width - resizedWidth) / 2 + translateX
+        val y = (height - resizedHeight) / 2 + translateY
 
-            g2d.drawImage(
-                scaledImage,
-                x,
-                y,
-                scaledImage.width,
-                scaledImage.height,
-                this
-            )
-        }
-    }
-
-    private fun resizeBufferedImage(
-        originalImage: BufferedImage,
-        resizedWidth: Int,
-        resizedHeight: Int
-    ): BufferedImage {
-        val resizedImage = BufferedImage(resizedWidth, resizedHeight, BufferedImage.TYPE_INT_ARGB)
-        val g2d = resizedImage.createGraphics()
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-        g2d.drawImage(originalImage, 0, 0, resizedWidth, resizedHeight, null)
-        g2d.dispose()
-        return resizedImage
+        g2d.drawImage(
+            image,
+            x,
+            y,
+            resizedWidth,
+            resizedHeight,
+            this
+        )
     }
 
     fun updateImageSize() {
@@ -88,19 +76,15 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             )
 
             if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
-                scaledImage = resizeBufferedImage(
-                    image, (widthStandardSize.first * zoomRatio).toInt(), (widthStandardSize.second * zoomRatio).toInt()
-                )
+                resizedWidth = (widthStandardSize.first * zoomRatio).toInt()
+                resizedHeight = (widthStandardSize.second * zoomRatio).toInt()
             } else if (width >= heightStandardSize.first && height >= heightStandardSize.second) {
-                scaledImage = resizeBufferedImage(
-                    image,
-                    (heightStandardSize.first * zoomRatio).toInt(),
-                    (heightStandardSize.second * zoomRatio).toInt()
-                )
+                resizedWidth = (heightStandardSize.first * zoomRatio).toInt()
+                resizedHeight = (heightStandardSize.second * zoomRatio).toInt()
             }
         } else {
-            scaledImage =
-                resizeBufferedImage(image, (image.width * zoomRatio).toInt(), (image.height * zoomRatio).toInt())
+            resizedWidth = (image.width * zoomRatio).toInt()
+            resizedHeight = (image.height * zoomRatio).toInt()
         }
 
         repaint()
