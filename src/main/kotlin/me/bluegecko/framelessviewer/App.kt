@@ -264,7 +264,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     focusedPanel.imagePath = fileList[fileListIndex - 1]
                 }
                 focusedPanel.updateImage()
-                updateTitle()
             },
             "runnableRight" to Runnable {
                 if (focusedPanel.imagePath.isEmpty()) return@Runnable
@@ -276,7 +275,24 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     focusedPanel.imagePath = fileList[fileListIndex + 1]
                 }
                 focusedPanel.updateImage()
-                updateTitle()
+            },
+            "runnablePageUp" to Runnable {
+                if (isLocked) return@Runnable
+
+                val panels = getPanels()
+                val index = panels.indexOf(focusedPanel)
+
+                if (index + 1 >= panels.size) focusToPanel(panels[0])
+                else focusToPanel(panels[index + 1])
+            },
+            "runnablePageDown" to Runnable {
+                if (isLocked) return@Runnable
+
+                val panels = getPanels()
+                val index = panels.indexOf(focusedPanel)
+
+                if (index - 1 < 0) focusToPanel(panels[panels.size - 1])
+                else focusToPanel(panels[index - 1])
             }
         )
 
@@ -316,6 +332,12 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             }
             runnableMap["runnableRight"]?.let {
                 keybindingMap[KeyData(KeyEvent.VK_RIGHT)] = it
+            }
+            runnableMap["runnablePageUp"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_PAGE_UP)] = it
+            }
+            runnableMap["runnablePageDown"]?.let {
+                keybindingMap[KeyData(KeyEvent.VK_PAGE_DOWN)] = it
             }
 
             val yaml = Yaml()
@@ -400,7 +422,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     fun getPanels(): List<ImagePanel> {
-        return this.contentPane.components.map { it as ImagePanel }
+        return this.contentPane.components.filterIsInstance<ImagePanel>().sortedBy { it.uuid }
     }
 
     private fun convertToPanelData(): MutableList<ImagePanelData> {

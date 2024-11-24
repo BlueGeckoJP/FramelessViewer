@@ -10,6 +10,7 @@ import java.awt.event.MouseWheelListener
 import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Paths
+import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
@@ -28,6 +29,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var translateY = 0
     var resizedWidth = 0
     var resizedHeight = 0
+    val uuid = UUID.randomUUID()
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -50,7 +52,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         if (imagePath.isEmpty() || !::image.isInitialized) return
 
         val g2d = g as Graphics2D
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         val x = (width - resizedWidth) / 2 + translateX
         val y = (height - resizedHeight) / 2 + translateY
@@ -130,10 +132,12 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
     private fun updateFileList() {
         val dir = Paths.get(imagePath).parent.toFile()
-        fileList = dir.walk()
-            .filter { it.isFile && it.name.contains(extensionRegex) }
-            .map { it.absolutePath }
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+        dir.listFiles()?.let { files ->
+            fileList =
+                files.filter { it.isFile && it.name.contains(extensionRegex) }
+                    .map { it.absolutePath }
+                    .sortedWith(String.CASE_INSENSITIVE_ORDER).asSequence()
+        }
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
