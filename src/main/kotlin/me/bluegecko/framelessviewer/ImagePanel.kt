@@ -13,6 +13,7 @@ import java.nio.file.Paths
 import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
+import javax.swing.SwingWorker
 import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 import kotlin.math.abs
@@ -92,21 +93,38 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     }
 
     fun updateImage() {
-        try {
-            if (imagePath.isEmpty()) return
+        object : SwingWorker<BufferedImage?, Void>() {
+            override fun doInBackground(): BufferedImage? {
+                return try {
+                    ImageIO.read(File(imagePath))
+                } catch (e: Exception) {
+                    null
+                }
+            }
 
-            val file = File(imagePath)
-            image = ImageIO.read(file)
+            override fun done() {
+                try {
+                    if (imagePath.isEmpty()) return
 
-            updateImageSize()
-            updateFileList()
+                    val img = get()
+                    img?.let {
+                        image = it
 
-            repaint()
-            revalidate()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            app.updateTitle()
+                        updateImageSize()
+                        updateFileList()
+
+                        repaint()
+                        revalidate()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    app.updateTitle()
+                }
+            }
+        }.also {
+            app.title = "Loading.. ".plus(app.title)
+            it.execute()
         }
     }
 
