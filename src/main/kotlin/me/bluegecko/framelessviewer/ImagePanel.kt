@@ -266,9 +266,9 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
     inner class ZoomListener : MouseWheelListener {
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            when {
-                e.preciseWheelRotation < 0 -> zoomRatio += 0.1
-                else -> zoomRatio -= 0.1
+            zoomRatio *= when {
+                e.preciseWheelRotation < 0 -> 1.1
+                else -> 0.9
             }
             if (zoomRatio <= 1.0) {
                 translateX = 0
