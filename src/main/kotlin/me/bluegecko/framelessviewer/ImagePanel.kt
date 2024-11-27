@@ -29,6 +29,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var translateY = 0
     var resizedWidth = 0
     var resizedHeight = 0
+    private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
 
     init {
@@ -49,9 +50,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        if (imagePath.isEmpty() || !::image.isInitialized) return
-
-        val scaledImage = image.getScaledInstance(resizedWidth, resizedHeight, Image.SCALE_SMOOTH)
+        if (imagePath.isEmpty() || !::image.isInitialized || scaledImage == null) return
 
         val g2d = g as Graphics2D
 
@@ -90,6 +89,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             resizedWidth = (image.width * zoomRatio).toInt()
             resizedHeight = (image.height * zoomRatio).toInt()
         }
+
+        scaledImage = image.getScaledInstance(resizedWidth, resizedHeight, Image.SCALE_SMOOTH)
 
         repaint()
         revalidate()
@@ -218,8 +219,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
                 this@ImagePanel.location = Point(newX, newY)
             }
-            this@ImagePanel.repaint()
-            this@ImagePanel.revalidate()
+            //this@ImagePanel.repaint()
+            //this@ImagePanel.revalidate()
         }
 
         override fun mouseReleased(e: MouseEvent) {
