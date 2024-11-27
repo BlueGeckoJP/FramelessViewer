@@ -51,17 +51,15 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
         if (imagePath.isEmpty() || !::image.isInitialized) return
 
+        val scaledImage = image.getScaledInstance(resizedWidth, resizedHeight, Image.SCALE_SMOOTH)
+
         val g2d = g as Graphics2D
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
         val x = (width - resizedWidth) / 2 + translateX
         val y = (height - resizedHeight) / 2 + translateY
 
         g2d.drawImage(
-            image,
+            scaledImage,
             x,
             y,
             resizedWidth,
@@ -268,9 +266,9 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
     inner class ZoomListener : MouseWheelListener {
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            when {
-                e.preciseWheelRotation < 0 -> zoomRatio += 0.1
-                else -> zoomRatio -= 0.1
+            zoomRatio *= when {
+                e.preciseWheelRotation < 0 -> 1.1
+                else -> 0.9
             }
             if (zoomRatio <= 1.0) {
                 translateX = 0
