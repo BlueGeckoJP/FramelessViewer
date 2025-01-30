@@ -23,6 +23,7 @@ dependencies {
     implementation("com.formdev:flatlaf:3.5.1")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation("org.yaml:snakeyaml:2.3")
+    implementation("info.picocli:picocli:4.7.6")
 }
 
 tasks.test {
