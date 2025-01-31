@@ -1,10 +1,11 @@
 package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
-import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
+import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.ThreadData
+import picocli.CommandLine
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO
@@ -19,10 +20,18 @@ fun main(args: Array<String>) {
     ImageIO.scanForPlugins()
     ImageIO.getImageReadersByFormatName("webp").next()
 
+    val argumentsParser = ArgumentsParser()
+    CommandLine(argumentsParser).execute(*args)
+
+    if (argumentsParser.daemon) {
+        println("Daemon Mode!")
+    }
+
+
     while (true) {
         if (isFirstTime) {
-            val returnValue = if (args.size == 1) {
-                runApp(AppData(initPath = args[0]))
+            val returnValue = if (argumentsParser.initPath != "") {
+                runApp(AppData(initPath = argumentsParser.initPath))
             } else {
                 runApp()
             }
