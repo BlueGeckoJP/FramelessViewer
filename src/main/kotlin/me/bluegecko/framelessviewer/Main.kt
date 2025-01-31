@@ -14,6 +14,7 @@ import kotlin.system.exitProcess
 
 val threadDataList = mutableListOf<ThreadData>()
 var isFirstTime = true
+var daemon: Daemon? = null
 
 fun main(args: Array<String>) {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
@@ -25,6 +26,8 @@ fun main(args: Array<String>) {
 
     if (argumentsParser.daemon) {
         println("Daemon Mode!")
+        daemon = Daemon()
+        daemon!!.start()
     }
 
 
@@ -40,6 +43,10 @@ fun main(args: Array<String>) {
         }
 
         if (threadDataList.isEmpty()) {
+            if (daemon != null) {
+                daemon!!.stop()
+            }
+
             exitProcess(0)
         }
 
