@@ -1,10 +1,15 @@
 package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
-import me.bluegecko.framelessviewer.data.ChannelMessage.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
+import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.ThreadData
+import picocli.CommandLine
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO
@@ -13,16 +18,36 @@ import kotlin.system.exitProcess
 
 val threadDataList = mutableListOf<ThreadData>()
 var isFirstTime = true
+var daemon: Daemon? = null
+var isNormalExecution = true
 
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
     ImageIO.scanForPlugins()
     ImageIO.getImageReadersByFormatName("webp").next()
 
-    while (true) {
+    val argumentsParser = ArgumentsParser()
+    CommandLine(argumentsParser).execute(*args)
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        if (daemon != null) {
+            daemon!!.stop()
+        }
+
+        threadDataList.forEach { it.thread.cancel() }
+    })
+
+    if (argumentsParser.daemon) {
+        println("Daemon Mode!")
+        daemon = Daemon()
+        daemon!!.start()
+    }
+
+
+    while (isNormalExecution) {
         if (isFirstTime) {
-            val returnValue = if (args.size == 1) {
-                runApp(AppData(initPath = args[0]))
+            val returnValue = if (argumentsParser.initPath != "") {
+                runApp(AppData(initPath = argumentsParser.initPath))
             } else {
                 runApp()
             }
@@ -43,7 +68,7 @@ fun main(args: Array<String>) {
             when (message) {
                 Exit -> {
                     iterator.remove()
-                    item.thread.interrupt()
+                    item.thread.cancel()
                     println("Exited ${item.uuid}")
                 }
 
@@ -58,7 +83,7 @@ fun main(args: Array<String>) {
                     val returnValue = runApp(item.channel.get().appData)
                     addList.add(returnValue)
                     iterator.remove()
-                    item.thread.interrupt()
+                    item.thread.cancel()
                     println("Reinit ${item.uuid} -> ${returnValue.uuid}")
                 }
 
@@ -90,11 +115,18 @@ fun main(args: Array<String>) {
 fun runApp(initAppData: AppData = AppData()): ThreadData {
     val channel = AtomicReference(Channel(appData = initAppData))
     val uuid = UUID.randomUUID().toString()
-    val thread = Thread { App(channel, uuid) }
-    thread.start()
+    val thread = CoroutineScope(Dispatchers.Default).launch {
+        App(channel, uuid)
+    }
     return ThreadData(uuid, thread, channel)
 }
 
 fun getThreadUUIDs(): List<String> {
     return threadDataList.map { it.uuid }
+}
+
+fun newWindowByDaemon(path: String) {
+    val returnValue = runApp(AppData(initPath = path))
+    threadDataList.add(returnValue)
+    println("NewWindow By Daemon  -> ${returnValue.uuid}")
 }
