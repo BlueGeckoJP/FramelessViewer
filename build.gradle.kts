@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "2.1.10"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -14,7 +14,7 @@ dependencies {
     testImplementation(kotlin("test"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.0-RC1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core
     implementation("com.twelvemonkeys.imageio:imageio-core:3.11.0")
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
@@ -24,6 +24,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation("org.yaml:snakeyaml:2.3")
     implementation("info.picocli:picocli:4.7.6")
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+
 }
 
 tasks.test {
