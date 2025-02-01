@@ -1,5 +1,9 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -9,7 +13,7 @@ const val pipePath = "/tmp/framelessviewer_pipe"
 class Daemon {
     @Volatile
     private var isRunning = false
-    private var serverThread: Thread? = null
+    private var serverThread: Job? = null
 
     init {
         if (File(pipePath).exists()) {
@@ -21,23 +25,14 @@ class Daemon {
     fun start() {
         isRunning = true
 
-        serverThread = Thread {
+        serverThread = CoroutineScope(Dispatchers.IO).launch {
             runServer()
-        }.apply {
-            isDaemon = true
-            start()
         }
     }
 
     fun stop() {
         isRunning = false
-        serverThread?.let { thread ->
-            try {
-                thread.join(5000)
-            } catch (e: InterruptedException) {
-                println("Daemon: Shutdown interrupted")
-            }
-        }
+        serverThread?.cancel()
 
         File(pipePath).delete()
     }
