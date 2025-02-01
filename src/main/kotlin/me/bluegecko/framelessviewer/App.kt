@@ -363,7 +363,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                     }
                 }
             } catch (_: Exception) {
-                println("Keybinding overrides is empty")
             }
         }
 

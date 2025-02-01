@@ -115,7 +115,7 @@ fun main(args: Array<String>) = runBlocking {
 fun runApp(initAppData: AppData = AppData()): ThreadData {
     val channel = AtomicReference(Channel(appData = initAppData))
     val uuid = UUID.randomUUID().toString()
-    val thread = CoroutineScope(Dispatchers.Main).launch {
+    val thread = CoroutineScope(Dispatchers.Default).launch {
         App(channel, uuid)
     }
     return ThreadData(uuid, thread, channel)
