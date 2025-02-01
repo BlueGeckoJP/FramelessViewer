@@ -1,6 +1,10 @@
 package me.bluegecko.framelessviewer
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
@@ -17,7 +21,7 @@ var isFirstTime = true
 var daemon: Daemon? = null
 var isNormalExecution = true
 
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
     ImageIO.scanForPlugins()
     ImageIO.getImageReadersByFormatName("webp").next()
@@ -29,6 +33,8 @@ fun main(args: Array<String>) {
         if (daemon != null) {
             daemon!!.stop()
         }
+
+        threadDataList.forEach { it.thread.cancel() }
     })
 
     if (argumentsParser.daemon) {
@@ -62,7 +68,7 @@ fun main(args: Array<String>) {
             when (message) {
                 Exit -> {
                     iterator.remove()
-                    item.thread.interrupt()
+                    item.thread.cancel()
                     println("Exited ${item.uuid}")
                 }
 
@@ -77,7 +83,7 @@ fun main(args: Array<String>) {
                     val returnValue = runApp(item.channel.get().appData)
                     addList.add(returnValue)
                     iterator.remove()
-                    item.thread.interrupt()
+                    item.thread.cancel()
                     println("Reinit ${item.uuid} -> ${returnValue.uuid}")
                 }
 
@@ -109,8 +115,9 @@ fun main(args: Array<String>) {
 fun runApp(initAppData: AppData = AppData()): ThreadData {
     val channel = AtomicReference(Channel(appData = initAppData))
     val uuid = UUID.randomUUID().toString()
-    val thread = Thread { App(channel, uuid) }
-    thread.start()
+    val thread = CoroutineScope(Dispatchers.Main).launch {
+        App(channel, uuid)
+    }
     return ThreadData(uuid, thread, channel)
 }
 
