@@ -1,6 +1,8 @@
 package me.bluegecko.framelessviewer
 
 import picocli.CommandLine.*
+import java.io.File
+import java.io.FileWriter
 
 @Command(name = "FramelessViewer", mixinStandardHelpOptions = true, subcommands = [DCSubcomand::class])
 class ArgumentsParser : Runnable {
@@ -26,7 +28,21 @@ class DCSubcomand : Runnable {
         @Parameters(index = "0", description = ["Path of the file"], paramLabel = "PATH")
         var path = ""
 
-        override fun run() {}
+        override fun run() {
+            try {
+                if (File(pipePath).exists()) {
+                    FileWriter(pipePath, true).use { writer ->
+                        writer.write("open $path\n")
+                        writer.flush()
+                        println("DC Open: send command 'open $path'")
+                    }
+                } else {
+                    println("DC Open: pipe not found. Daemon not running?")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     override fun run() {}

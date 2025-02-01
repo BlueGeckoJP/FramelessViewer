@@ -24,6 +24,12 @@ fun main(args: Array<String>) {
     val argumentsParser = ArgumentsParser()
     CommandLine(argumentsParser).execute(*args)
 
+    Runtime.getRuntime().addShutdownHook(Thread {
+        if (daemon != null) {
+            daemon!!.stop()
+        }
+    })
+
     if (argumentsParser.daemon) {
         println("Daemon Mode!")
         daemon = Daemon()
@@ -43,10 +49,6 @@ fun main(args: Array<String>) {
         }
 
         if (threadDataList.isEmpty()) {
-            if (daemon != null) {
-                daemon!!.stop()
-            }
-
             exitProcess(0)
         }
 

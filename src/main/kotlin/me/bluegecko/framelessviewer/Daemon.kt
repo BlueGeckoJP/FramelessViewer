@@ -4,17 +4,18 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 
-class Daemon {
-    private val pipePath = "/tmp/framelessviewer_pipe"
+const val pipePath = "/tmp/framelessviewer_pipe"
 
+class Daemon {
     @Volatile
     private var isRunning = false
     private var serverThread: Thread? = null
 
     init {
-        if (!File(pipePath).exists()) {
-            Runtime.getRuntime().exec("mkfifo $pipePath").waitFor()
+        if (File(pipePath).exists()) {
+            File(pipePath).delete()
         }
+        Runtime.getRuntime().exec("mkfifo $pipePath").waitFor()
     }
 
     fun start() {
