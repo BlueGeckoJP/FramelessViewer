@@ -42,8 +42,12 @@ class DCSubcomand : Runnable {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
+            isNormalExecution = false
         }
     }
 
-    override fun run() {}
+    override fun run() {
+        isNormalExecution = false
+    }
 }

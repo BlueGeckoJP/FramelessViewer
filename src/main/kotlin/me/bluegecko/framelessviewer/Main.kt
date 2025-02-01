@@ -15,6 +15,7 @@ import kotlin.system.exitProcess
 val threadDataList = mutableListOf<ThreadData>()
 var isFirstTime = true
 var daemon: Daemon? = null
+var isNormalExecution = true
 
 fun main(args: Array<String>) {
     UIManager.setLookAndFeel(FlatMacDarkLaf())
@@ -37,7 +38,7 @@ fun main(args: Array<String>) {
     }
 
 
-    while (true) {
+    while (isNormalExecution) {
         if (isFirstTime) {
             val returnValue = if (argumentsParser.initPath != "") {
                 runApp(AppData(initPath = argumentsParser.initPath))
