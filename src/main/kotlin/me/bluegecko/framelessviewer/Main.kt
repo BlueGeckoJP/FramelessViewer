@@ -116,3 +116,9 @@ fun runApp(initAppData: AppData = AppData()): ThreadData {
 fun getThreadUUIDs(): List<String> {
     return threadDataList.map { it.uuid }
 }
+
+fun newWindowByDaemon(path: String) {
+    val returnValue = runApp(AppData(initPath = path))
+    threadDataList.add(returnValue)
+    println("NewWindow By Daemon  -> ${returnValue.uuid}")
+}

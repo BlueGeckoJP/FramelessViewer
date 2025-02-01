@@ -46,11 +46,14 @@ class Daemon {
         while (isRunning) {
             try {
                 BufferedReader(FileReader(pipePath)).use { reader ->
-                    println("Daemon: Waiting for commands...")
-
                     var line = ""
                     while (isRunning && reader.readLine().also { line = it } != null) {
-                        println(line)
+                        if (line.startsWith("open ")) {
+                            val path = line.substring("open ".length)
+                            if (File(path).exists()) {
+                                newWindowByDaemon(path)
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {
