@@ -126,7 +126,9 @@ fun getThreadUUIDs(): List<String> {
 }
 
 fun newWindowByDaemon(path: String) {
-    val returnValue = runApp(AppData(initPath = path))
+    val beforeAppData = threadDataList.last().channel.get().appData
+    val returnValue =
+        runApp(AppData(initPath = path, isUndecorated = beforeAppData.isUndecorated, bounds = beforeAppData.bounds))
     threadDataList.add(returnValue)
     println("NewWindow By Daemon  -> ${returnValue.uuid}")
 }
