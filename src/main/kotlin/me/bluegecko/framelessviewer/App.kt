@@ -41,6 +41,18 @@ class App(
 
         updateAppSize()
 
+        addPropertyChangeListener("bounds") { event ->
+            if (event.newValue != appData.value.bounds) {
+                appData.value.bounds = event.newValue as Rectangle
+            }
+        }
+
+        addPropertyChangeListener("isUndecorated") { event ->
+            if (event.newValue != appData.value.isUndecorated) {
+                appData.value.isUndecorated = event.newValue as Boolean
+            }
+        }
+
         val itemNew = JMenuItem("New")
         val itemNewWidget = JMenuItem("New Widget")
         val itemOpen = JMenuItem("Open")
@@ -411,6 +423,7 @@ class App(
             appWidth = width
             appHeight = height
         }
+        appData.value.bounds = Rectangle(this.x, this.y, appWidth, appHeight)
     }
 
     private fun createNewPanel(path: String = ""): ImagePanel {
