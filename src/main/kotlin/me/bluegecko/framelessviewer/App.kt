@@ -1,5 +1,6 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import me.bluegecko.framelessviewer.data.*
 import me.bluegecko.framelessviewer.window.KeybindingWindow
 import org.yaml.snakeyaml.Yaml
@@ -16,14 +17,16 @@ import javax.swing.event.MenuEvent
 import javax.swing.event.MenuListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class App(private val channel: AtomicReference<Channel>, private val uuid: String) : JFrame() {
-    private val appData = channel.get().appData
+class App(
+    private val channel: AtomicReference<Channel>,
+    private val uuid: String,
+    val appData: MutableStateFlow<AppData>
+) : JFrame() {
     val popupMenu = PopupMenu(this)
     private var focusedPanel: ImagePanel
     var appWidth = this.width
     var appHeight = this.height
     var isPressedShiftKey = false
-    var isLocked = appData.isLocked
     val defaultColor: Color = Color.WHITE
     private val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
@@ -31,12 +34,24 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
 
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
-        isUndecorated = appData.isUndecorated
-        bounds = appData.bounds
+        isUndecorated = appData.value.isUndecorated
+        bounds = appData.value.bounds
         layout = null
         isVisible = true
 
         updateAppSize()
+
+        addPropertyChangeListener("bounds") { event ->
+            if (event.newValue != appData.value.bounds) {
+                appData.value.bounds = event.newValue as Rectangle
+            }
+        }
+
+        addPropertyChangeListener("isUndecorated") { event ->
+            if (event.newValue != appData.value.isUndecorated) {
+                appData.value.isUndecorated = event.newValue as Boolean
+            }
+        }
 
         val itemNew = JMenuItem("New")
         val itemNewWidget = JMenuItem("New Widget")
@@ -97,8 +112,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         popupMenu.add(itemRemoveWidget)
         popupMenu.add(itemExit)
 
-        if (appData.panelDataList.isNotEmpty()) {
-            appData.panelDataList.forEach {
+        if (appData.value.panelDataList.isNotEmpty()) {
+            appData.value.panelDataList.forEach {
                 val panel = createNewPanel(it.imagePath)
                 panel.bounds = it.bounds
             }
@@ -107,8 +122,8 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             revalidate()
         }
 
-        if (appData.initPath.isNotEmpty()) {
-            createNewPanel(appData.initPath)
+        if (appData.value.initPath.isNotEmpty()) {
+            createNewPanel(appData.value.initPath)
         }
 
         if (getPanels().isEmpty()) {
@@ -125,7 +140,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            if (isLocked) {
+            if (appData.value.isLocked) {
                 focusedPanel.border = EmptyBorder(0, 0, 0, 0)
                 focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
             } else focusToPanel(getPanels()[0])
@@ -144,7 +159,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
 
-            if (isLocked) {
+            if (appData.value.isLocked) {
                 focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                 repaint()
                 revalidate()
@@ -167,13 +182,13 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
         val runnableMap: Map<String, Runnable> = mapOf(
             "runnableLeftCtrl" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                 focusedPanel.updateImageSize()
             },
             "runnableRightCtrl" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         appWidth - appWidth / panelDivisor,
@@ -184,13 +199,13 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImageSize()
             },
             "runnableUpCtrl" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
                 focusedPanel.updateImageSize()
             },
             "runnableDownCtrl" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -201,7 +216,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImageSize()
             },
             "runnableLeftAlt" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -212,7 +227,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImageSize()
             },
             "runnableRightAlt" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x + focusedPanel.width / panelDivisor,
@@ -223,7 +238,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImageSize()
             },
             "runnableUpAlt" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -234,7 +249,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImageSize()
             },
             "runnableDownAlt" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -277,7 +292,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 focusedPanel.updateImage()
             },
             "runnablePageUp" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
 
                 val panels = getPanels()
                 val index = panels.indexOf(focusedPanel)
@@ -286,7 +301,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
                 else focusToPanel(panels[index + 1])
             },
             "runnablePageDown" to Runnable {
-                if (isLocked) return@Runnable
+                if (appData.value.isLocked) return@Runnable
 
                 val panels = getPanels()
                 val index = panels.indexOf(focusedPanel)
@@ -367,7 +382,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
 
         override fun keyPressed(e: KeyEvent?) {
-            if (isLocked) return
+            if (appData.value.isLocked) return
 
             if (e != null) {
                 if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
@@ -387,7 +402,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         override fun actionPerformed(e: ActionEvent) {
             if (channel.get().isReceived) {
                 val receivedImagePath = channel.get().receivedImagePath
-                if (isLocked) {
+                if (appData.value.isLocked) {
                     focusedPanel.imagePath = receivedImagePath
                     focusedPanel.updateImage()
                 } else {
@@ -408,6 +423,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
             appWidth = width
             appHeight = height
         }
+        appData.value.bounds = Rectangle(this.x, this.y, appWidth, appHeight)
     }
 
     private fun createNewPanel(path: String = ""): ImagePanel {
@@ -438,15 +454,6 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         updateTitle()
         repaint()
         revalidate()
-    }
-
-    private fun createExportAppData(): AppData {
-        return appData.copy(
-            isUndecorated = isUndecorated,
-            bounds = bounds,
-            panelDataList = convertToPanelData(),
-            isLocked = isLocked
-        )
     }
 
     private fun sendImageTo(target: String) {
@@ -481,6 +488,16 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
         }
     }
 
+    private fun updateAppData() {
+        //appData.value.isLocked
+        appData.value.panelDataList = convertToPanelData()
+        //appData.value.initPath
+        appData.value.bounds = bounds
+        appData.value.isUndecorated = isUndecorated
+
+        println(appData.value)
+    }
+
     private fun itemNewFun() {
         channel.set(Channel(ChannelMessage.NewWindow))
     }
@@ -510,12 +527,13 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun itemCloneFun() {
-        channel.set(Channel(ChannelMessage.NewWindowWithImage, createExportAppData()))
+        updateAppData()
+        channel.set(Channel(ChannelMessage.NewWindowWithImage))
     }
 
     private fun itemLockFun() {
-        isLocked = !isLocked
-        focusedPanel.border = if (isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
+        appData.value.isLocked = !appData.value.isLocked
+        focusedPanel.border = if (appData.value.isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
         focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
 
         repaint()
@@ -539,9 +557,9 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     }
 
     private fun itemToggleTitleFun() {
-        val exportAppData = createExportAppData()
-        exportAppData.isUndecorated = !isUndecorated
-        channel.set(Channel(ChannelMessage.Reinit, exportAppData))
+        updateAppData()
+        appData.value.isUndecorated = !appData.value.isUndecorated
+        channel.set(Channel(ChannelMessage.Reinit))
         this.dispose()
     }
 
@@ -553,7 +571,7 @@ class App(private val channel: AtomicReference<Channel>, private val uuid: Strin
     private fun itemRemoveWidgetFun() {
         this.remove(focusedPanel)
 
-        isLocked = false
+        appData.value.isLocked = false
 
         if (getPanels().isEmpty()) {
             createNewPanel()

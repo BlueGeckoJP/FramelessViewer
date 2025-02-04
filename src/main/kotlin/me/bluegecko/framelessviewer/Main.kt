@@ -3,6 +3,7 @@ package me.bluegecko.framelessviewer
 import com.formdev.flatlaf.themes.FlatMacDarkLaf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.bluegecko.framelessviewer.data.AppData
@@ -47,7 +48,7 @@ fun main(args: Array<String>) = runBlocking {
     while (isNormalExecution) {
         if (isFirstTime) {
             val returnValue = if (argumentsParser.initPath != "") {
-                runApp(AppData(initPath = argumentsParser.initPath))
+                runApp(MutableStateFlow(AppData(initPath = argumentsParser.initPath)))
             } else {
                 runApp()
             }
@@ -80,7 +81,7 @@ fun main(args: Array<String>) = runBlocking {
                 }
 
                 Reinit -> {
-                    val returnValue = runApp(item.channel.get().appData)
+                    val returnValue = runApp(MutableStateFlow(item.appData.value))
                     addList.add(returnValue)
                     iterator.remove()
                     item.thread.cancel()
@@ -88,7 +89,8 @@ fun main(args: Array<String>) = runBlocking {
                 }
 
                 NewWindowWithImage -> {
-                    val returnValue = runApp(item.channel.get().appData)
+                    println(item.appData.value)
+                    val returnValue = runApp(MutableStateFlow(item.appData.value))
                     addList.add(returnValue)
                     item.channel.set(Channel())
                     println("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
@@ -112,13 +114,13 @@ fun main(args: Array<String>) = runBlocking {
     }
 }
 
-fun runApp(initAppData: AppData = AppData()): ThreadData {
-    val channel = AtomicReference(Channel(appData = initAppData))
+fun runApp(initAppData: MutableStateFlow<AppData> = MutableStateFlow(AppData())): ThreadData {
+    val channel = AtomicReference(Channel())
     val uuid = UUID.randomUUID().toString()
     val thread = CoroutineScope(Dispatchers.Default).launch {
-        App(channel, uuid)
+        App(channel, uuid, initAppData)
     }
-    return ThreadData(uuid, thread, channel)
+    return ThreadData(uuid, thread, channel, initAppData)
 }
 
 fun getThreadUUIDs(): List<String> {
@@ -126,7 +128,8 @@ fun getThreadUUIDs(): List<String> {
 }
 
 fun newWindowByDaemon(path: String) {
-    val returnValue = runApp(AppData(initPath = path))
+    val lastAppData = threadDataList.last().appData.value
+    val returnValue = runApp(MutableStateFlow(lastAppData.apply { this.initPath = path }))
     threadDataList.add(returnValue)
     println("NewWindow By Daemon  -> ${returnValue.uuid}")
 }
