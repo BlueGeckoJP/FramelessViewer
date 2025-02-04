@@ -423,7 +423,7 @@ class App(
             appWidth = width
             appHeight = height
         }
-        appData.value.bounds = Rectangle(this.x, this.y, appWidth, appHeight)
+        appData.value.bounds = Rectangle(this.x, this.y, this.width, this.height)
     }
 
     private fun createNewPanel(path: String = ""): ImagePanel {
