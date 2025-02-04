@@ -128,7 +128,8 @@ fun getThreadUUIDs(): List<String> {
 }
 
 fun newWindowByDaemon(path: String) {
-    val returnValue = runApp(MutableStateFlow(AppData(initPath = path)))
+    val lastAppData = threadDataList.last().appData
+    val returnValue = runApp(MutableStateFlow(lastAppData.value.apply { this.initPath = path }))
     threadDataList.add(returnValue)
     println("NewWindow By Daemon  -> ${returnValue.uuid}")
 }
