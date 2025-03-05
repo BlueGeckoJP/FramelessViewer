@@ -89,7 +89,6 @@ fun main(args: Array<String>) = runBlocking {
                 }
 
                 NewWindowWithImage -> {
-                    println(item.appData.value)
                     val returnValue = runApp(MutableStateFlow(item.appData.value))
                     addList.add(returnValue)
                     item.channel.set(Channel())

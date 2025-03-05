@@ -494,8 +494,6 @@ class App(
         //appData.value.initPath
         appData.value.bounds = bounds
         appData.value.isUndecorated = isUndecorated
-
-        println(appData.value)
     }
 
     private fun itemNewFun() {

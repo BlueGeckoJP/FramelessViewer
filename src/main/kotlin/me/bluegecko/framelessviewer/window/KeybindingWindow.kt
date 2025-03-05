@@ -36,7 +36,6 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
                 SwingUtilities.invokeLater {
                     val listener = object : KeyAdapter() {
                         override fun keyPressed(e: KeyEvent) {
-                            println("aa")
                             this@KeybindingWindow.enteredKey =
                                 KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
                         }
