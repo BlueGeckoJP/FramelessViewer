@@ -43,7 +43,17 @@ class App(
 
         addPropertyChangeListener("bounds") { event ->
             if (event.newValue != appData.value.bounds) {
-                appData.value.bounds = event.newValue as Rectangle
+                val b = event.newValue as Rectangle
+                val newWidth: Int
+                val newHeight: Int
+                if (!isUndecorated) {
+                    newWidth = b.width - insets.left - insets.right
+                    newHeight = b.height - insets.top - insets.bottom
+                } else {
+                    newWidth = b.width
+                    newHeight = b.height
+                }
+                appData.value.bounds = Rectangle(b.x, b.y, newWidth, newHeight)
             }
         }
 
