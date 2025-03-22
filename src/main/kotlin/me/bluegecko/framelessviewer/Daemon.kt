@@ -19,7 +19,7 @@ class Daemon {
         if (File(pipePath).exists()) {
             File(pipePath).delete()
         }
-        Runtime.getRuntime().exec("mkfifo $pipePath").waitFor()
+        Runtime.getRuntime().exec(arrayOf("mkfifo", pipePath)).waitFor()
     }
 
     fun start() {
