@@ -46,7 +46,7 @@ class Daemon {
                         if (line.startsWith("open ")) {
                             val path = line.substring("open ".length)
                             if (File(path).exists()) {
-                                newWindowByDaemon(path)
+                                appController.newWindowByDaemon(path)
                             }
                         }
                     }

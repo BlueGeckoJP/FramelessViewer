@@ -91,10 +91,10 @@ class App(
             override fun menuSelected(e: MenuEvent) {
                 menuSendImageTo.removeAll()
 
-                getThreadUUIDs().forEach {
+                appController.getThreadUUIDs().forEach {
                     if (it != uuid) {
                         val otherUUID = it
-                        val item = JMenuItem(getShortUUID(otherUUID))
+                        val item = JMenuItem(appController.getShortUUID(otherUUID))
                         item.addActionListener { sendImageTo(otherUUID) }
                         menuSendImageTo.add(item)
                     }
@@ -467,7 +467,7 @@ class App(
     }
 
     private fun sendImageTo(target: String) {
-        val uuids = getThreadUUIDs()
+        val uuids = appController.getThreadUUIDs()
         if (uuids.contains(target)) {
             channel.set(
                 Channel(
@@ -479,10 +479,6 @@ class App(
         }
     }
 
-    fun getShortUUID(uuid: String): String {
-        return uuid.substringBefore("-")
-    }
-
     fun updateTitle() {
         try {
             val imageName = File(focusedPanel.imagePath).name
@@ -490,11 +486,11 @@ class App(
 
             title =
                 "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
-                    getShortUUID(uuid)
+                    appController.getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
             title =
-                "${getShortUUID(uuid)} | PD:${panelDivisor}"
+                "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
         }
     }
 
