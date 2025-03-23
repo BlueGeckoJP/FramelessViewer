@@ -104,7 +104,7 @@ class AppController {
     }
 
     fun newWindowByDaemon(path: String) {
-        val lastAppData = threadDataList.last().appData.get().copy()
+        val lastAppData = threadDataList.last().appData.get()
         val returnValue = runApp(AppData(lastAppData.apply { this.initPath = path }))
         threadDataList.add(returnValue)
         println("NewWindow By Daemon -> ${returnValue.uuid}")

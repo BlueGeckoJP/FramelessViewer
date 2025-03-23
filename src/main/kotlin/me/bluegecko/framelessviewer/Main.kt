@@ -14,6 +14,8 @@ fun main(args: Array<String>) = runBlocking {
     ImageIO.scanForPlugins()
     ImageIO.getImageReadersByFormatName("webp").next()
 
+    appController = AppController()
+
     val argumentsParser = ArgumentsParser()
     CommandLine(argumentsParser).execute(*args)
 
@@ -31,6 +33,5 @@ fun main(args: Array<String>) = runBlocking {
         daemon!!.start()
     }
 
-    appController = AppController()
     appController.run(argumentsParser.initPath)
 }
