@@ -219,8 +219,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
                 this@ImagePanel.location = Point(newX, newY)
             }
-            //this@ImagePanel.repaint()
-            //this@ImagePanel.revalidate()
         }
 
         override fun mouseReleased(e: MouseEvent) {

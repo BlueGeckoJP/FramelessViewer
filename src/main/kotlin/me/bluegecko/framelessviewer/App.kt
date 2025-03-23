@@ -54,30 +54,6 @@ class App(
 
         updateAppSize()
 
-        /*
-        addPropertyChangeListener("bounds") { event ->
-            if (event.newValue != appData.get().bounds) {
-                val b = event.newValue as Rectangle
-                val newWidth: Int
-                val newHeight: Int
-                if (!isUndecorated) {
-                    newWidth = b.width - insets.left - insets.right
-                    newHeight = b.height - insets.top - insets.bottom
-                } else {
-                    newWidth = b.width
-                    newHeight = b.height
-                }
-                appData.applyData { bounds = Rectangle(b.x, b.y, newWidth, newHeight) }
-            }
-        }
-
-        addPropertyChangeListener("isUndecorated") { event ->
-            if (event.newValue != appData.get().isUndecorated) {
-                appData.applyData { isUndecorated = event.newValue as Boolean }
-            }
-        }
-         */
-
         if (appData.get().panelDataList.isNotEmpty()) {
             appData.get().panelDataList.forEach {
                 val panel = createNewPanel(it.imagePath)
