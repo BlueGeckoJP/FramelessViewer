@@ -18,9 +18,7 @@ import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
 
 class App(
-    val channel: AtomicReference<Channel>,
-    val uuid: String,
-    val appData: AppData
+    val channel: AtomicReference<Channel>, val uuid: String, val appData: AppData
 ) : JFrame() {
     val popupMenu = PopupMenu(this)
     var focusedPanel: ImagePanel
@@ -122,136 +120,101 @@ class App(
 
     inner class AppKeyAdapter : KeyAdapter() {
         val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
-        val runnableMap: Map<String, Runnable> = mapOf(
-            "runnableLeftCtrl" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
-                focusedPanel.updateImageSize()
-            },
-            "runnableRightCtrl" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        appWidth - appWidth / panelDivisor,
-                        focusedPanel.y,
-                        appWidth / panelDivisor,
-                        focusedPanel.height
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableUpCtrl" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
-                focusedPanel.updateImageSize()
-            },
-            "runnableDownCtrl" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        focusedPanel.x,
-                        appHeight - appHeight / panelDivisor,
-                        focusedPanel.width,
-                        appHeight / panelDivisor
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableLeftAlt" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        focusedPanel.x,
-                        focusedPanel.y,
-                        focusedPanel.width / panelDivisor,
-                        focusedPanel.height
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableRightAlt" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        focusedPanel.x + focusedPanel.width / panelDivisor,
-                        focusedPanel.y,
-                        focusedPanel.width / panelDivisor,
-                        focusedPanel.height
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableUpAlt" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        focusedPanel.x,
-                        focusedPanel.y,
-                        focusedPanel.width,
-                        focusedPanel.height / panelDivisor
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableDownAlt" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-                focusedPanel.bounds =
-                    Rectangle(
-                        focusedPanel.x,
-                        focusedPanel.y + focusedPanel.height / panelDivisor,
-                        focusedPanel.width,
-                        focusedPanel.height / panelDivisor
-                    )
-                focusedPanel.updateImageSize()
-            },
-            "runnableUp" to Runnable {
-                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
-                repaint()
-                revalidate()
-                focusedPanel.updateImageSize()
-            },
-            "runnableDown" to Runnable {
-                panelDivisor = 5 - panelDivisor
-                updateTitle()
-            },
-            "runnableLeft" to Runnable {
-                if (focusedPanel.imagePath.isEmpty()) return@Runnable
-                val fileList = focusedPanel.fileList.toList()
-                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-                if (fileListIndex - 1 < 0) {
-                    focusedPanel.imagePath = fileList[fileList.size - 1]
-                } else {
-                    focusedPanel.imagePath = fileList[fileListIndex - 1]
-                }
-                focusedPanel.updateImage()
-            },
-            "runnableRight" to Runnable {
-                if (focusedPanel.imagePath.isEmpty()) return@Runnable
-                val fileList = focusedPanel.fileList.toList()
-                val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
-                if (fileListIndex + 1 >= fileList.size) {
-                    focusedPanel.imagePath = fileList[0]
-                } else {
-                    focusedPanel.imagePath = fileList[fileListIndex + 1]
-                }
-                focusedPanel.updateImage()
-            },
-            "runnablePageUp" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-
-                val panels = getPanels()
-                val index = panels.indexOf(focusedPanel)
-
-                if (index + 1 >= panels.size) focusToPanel(panels[0])
-                else focusToPanel(panels[index + 1])
-            },
-            "runnablePageDown" to Runnable {
-                if (appData.get().isLocked) return@Runnable
-
-                val panels = getPanels()
-                val index = panels.indexOf(focusedPanel)
-
-                if (index - 1 < 0) focusToPanel(panels[panels.size - 1])
-                else focusToPanel(panels[index - 1])
+        val runnableMap: Map<String, Runnable> = mapOf("runnableLeftCtrl" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
+            focusedPanel.updateImageSize()
+        }, "runnableRightCtrl" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                appWidth - appWidth / panelDivisor, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableUpCtrl" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
+            focusedPanel.updateImageSize()
+        }, "runnableDownCtrl" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                focusedPanel.x, appHeight - appHeight / panelDivisor, focusedPanel.width, appHeight / panelDivisor
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableLeftAlt" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                focusedPanel.x, focusedPanel.y, focusedPanel.width / panelDivisor, focusedPanel.height
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableRightAlt" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                focusedPanel.x + focusedPanel.width / panelDivisor,
+                focusedPanel.y,
+                focusedPanel.width / panelDivisor,
+                focusedPanel.height
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableUpAlt" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                focusedPanel.x, focusedPanel.y, focusedPanel.width, focusedPanel.height / panelDivisor
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableDownAlt" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+            focusedPanel.bounds = Rectangle(
+                focusedPanel.x,
+                focusedPanel.y + focusedPanel.height / panelDivisor,
+                focusedPanel.width,
+                focusedPanel.height / panelDivisor
+            )
+            focusedPanel.updateImageSize()
+        }, "runnableUp" to Runnable {
+            focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+            repaint()
+            revalidate()
+            focusedPanel.updateImageSize()
+        }, "runnableDown" to Runnable {
+            panelDivisor = 5 - panelDivisor
+            updateTitle()
+        }, "runnableLeft" to Runnable {
+            if (focusedPanel.imagePath.isEmpty()) return@Runnable
+            val fileList = focusedPanel.fileList.toList()
+            val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+            if (fileListIndex - 1 < 0) {
+                focusedPanel.imagePath = fileList[fileList.size - 1]
+            } else {
+                focusedPanel.imagePath = fileList[fileListIndex - 1]
             }
-        )
+            focusedPanel.updateImage()
+        }, "runnableRight" to Runnable {
+            if (focusedPanel.imagePath.isEmpty()) return@Runnable
+            val fileList = focusedPanel.fileList.toList()
+            val fileListIndex = fileList.indexOf(focusedPanel.imagePath)
+            if (fileListIndex + 1 >= fileList.size) {
+                focusedPanel.imagePath = fileList[0]
+            } else {
+                focusedPanel.imagePath = fileList[fileListIndex + 1]
+            }
+            focusedPanel.updateImage()
+        }, "runnablePageUp" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+
+            val panels = getPanels()
+            val index = panels.indexOf(focusedPanel)
+
+            if (index + 1 >= panels.size) focusToPanel(panels[0])
+            else focusToPanel(panels[index + 1])
+        }, "runnablePageDown" to Runnable {
+            if (appData.get().isLocked) return@Runnable
+
+            val panels = getPanels()
+            val index = panels.indexOf(focusedPanel)
+
+            if (index - 1 < 0) focusToPanel(panels[panels.size - 1])
+            else focusToPanel(panels[index - 1])
+        })
 
         init {
             runnableMap["runnableLeftCtrl"]?.let {
@@ -408,8 +371,7 @@ class App(
                     appController.getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
-            title =
-                "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
+            title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
         }
     }
 
