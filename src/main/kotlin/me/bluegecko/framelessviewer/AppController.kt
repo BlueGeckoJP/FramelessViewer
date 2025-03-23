@@ -2,11 +2,11 @@ package me.bluegecko.framelessviewer
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
+import me.bluegecko.framelessviewer.data.InnerAppData
 import me.bluegecko.framelessviewer.data.ThreadData
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
@@ -23,7 +23,7 @@ class AppController {
                 val returnValue = if (initPath == "") {
                     runApp()
                 } else {
-                    runApp(MutableStateFlow(AppData(initPath = initPath)))
+                    runApp(AppData(InnerAppData(initPath = initPath)))
                 }
                 threadDataList.add(returnValue)
                 isFirstTime = false
@@ -54,7 +54,7 @@ class AppController {
                     }
 
                     Reinit -> {
-                        val returnValue = runApp(MutableStateFlow(item.appData.value))
+                        val returnValue = runApp(AppData(item.appData.get().copy()))
                         addList.add(returnValue)
                         iterator.remove()
                         item.thread.cancel()
@@ -62,7 +62,7 @@ class AppController {
                     }
 
                     NewWindowWithImage -> {
-                        val returnValue = runApp(MutableStateFlow(item.appData.value))
+                        val returnValue = runApp(AppData(item.appData.get().copy()))
                         addList.add(returnValue)
                         item.channel.set(Channel())
                         println("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
@@ -86,7 +86,7 @@ class AppController {
         }
     }
 
-    private fun runApp(initAppData: MutableStateFlow<AppData> = MutableStateFlow(AppData())): ThreadData {
+    private fun runApp(initAppData: AppData = AppData()): ThreadData {
         val channel = AtomicReference(Channel())
         val uuid = UUID.randomUUID().toString()
         val thread = CoroutineScope(Dispatchers.Default).launch {
@@ -104,8 +104,8 @@ class AppController {
     }
 
     fun newWindowByDaemon(path: String) {
-        val lastAppData = threadDataList.last().appData.value.copy()
-        val returnValue = runApp(MutableStateFlow(lastAppData.apply { this.initPath = path }))
+        val lastAppData = threadDataList.last().appData.get().copy()
+        val returnValue = runApp(AppData(lastAppData.apply { this.initPath = path }))
         threadDataList.add(returnValue)
         println("NewWindow By Daemon -> ${returnValue.uuid}")
     }

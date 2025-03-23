@@ -1,6 +1,5 @@
 package me.bluegecko.framelessviewer
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import me.bluegecko.framelessviewer.data.*
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
@@ -18,7 +17,7 @@ import javax.swing.border.LineBorder
 class App(
     val channel: AtomicReference<Channel>,
     val uuid: String,
-    val appData: MutableStateFlow<AppData>
+    val appData: AppData
 ) : JFrame() {
     val popupMenu = PopupMenu(this)
     var focusedPanel: ImagePanel
@@ -32,15 +31,15 @@ class App(
 
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
-        isUndecorated = appData.value.isUndecorated
-        bounds = appData.value.bounds
+        isUndecorated = appData.get().isUndecorated
+        bounds = appData.get().bounds
         layout = null
         isVisible = true
 
         updateAppSize()
 
         addPropertyChangeListener("bounds") { event ->
-            if (event.newValue != appData.value.bounds) {
+            if (event.newValue != appData.get().bounds) {
                 val b = event.newValue as Rectangle
                 val newWidth: Int
                 val newHeight: Int
@@ -51,18 +50,18 @@ class App(
                     newWidth = b.width
                     newHeight = b.height
                 }
-                appData.value.bounds = Rectangle(b.x, b.y, newWidth, newHeight)
+                appData.applyData { bounds = Rectangle(b.x, b.y, newWidth, newHeight) }
             }
         }
 
         addPropertyChangeListener("isUndecorated") { event ->
-            if (event.newValue != appData.value.isUndecorated) {
-                appData.value.isUndecorated = event.newValue as Boolean
+            if (event.newValue != appData.get().isUndecorated) {
+                appData.applyData { isUndecorated = event.newValue as Boolean }
             }
         }
 
-        if (appData.value.panelDataList.isNotEmpty()) {
-            appData.value.panelDataList.forEach {
+        if (appData.get().panelDataList.isNotEmpty()) {
+            appData.get().panelDataList.forEach {
                 val panel = createNewPanel(it.imagePath)
                 panel.bounds = it.bounds
             }
@@ -71,8 +70,8 @@ class App(
             revalidate()
         }
 
-        if (appData.value.initPath.isNotEmpty()) {
-            createNewPanel(appData.value.initPath)
+        if (appData.get().initPath.isNotEmpty()) {
+            createNewPanel(appData.get().initPath)
         }
 
         if (getPanels().isEmpty()) {
@@ -89,7 +88,7 @@ class App(
         SwingUtilities.invokeLater {
             updateAppSize()
 
-            if (appData.value.isLocked) {
+            if (appData.get().isLocked) {
                 focusedPanel.border = EmptyBorder(0, 0, 0, 0)
                 focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
             } else focusToPanel(getPanels()[0])
@@ -108,7 +107,7 @@ class App(
         override fun componentResized(e: ComponentEvent?) {
             updateAppSize()
 
-            if (appData.value.isLocked) {
+            if (appData.get().isLocked) {
                 focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
                 repaint()
                 revalidate()
@@ -131,13 +130,13 @@ class App(
         val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
         val runnableMap: Map<String, Runnable> = mapOf(
             "runnableLeftCtrl" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(0, focusedPanel.y, appWidth / panelDivisor, focusedPanel.height)
                 focusedPanel.updateImageSize()
             },
             "runnableRightCtrl" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         appWidth - appWidth / panelDivisor,
@@ -148,13 +147,13 @@ class App(
                 focusedPanel.updateImageSize()
             },
             "runnableUpCtrl" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(focusedPanel.x, 0, focusedPanel.width, appHeight / panelDivisor)
                 focusedPanel.updateImageSize()
             },
             "runnableDownCtrl" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -165,7 +164,7 @@ class App(
                 focusedPanel.updateImageSize()
             },
             "runnableLeftAlt" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -176,7 +175,7 @@ class App(
                 focusedPanel.updateImageSize()
             },
             "runnableRightAlt" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x + focusedPanel.width / panelDivisor,
@@ -187,7 +186,7 @@ class App(
                 focusedPanel.updateImageSize()
             },
             "runnableUpAlt" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -198,7 +197,7 @@ class App(
                 focusedPanel.updateImageSize()
             },
             "runnableDownAlt" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
                 focusedPanel.bounds =
                     Rectangle(
                         focusedPanel.x,
@@ -241,7 +240,7 @@ class App(
                 focusedPanel.updateImage()
             },
             "runnablePageUp" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
 
                 val panels = getPanels()
                 val index = panels.indexOf(focusedPanel)
@@ -250,7 +249,7 @@ class App(
                 else focusToPanel(panels[index + 1])
             },
             "runnablePageDown" to Runnable {
-                if (appData.value.isLocked) return@Runnable
+                if (appData.get().isLocked) return@Runnable
 
                 val panels = getPanels()
                 val index = panels.indexOf(focusedPanel)
@@ -331,7 +330,7 @@ class App(
         }
 
         override fun keyPressed(e: KeyEvent?) {
-            if (appData.value.isLocked) return
+            if (appData.get().isLocked) return
 
             if (e != null) {
                 if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
@@ -351,7 +350,7 @@ class App(
         override fun actionPerformed(e: ActionEvent) {
             if (channel.get().isReceived) {
                 val receivedImagePath = channel.get().receivedImagePath
-                if (appData.value.isLocked) {
+                if (appData.get().isLocked) {
                     focusedPanel.imagePath = receivedImagePath
                     focusedPanel.updateImage()
                 } else {
@@ -372,7 +371,7 @@ class App(
             appWidth = width
             appHeight = height
         }
-        appData.value.bounds = Rectangle(this.x, this.y, this.width, this.height)
+        appData.get().bounds = Rectangle(this.x, this.y, this.width, this.height)
     }
 
     fun createNewPanel(path: String = ""): ImagePanel {
@@ -421,10 +420,11 @@ class App(
     }
 
     fun updateAppData() {
-        //appData.value.isLocked
-        appData.value.panelDataList = convertToPanelData()
-        //appData.value.initPath
-        appData.value.bounds = bounds
-        appData.value.isUndecorated = isUndecorated
+        appData.applyData {
+            panelDataList = convertToPanelData()
+            bounds = this@App.bounds
+            isUndecorated = this@App.isUndecorated
+
+        }
     }
 }

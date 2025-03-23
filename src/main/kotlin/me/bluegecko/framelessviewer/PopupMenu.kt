@@ -134,9 +134,9 @@ class PopupMenu(val app: App) : JPopupMenu() {
     }
 
     private fun itemLockFun() {
-        app.appData.value.isLocked = !app.appData.value.isLocked
+        app.appData.applyData { isLocked = !app.appData.get().isLocked }
         app.focusedPanel.border =
-            if (app.appData.value.isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(app.focusedColor, 1)
+            if (app.appData.get().isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(app.focusedColor, 1)
         app.focusedPanel.bounds = Rectangle(0, 0, app.appWidth, app.appHeight)
 
         repaint()
@@ -166,7 +166,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
 
     private fun itemToggleTitleFun() {
         app.updateAppData()
-        app.appData.value.isUndecorated = !app.appData.value.isUndecorated
+        app.appData.applyData { isUndecorated = !app.appData.get().isUndecorated }
         app.channel.set(Channel(ChannelMessage.Reinit))
         app.dispose()
     }
@@ -179,7 +179,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
     private fun itemRemoveWidgetFun() {
         this.remove(app.focusedPanel)
 
-        app.appData.value.isLocked = false
+        app.appData.applyData { isLocked = false }
 
         if (app.getPanels().isEmpty()) {
             app.createNewPanel()

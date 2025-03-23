@@ -166,7 +166,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         override fun mousePressed(e: MouseEvent) {
             initClick = e.point
 
-            if (!app.appData.value.isLocked) app.focusToPanel(this@ImagePanel)
+            if (!app.appData.get().isLocked) app.focusToPanel(this@ImagePanel)
 
             if (SwingUtilities.isRightMouseButton(e)) {
                 app.popupMenu.show(e.component, e.x, e.y)
@@ -176,14 +176,14 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 translateY = 0
                 updateImageSize()
             } else if (isNearCorner(e.x, e.y)) {
-                if (app.appData.value.isLocked) return
+                if (app.appData.get().isLocked) return
 
                 this@ImagePanel.cursor = Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR)
             }
         }
 
         override fun mouseDragged(e: MouseEvent) {
-            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.appData.value.isLocked) {
+            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.appData.get().isLocked) {
                 val newWidth = snapToEdge(e.x, this@ImagePanel.parent.width - this@ImagePanel.x)
                 val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
                 this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
@@ -196,7 +196,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 this@ImagePanel.repaint()
                 this@ImagePanel.revalidate()
                 return
-            } else if (!app.appData.value.isLocked) {
+            } else if (!app.appData.get().isLocked) {
                 var newX = snapToEdge(
                     this@ImagePanel.x + e.x - initClick.x,
                     this@ImagePanel.parent.width - this@ImagePanel.width

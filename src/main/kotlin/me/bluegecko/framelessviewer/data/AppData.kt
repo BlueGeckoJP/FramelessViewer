@@ -1,8 +1,25 @@
 package me.bluegecko.framelessviewer.data
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.awt.Rectangle
+import kotlin.properties.Delegates
 
-data class AppData(
+class AppData(innerAppData: InnerAppData = InnerAppData()) {
+    var data: MutableStateFlow<InnerAppData> by Delegates.observable(MutableStateFlow(innerAppData)) { prop, old, new ->
+        println("$prop, $old, $new")
+    }
+
+    fun get(): InnerAppData {
+        return data.value.copy()
+    }
+
+    inline fun applyData(block: InnerAppData.() -> Unit) {
+        data.value.apply(block)
+        data = data
+    }
+}
+
+data class InnerAppData(
     var isUndecorated: Boolean = false,
     var bounds: Rectangle = Rectangle(0, 0, 600, 400),
     var initPath: String = "",
