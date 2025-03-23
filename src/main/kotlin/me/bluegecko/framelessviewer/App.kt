@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import me.bluegecko.framelessviewer.data.*
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
+import java.awt.IllegalComponentStateException
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
@@ -43,8 +44,9 @@ class App(
                     try {
                         this@App.isUndecorated = newData.isUndecorated
                         this@App.bounds = newData.bounds
-                    } catch (_: Exception) {
-                        println("App: Error updating app by app data")
+                    } catch (_: IllegalComponentStateException) {
+                    } catch (e: Exception) {
+                        println("App: error updating app by app data")
                     }
                 }
             }
