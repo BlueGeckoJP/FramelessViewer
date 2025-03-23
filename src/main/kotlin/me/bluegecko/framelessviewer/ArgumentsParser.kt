@@ -43,11 +43,11 @@ class DCSubcomand : Runnable {
                 e.printStackTrace()
             }
 
-            isNormalExecution = false
+            appController.stop()
         }
     }
 
     override fun run() {
-        isNormalExecution = false
+        appController.stop()
     }
 }

@@ -19,7 +19,7 @@ class Daemon {
         if (File(pipePath).exists()) {
             File(pipePath).delete()
         }
-        Runtime.getRuntime().exec("mkfifo $pipePath").waitFor()
+        Runtime.getRuntime().exec(arrayOf("mkfifo", pipePath)).waitFor()
     }
 
     fun start() {
@@ -46,7 +46,7 @@ class Daemon {
                         if (line.startsWith("open ")) {
                             val path = line.substring("open ".length)
                             if (File(path).exists()) {
-                                newWindowByDaemon(path)
+                                appController.newWindowByDaemon(path)
                             }
                         }
                     }

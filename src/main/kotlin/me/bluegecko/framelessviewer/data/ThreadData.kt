@@ -1,14 +1,13 @@
 package me.bluegecko.framelessviewer.data
 
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.atomic.AtomicReference
 
 data class ThreadData(
     val uuid: String,
     val thread: Job,
     val channel: AtomicReference<Channel>,
-    val appData: MutableStateFlow<AppData>,
+    val appData: AppData,
 )
 
 data class Channel(
