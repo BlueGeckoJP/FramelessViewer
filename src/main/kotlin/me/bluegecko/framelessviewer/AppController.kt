@@ -8,7 +8,7 @@ import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.ThreadData
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
@@ -108,5 +108,9 @@ class AppController {
         val returnValue = runApp(MutableStateFlow(lastAppData.apply { this.initPath = path }))
         threadDataList.add(returnValue)
         println("NewWindow By Daemon -> ${returnValue.uuid}")
+    }
+
+    fun stop() {
+        isNormalExecution = false
     }
 }
