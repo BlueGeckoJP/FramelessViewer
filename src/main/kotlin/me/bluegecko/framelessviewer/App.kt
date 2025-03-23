@@ -54,6 +54,14 @@ class App(
 
         updateAppSize()
 
+        addPropertyChangeListener("bounds") { event ->
+            appData.applyData { bounds = event.newValue as Rectangle }
+        }
+
+        addPropertyChangeListener("isUndecorated") { event ->
+            appData.applyData { isUndecorated = event.newValue as Boolean }
+        }
+
         if (appData.get().panelDataList.isNotEmpty()) {
             appData.get().panelDataList.forEach {
                 val panel = createNewPanel(it.imagePath)
@@ -330,7 +338,7 @@ class App(
             appWidth = width
             appHeight = height
         }
-        appData.get().bounds = Rectangle(this.x, this.y, this.width, this.height)
+        appData.applyData { bounds = Rectangle(this@App.x, this@App.y, this@App.width, this@App.height) }
     }
 
     fun createNewPanel(path: String = ""): ImagePanel {
@@ -378,11 +386,11 @@ class App(
     }
 
     fun updateAppData() {
+        updateAppSize()
         appData.applyData {
             panelDataList = convertToPanelData()
             bounds = this@App.bounds
             isUndecorated = this@App.isUndecorated
-
         }
     }
 }
