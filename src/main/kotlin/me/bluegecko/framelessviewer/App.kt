@@ -2,7 +2,6 @@ package me.bluegecko.framelessviewer
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.bluegecko.framelessviewer.data.*
-import me.bluegecko.framelessviewer.window.KeybindingWindow
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
 import java.awt.Rectangle
@@ -10,25 +9,24 @@ import java.awt.event.*
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
-import javax.swing.*
+import javax.swing.JFrame
+import javax.swing.SwingUtilities
+import javax.swing.Timer
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
-import javax.swing.event.MenuEvent
-import javax.swing.event.MenuListener
-import javax.swing.filechooser.FileNameExtensionFilter
 
 class App(
-    private val channel: AtomicReference<Channel>,
-    private val uuid: String,
+    val channel: AtomicReference<Channel>,
+    val uuid: String,
     val appData: MutableStateFlow<AppData>
 ) : JFrame() {
     val popupMenu = PopupMenu(this)
-    private var focusedPanel: ImagePanel
+    var focusedPanel: ImagePanel
     var appWidth = this.width
     var appHeight = this.height
     var isPressedShiftKey = false
     val defaultColor: Color = Color.WHITE
-    private val focusedColor: Color = Color.CYAN
+    val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
     val appKeyAdapter: AppKeyAdapter
 
@@ -62,65 +60,6 @@ class App(
                 appData.value.isUndecorated = event.newValue as Boolean
             }
         }
-
-        val itemNew = JMenuItem("New")
-        val itemNewWidget = JMenuItem("New Widget")
-        val itemOpen = JMenuItem("Open")
-        val itemClone = JMenuItem("Clone")
-        val itemLock = JMenuItem("Lock To Window")
-        val itemToggleTitle = JMenuItem("Toggle Title")
-        val itemFitToImage = JMenuItem("Fit To Image")
-        val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
-        val itemOpenKeybindingWindow = JMenuItem("Open Keybinding Window")
-        val itemRemoveWidget = JMenuItem("Remove Widget")
-        val itemExit = JMenuItem("Exit")
-        itemNew.addActionListener { itemNewFun() }
-        itemNewWidget.addActionListener { itemNewWidgetFun() }
-        itemOpen.addActionListener { itemOpenFun() }
-        itemClone.addActionListener { itemCloneFun() }
-        itemLock.addActionListener { itemLockFun() }
-        itemToggleTitle.addActionListener { itemToggleTitleFun() }
-        itemFitToImage.addActionListener { itemFitToImageFun() }
-        itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
-        itemOpenKeybindingWindow.addActionListener { itemOpenKeybindingWindowFun() }
-        itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
-        itemExit.addActionListener { itemExitFun() }
-
-        val menuSendImageTo = JMenu("Send Image To")
-        menuSendImageTo.addMenuListener(object : MenuListener {
-            override fun menuSelected(e: MenuEvent) {
-                menuSendImageTo.removeAll()
-
-                appController.getThreadUUIDs().forEach {
-                    if (it != uuid) {
-                        val otherUUID = it
-                        val item = JMenuItem(appController.getShortUUID(otherUUID))
-                        item.addActionListener { sendImageTo(otherUUID) }
-                        menuSendImageTo.add(item)
-                    }
-                }
-            }
-
-            override fun menuDeselected(e: MenuEvent?) {}
-            override fun menuCanceled(e: MenuEvent?) {}
-        })
-
-        popupMenu.add(itemNew)
-        popupMenu.add(itemNewWidget)
-        popupMenu.addSeparator()
-        popupMenu.add(itemOpen)
-        popupMenu.add(itemClone)
-        popupMenu.addSeparator()
-        popupMenu.add(itemLock)
-        popupMenu.add(itemToggleTitle)
-        popupMenu.add(itemFitToImage)
-        popupMenu.add(itemSetZoomRatioToAuto)
-        popupMenu.add(menuSendImageTo)
-        popupMenu.addSeparator()
-        popupMenu.add(itemOpenKeybindingWindow)
-        popupMenu.addSeparator()
-        popupMenu.add(itemRemoveWidget)
-        popupMenu.add(itemExit)
 
         if (appData.value.panelDataList.isNotEmpty()) {
             appData.value.panelDataList.forEach {
@@ -436,7 +375,7 @@ class App(
         appData.value.bounds = Rectangle(this.x, this.y, this.width, this.height)
     }
 
-    private fun createNewPanel(path: String = ""): ImagePanel {
+    fun createNewPanel(path: String = ""): ImagePanel {
         val panel = ImagePanel(this, ImagePanelData(Rectangle(appWidth, appHeight), path))
 
         this.add(panel)
@@ -466,19 +405,6 @@ class App(
         revalidate()
     }
 
-    private fun sendImageTo(target: String) {
-        val uuids = appController.getThreadUUIDs()
-        if (uuids.contains(target)) {
-            channel.set(
-                Channel(
-                    message = ChannelMessage.SendImage,
-                    sendImageTo = target,
-                    sendImagePath = focusedPanel.imagePath
-                )
-            )
-        }
-    }
-
     fun updateTitle() {
         try {
             val imageName = File(focusedPanel.imagePath).name
@@ -494,101 +420,11 @@ class App(
         }
     }
 
-    private fun updateAppData() {
+    fun updateAppData() {
         //appData.value.isLocked
         appData.value.panelDataList = convertToPanelData()
         //appData.value.initPath
         appData.value.bounds = bounds
         appData.value.isUndecorated = isUndecorated
-    }
-
-    private fun itemNewFun() {
-        channel.set(Channel(ChannelMessage.NewWindow))
-    }
-
-    private fun itemNewWidgetFun() {
-        createNewPanel()
-    }
-
-    private fun itemOpenFun() {
-        val chooser = JFileChooser()
-        chooser.fileFilter = FileNameExtensionFilter("JPEG", "jpg", "jpeg")
-        chooser.fileFilter = FileNameExtensionFilter("PNG", "png")
-        chooser.fileFilter = FileNameExtensionFilter("GIF", "gif")
-        chooser.fileFilter = FileNameExtensionFilter("BMP", "bmp", "dib")
-        chooser.fileFilter = FileNameExtensionFilter("WBMP", "wbmp")
-        chooser.fileFilter = FileNameExtensionFilter("WebP", "webp")
-        chooser.fileFilter =
-            FileNameExtensionFilter("Supported images", "jpg", "jpeg", "png", "gif", "bmp", "dib", "wbmp", "webp")
-        chooser.showOpenDialog(null)
-        val file = chooser.selectedFile
-
-        if (file != null) {
-            focusedPanel.imagePath = file.absolutePath
-            focusedPanel.zoomRatio = 1.0
-            focusedPanel.updateImage()
-        }
-    }
-
-    private fun itemCloneFun() {
-        updateAppData()
-        channel.set(Channel(ChannelMessage.NewWindowWithImage))
-    }
-
-    private fun itemLockFun() {
-        appData.value.isLocked = !appData.value.isLocked
-        focusedPanel.border = if (appData.value.isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(focusedColor, 1)
-        focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
-
-        repaint()
-        revalidate()
-    }
-
-    private fun itemFitToImageFun() {
-        focusedPanel.bounds =
-            Rectangle(focusedPanel.x, focusedPanel.y, focusedPanel.resizedWidth, focusedPanel.resizedHeight)
-        focusedPanel.zoomRatio = 1.0
-        focusedPanel.translateX = 0
-        focusedPanel.translateY = 0
-        focusedPanel.updateImageSize()
-    }
-
-    private fun itemSetZoomRatioToAutoFun() {
-        focusedPanel.resizedWidth = focusedPanel.image.width
-        focusedPanel.resizedHeight = focusedPanel.image.height
-        focusedPanel.repaint()
-        focusedPanel.revalidate()
-    }
-
-    private fun itemToggleTitleFun() {
-        updateAppData()
-        appData.value.isUndecorated = !appData.value.isUndecorated
-        channel.set(Channel(ChannelMessage.Reinit))
-        this.dispose()
-    }
-
-    private fun itemOpenKeybindingWindowFun() {
-        val window = KeybindingWindow(this)
-        window.isVisible = true
-    }
-
-    private fun itemRemoveWidgetFun() {
-        this.remove(focusedPanel)
-
-        appData.value.isLocked = false
-
-        if (getPanels().isEmpty()) {
-            createNewPanel()
-        }
-
-        focusToPanel(getPanels()[0])
-
-        repaint()
-        revalidate()
-    }
-
-    private fun itemExitFun() {
-        channel.set(Channel(ChannelMessage.Exit))
-        this.dispose()
     }
 }
