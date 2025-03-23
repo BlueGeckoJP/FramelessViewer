@@ -1,5 +1,8 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.bluegecko.framelessviewer.data.*
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
@@ -36,8 +39,22 @@ class App(
         layout = null
         isVisible = true
 
+        CoroutineScope(Dispatchers.Default).launch {
+            appData.data.collect { newData ->
+                SwingUtilities.invokeLater {
+                    try {
+                        this@App.isUndecorated = newData.isUndecorated
+                        this@App.bounds = newData.bounds
+                    } catch (_: Exception) {
+                        println("App: Error updating app by app data")
+                    }
+                }
+            }
+        }
+
         updateAppSize()
 
+        /*
         addPropertyChangeListener("bounds") { event ->
             if (event.newValue != appData.get().bounds) {
                 val b = event.newValue as Rectangle
@@ -59,6 +76,7 @@ class App(
                 appData.applyData { isUndecorated = event.newValue as Boolean }
             }
         }
+         */
 
         if (appData.get().panelDataList.isNotEmpty()) {
             appData.get().panelDataList.forEach {
