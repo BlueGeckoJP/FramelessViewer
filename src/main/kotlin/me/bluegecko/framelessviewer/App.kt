@@ -1,12 +1,8 @@
 package me.bluegecko.framelessviewer
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import me.bluegecko.framelessviewer.data.*
 import org.yaml.snakeyaml.Yaml
 import java.awt.Color
-import java.awt.IllegalComponentStateException
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
@@ -34,33 +30,9 @@ class App(
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.get().isUndecorated
-        bounds = appData.get().bounds
         layout = null
+        bounds = appData.get().bounds
         isVisible = true
-
-        CoroutineScope(Dispatchers.Default).launch {
-            appData.data.collect { newData ->
-                SwingUtilities.invokeLater {
-                    try {
-                        this@App.isUndecorated = newData.isUndecorated
-                        this@App.bounds = newData.bounds
-                    } catch (_: IllegalComponentStateException) {
-                    } catch (e: Exception) {
-                        println("App: error updating app by app data")
-                    }
-                }
-            }
-        }
-
-        updateAppSize()
-
-        addPropertyChangeListener("bounds") { event ->
-            appData.applyData { bounds = event.newValue as Rectangle }
-        }
-
-        addPropertyChangeListener("isUndecorated") { event ->
-            appData.applyData { isUndecorated = event.newValue as Boolean }
-        }
 
         if (appData.get().panelDataList.isNotEmpty()) {
             appData.get().panelDataList.forEach {
@@ -116,6 +88,10 @@ class App(
             }
 
             getPanels().forEach { it.updateImageSize() }
+        }
+
+        override fun componentMoved(e: ComponentEvent?) {
+            updateAppSize()
         }
     }
 
@@ -389,7 +365,6 @@ class App(
         updateAppSize()
         appData.applyData {
             panelDataList = convertToPanelData()
-            bounds = this@App.bounds
             isUndecorated = this@App.isUndecorated
         }
     }
