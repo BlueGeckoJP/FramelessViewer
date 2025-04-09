@@ -31,6 +31,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var resizedHeight = 0
     private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
+    private val numRegex = Regex("[0-9]+")
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -138,7 +139,11 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             fileList =
                 files.filter { it.isFile && it.name.contains(extensionRegex) }
                     .map { it.absolutePath }
-                    .sortedWith(String.CASE_INSENSITIVE_ORDER).asSequence()
+                    .sortedWith(
+                        compareBy<String> { numRegex.replace(it, "").lowercase(Locale.getDefault()) }
+                            .thenBy { numRegex.findAll(it).map { v -> v.value }.joinToString().toInt() }
+                    )
+                    .asSequence()
         }
     }
 
