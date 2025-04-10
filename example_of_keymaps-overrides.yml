@@ -1,0 +1,8 @@
+# Example of "keymaps_overrides.yml"
+# Place this file in $HOME/.framelessviewer/keymaps-overrides.yml
+
+halfOfAllLeft:
+  keyCode: 37
+  ctrl: true
+  shift: true
+  alt: true
