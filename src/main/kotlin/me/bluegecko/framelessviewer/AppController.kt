@@ -6,7 +6,6 @@ import kotlinx.coroutines.launch
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
-import me.bluegecko.framelessviewer.data.InnerAppData
 import me.bluegecko.framelessviewer.data.ThreadData
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
@@ -23,7 +22,7 @@ class AppController {
                 val returnValue = if (initPath == "") {
                     runApp()
                 } else {
-                    runApp(AppData(InnerAppData(initPath = initPath)))
+                    runApp(initPath = initPath)
                 }
                 threadDataList.add(returnValue)
                 isFirstTime = false
@@ -86,11 +85,11 @@ class AppController {
         }
     }
 
-    private fun runApp(initAppData: AppData = AppData()): ThreadData {
+    private fun runApp(initAppData: AppData = AppData(), initPath: String = ""): ThreadData {
         val channel = AtomicReference(Channel())
         val uuid = UUID.randomUUID().toString()
         val thread = CoroutineScope(Dispatchers.Default).launch {
-            App(channel, uuid, initAppData)
+            App(channel, uuid, initAppData, initPath)
         }
         return ThreadData(uuid, thread, channel, initAppData)
     }
@@ -105,7 +104,7 @@ class AppController {
 
     fun newWindowByDaemon(path: String) {
         val lastAppData = threadDataList.last().appData.get()
-        val returnValue = runApp(AppData(lastAppData.apply { this.initPath = path }))
+        val returnValue = runApp(AppData(lastAppData), path)
         threadDataList.add(returnValue)
         println("NewWindow By Daemon -> ${returnValue.uuid}")
     }

@@ -6,6 +6,7 @@ import me.bluegecko.framelessviewer.data.ChannelMessage
 import me.bluegecko.framelessviewer.data.ImagePanelData
 import org.slf4j.LoggerFactory
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
@@ -17,11 +18,11 @@ import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
 
 class App(
-    val channel: AtomicReference<Channel>, val uuid: String, val appData: AppData
+    val channel: AtomicReference<Channel>, val uuid: String, val appData: AppData, initPath: String = ""
 ) : JFrame() {
     val popupMenu = PopupMenu(this)
     var focusedPanel: ImagePanel
-    var innerSize = this.contentPane.size
+    var innerSize: Dimension = this.contentPane.size
     var isPressedShiftKey = false
     val defaultColor: Color = Color.WHITE
     val focusedColor: Color = Color.CYAN
@@ -36,6 +37,7 @@ class App(
         defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.get().isUndecorated
         layout = null
+        isLocationByPlatform = true
         bounds = appData.get().bounds
         isVisible = true
 
@@ -49,8 +51,8 @@ class App(
             revalidate()
         }
 
-        if (appData.get().initPath.isNotEmpty()) {
-            createNewPanel(appData.get().initPath)
+        if (initPath != "") {
+            createNewPanel(initPath)
         }
 
         if (getPanels().isEmpty()) {
