@@ -1,5 +1,6 @@
 package me.bluegecko.framelessviewer
 
+import org.slf4j.LoggerFactory
 import picocli.CommandLine.*
 import java.io.File
 import java.io.FileWriter
@@ -29,15 +30,16 @@ class DCSubcomand : Runnable {
         var path = ""
 
         override fun run() {
+            val logger = LoggerFactory.getLogger(this::class.java)
             try {
                 if (File(pipePath).exists()) {
                     FileWriter(pipePath, true).use { writer ->
                         writer.write("open $path\n")
                         writer.flush()
-                        println("DC Open: send command 'open $path'")
+                        logger.info("DC Open: send command 'open $path'")
                     }
                 } else {
-                    println("DC Open: pipe not found. Daemon not running?")
+                    logger.error("DC Open: pipe not found. Daemon not running?")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -7,6 +7,7 @@ import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.ThreadData
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
@@ -15,6 +16,7 @@ class AppController {
     val threadDataList = mutableListOf<ThreadData>()
     private var isNormalExecution = true
     private var isFirstTime = true
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun run(initPath: String = "") {
         while (isNormalExecution) {
@@ -42,14 +44,14 @@ class AppController {
                     Exit -> {
                         iterator.remove()
                         item.thread.cancel()
-                        println("Exited ${item.uuid}")
+                        logger.info("Exited ${item.uuid}")
                     }
 
                     NewWindow -> {
                         val returnValue = runApp()
                         addList.add(returnValue)
                         item.channel.set(Channel())
-                        println("New ${item.uuid} -> ${returnValue.uuid}")
+                        logger.info("New ${item.uuid} -> ${returnValue.uuid}")
                     }
 
                     Reinit -> {
@@ -57,14 +59,14 @@ class AppController {
                         addList.add(returnValue)
                         iterator.remove()
                         item.thread.cancel()
-                        println("Reinit ${item.uuid} -> ${returnValue.uuid}")
+                        logger.info("Reinit ${item.uuid} -> ${returnValue.uuid}")
                     }
 
                     NewWindowWithImage -> {
                         val returnValue = runApp(AppData(item.appData.get().copy()))
                         addList.add(returnValue)
                         item.channel.set(Channel())
-                        println("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
+                        logger.info("NewWindowWithImage ${item.uuid} -> ${returnValue.uuid}")
                     }
 
                     SendImage -> {
@@ -74,7 +76,7 @@ class AppController {
                         targetChannel.receivedImagePath = itemChannel.sendImagePath
                         targetChannel.isReceived = true
                         item.channel.set(Channel())
-                        println("SendImage ${item.uuid} -> ${targetThreadData.uuid}")
+                        logger.info("SendImage ${item.uuid} -> ${targetThreadData.uuid}")
                     }
 
                     Normal -> {}
@@ -106,7 +108,7 @@ class AppController {
         val lastAppData = threadDataList.last().appData.get()
         val returnValue = runApp(AppData(lastAppData), path)
         threadDataList.add(returnValue)
-        println("NewWindow By Daemon -> ${returnValue.uuid}")
+        logger.info("NewWindow By Daemon -> ${returnValue.uuid}")
     }
 
     fun stop() {

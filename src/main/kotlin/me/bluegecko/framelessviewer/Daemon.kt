@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -14,6 +15,7 @@ class Daemon {
     @Volatile
     private var isRunning = false
     private var serverThread: Job? = null
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
         if (File(pipePath).exists()) {
@@ -53,7 +55,7 @@ class Daemon {
                 }
             } catch (e: Exception) {
                 if (e.message != null) {
-                    println("Daemon: Error reading from pipe: ${e.message}")
+                    logger.error("Daemon: Error reading from pipe: ${e.message}")
                     Thread.sleep(1000)
                 }
             }

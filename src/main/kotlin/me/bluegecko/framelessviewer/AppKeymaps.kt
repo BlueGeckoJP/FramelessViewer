@@ -1,6 +1,7 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.KeyData
+import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.awt.Rectangle
 import java.awt.event.KeyAdapter
@@ -12,6 +13,7 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
     val actionsMap: MutableMap<String, Runnable> = mutableMapOf()
     val keymapsMap: MutableMap<KeyData, Runnable> = mutableMapOf()
     private lateinit var defaultKeymaps: List<Pair<String, KeyData>>
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     val arrowActionBaseFun = fun(x: Int, y: Int, w: Int, h: Int) {
         if (app.appData.get().isLocked) return
@@ -73,9 +75,9 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
                 }
             }
 
-            println("Loaded Keymaps: $keymapsOverrides")
+            logger.info("Loaded Keymaps: $keymapsOverrides")
         } catch (_: Exception) {
-            println("Loaded Keymaps: None")
+            logger.info("Loaded Keymaps: None")
         }
     }
 
