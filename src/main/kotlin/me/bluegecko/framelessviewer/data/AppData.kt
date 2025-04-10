@@ -4,11 +4,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.awt.Rectangle
 
 class AppData(innerAppData: InnerAppData = InnerAppData()) {
-    /*
-    var data: MutableStateFlow<InnerAppData> by Delegates.observable(MutableStateFlow(innerAppData)) { prop, old, new ->
-        println("$prop, $old, $new")
-    }
-     */
     var data: MutableStateFlow<InnerAppData> = MutableStateFlow(innerAppData)
 
     fun get(): InnerAppData {
