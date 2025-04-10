@@ -51,8 +51,8 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
                         val key = enteredKey
                         if (key != null) {
                             SwingUtilities.invokeLater {
-                                val keybindingMap = app.appKeyAdapter.keybindingMap
-                                val runnableMap = app.appKeyAdapter.runnableMap
+                                val keybindingMap = app.appKeymapsClass.keymapsMap
+                                val runnableMap = app.appKeymapsClass.actionsMap
                                 val runnableName = tableModel.getValueAt(row, 0).toString()
                                 val runnable = runnableMap[runnableName]
                                 if (runnable != null) {
@@ -91,8 +91,8 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
     }
 
     private fun updateTableData() {
-        val keybindingMap = app.appKeyAdapter.keybindingMap
-        val runnableMap = app.appKeyAdapter.runnableMap
+        val keybindingMap = app.appKeymapsClass.keymapsMap
+        val runnableMap = app.appKeymapsClass.actionsMap
         val tableItemList: MutableList<TableItem> = mutableListOf()
         keybindingMap.forEach {
             val functionName = runnableMap.entries.find { entry -> entry.value == it.value }?.key

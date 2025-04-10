@@ -1,12 +1,13 @@
 package me.bluegecko.framelessviewer
 
-import me.bluegecko.framelessviewer.data.*
-import org.yaml.snakeyaml.Yaml
+import me.bluegecko.framelessviewer.data.AppData
+import me.bluegecko.framelessviewer.data.Channel
+import me.bluegecko.framelessviewer.data.ChannelMessage
+import me.bluegecko.framelessviewer.data.ImagePanelData
 import java.awt.Color
 import java.awt.Rectangle
 import java.awt.event.*
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
@@ -25,7 +26,7 @@ class App(
     val defaultColor: Color = Color.WHITE
     val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
-    val appKeyAdapter: AppKeyAdapter
+    val appKeymapsClass: AppKeymaps
 
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
@@ -56,8 +57,8 @@ class App(
 
         addComponentListener(AppComponentAdapter())
         addWindowListener(AppWindowAdapter())
-        appKeyAdapter = AppKeyAdapter()
-        addKeyListener(appKeyAdapter)
+        appKeymapsClass = AppKeymaps(this)
+        addKeyListener(appKeymapsClass)
 
         SwingUtilities.invokeLater {
             updateAppSize()
@@ -101,55 +102,6 @@ class App(
                 channel.set(Channel(ChannelMessage.Exit))
                 this@App.dispose()
             }
-        }
-    }
-
-    inner class AppKeyAdapter : KeyAdapter() {
-        val keybindingMap: MutableMap<KeyData, Runnable> = mutableMapOf()
-        val runnableMap: Map<String, Runnable> = mapOf()
-
-        init {
-            // Work in progress
-            val yaml = Yaml()
-            val inputStream = javaClass.getResourceAsStream("/me/bluegecko/framelessviewer/keybinding-override.yml")
-                ?: throw IllegalStateException("keybinding-override.yml not found")
-            try {
-                val keybindingOverrides: Map<String, Any> = inputStream.use { stream ->
-                    yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
-                }
-                println(keybindingOverrides)
-
-                keybindingOverrides.forEach { keybinding ->
-                    val value = keybinding.value as Map<*, *>
-                    val keyCode = value["keyCode"] as Int
-                    val ctrl = value["ctrl"] as Boolean
-                    val shift = value["shift"] as Boolean
-                    val alt = value["alt"] as Boolean
-
-                    val runnable = runnableMap[keybinding.key]
-                    if (runnable != null) {
-                        keybindingMap.remove(keybindingMap.entries.find { it.value == runnable }?.key)
-                        keybindingMap[KeyData(keyCode, ctrl, shift, alt)] = runnable
-                    }
-                }
-            } catch (_: Exception) {
-            }
-        }
-
-        override fun keyPressed(e: KeyEvent?) {
-            if (appData.get().isLocked) return
-
-            if (e != null) {
-                if (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK != 0) isPressedShiftKey = true
-            }
-        }
-
-        override fun keyReleased(e: KeyEvent) {
-            if (isPressedShiftKey) isPressedShiftKey = false
-
-            val input = KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
-            val value = keybindingMap[input]
-            value?.run()
         }
     }
 

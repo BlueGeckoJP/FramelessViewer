@@ -1,13 +1,16 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.KeyData
+import org.yaml.snakeyaml.Yaml
 import java.awt.Rectangle
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import java.io.File
+import java.nio.charset.StandardCharsets
 
 class AppKeymaps(private val app: App) : KeyAdapter() {
-    private val actionsMap: MutableMap<String, Runnable> = mutableMapOf()
-    private val keymapsMap: MutableMap<KeyData, Runnable> = mutableMapOf()
+    val actionsMap: MutableMap<String, Runnable> = mutableMapOf()
+    val keymapsMap: MutableMap<KeyData, Runnable> = mutableMapOf()
     private lateinit var defaultKeymaps: List<Pair<String, KeyData>>
 
     val arrowActionBaseFun = fun(x: Int, y: Int, w: Int, h: Int) {
@@ -27,6 +30,8 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
         addOtherKeymaps()
 
         defaultKeymaps.forEach { keymapsMap[it.second] = actionsMap[it.first]!! }
+
+        loadOverrides()
     }
 
     override fun keyPressed(e: KeyEvent) {
@@ -41,6 +46,37 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
         val key = KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
         val action = keymapsMap[key]
         action?.run()
+    }
+
+    private fun loadOverrides() {
+        try {
+            val yaml = Yaml()
+
+            val home = System.getProperty("user.home")
+            val path = File(home).resolve(".framelessviewer/keymaps-overrides.yml")
+
+            val keymapsOverrides: Map<String, Any> = path.inputStream().use { stream ->
+                yaml.load(stream.bufferedReader(StandardCharsets.UTF_8))
+            }
+
+            keymapsOverrides.forEach { keymap ->
+                val value = keymap.value as Map<*, *>
+                val keyCode = value["keyCode"] as Int
+                val ctrl = value["ctrl"] as Boolean
+                val shift = value["shift"] as Boolean
+                val alt = value["alt"] as Boolean
+
+                val action = actionsMap[keymap.key]
+                action?.let {
+                    keymapsMap.remove(keymapsMap.entries.find { it.value == action }?.key)
+                    keymapsMap[KeyData(keyCode, ctrl, shift, alt)] = action
+                }
+            }
+
+            println("Loaded Keymaps: $keymapsOverrides")
+        } catch (_: Exception) {
+            println("Loaded Keymaps: None")
+        }
     }
 
     private fun definitionDefaultKeymaps() {
