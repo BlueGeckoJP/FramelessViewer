@@ -194,7 +194,7 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
             app.focusedPanel.updateImage()
         }
         actionsMap["maximizeImage"] = Runnable {
-            app.focusedPanel.bounds = Rectangle(0, 0, app.innerSize.height, app.innerSize.height)
+            app.focusedPanel.bounds = Rectangle(0, 0, app.innerSize.width, app.innerSize.height)
             app.focusedPanel.updateImageSize()
         }
         actionsMap["changePanelDivisor"] = Runnable {
