@@ -177,7 +177,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
     }
 
     private fun itemRemoveWidgetFun() {
-        this.remove(app.focusedPanel)
+        app.remove(app.focusedPanel)
 
         app.appData.applyData { isLocked = false }
 
