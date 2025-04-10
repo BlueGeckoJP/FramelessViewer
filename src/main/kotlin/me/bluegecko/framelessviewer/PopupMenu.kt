@@ -137,7 +137,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
         app.appData.applyData { isLocked = !app.appData.get().isLocked }
         app.focusedPanel.border =
             if (app.appData.get().isLocked) EmptyBorder(0, 0, 0, 0) else LineBorder(app.focusedColor, 1)
-        app.focusedPanel.bounds = Rectangle(0, 0, app.appWidth, app.appHeight)
+        app.focusedPanel.bounds = Rectangle(0, 0, app.innerSize.width, app.innerSize.height)
 
         repaint()
         revalidate()

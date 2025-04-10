@@ -103,15 +103,15 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
             arrowActionBaseFun(
                 0,
                 app.focusedPanel.y,
-                app.appWidth / app.panelDivisor,
+                app.innerSize.width / app.panelDivisor,
                 app.focusedPanel.height
             )
         }
         actionsMap["halfOfAllRight"] = Runnable {
             arrowActionBaseFun(
-                app.appWidth - (app.appWidth / app.panelDivisor),
+                app.innerSize.width - (app.innerSize.width / app.panelDivisor),
                 app.focusedPanel.y,
-                app.appWidth / app.panelDivisor,
+                app.innerSize.width / app.panelDivisor,
                 app.focusedPanel.height
             )
         }
@@ -120,15 +120,15 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
                 app.focusedPanel.x,
                 0,
                 app.focusedPanel.width,
-                app.appHeight / app.panelDivisor
+                app.innerSize.height / app.panelDivisor
             )
         }
         actionsMap["halfOfAllDown"] = Runnable {
             arrowActionBaseFun(
                 app.focusedPanel.x,
-                app.appHeight - (app.appHeight / app.panelDivisor),
+                app.innerSize.height - (app.innerSize.height / app.panelDivisor),
                 app.focusedPanel.width,
-                app.appHeight / app.panelDivisor
+                app.innerSize.height / app.panelDivisor
             )
         }
     }
@@ -192,7 +192,7 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
             app.focusedPanel.updateImage()
         }
         actionsMap["maximizeImage"] = Runnable {
-            app.focusedPanel.bounds = Rectangle(0, 0, app.appWidth, app.appHeight)
+            app.focusedPanel.bounds = Rectangle(0, 0, app.innerSize.height, app.innerSize.height)
             app.focusedPanel.updateImageSize()
         }
         actionsMap["changePanelDivisor"] = Runnable {

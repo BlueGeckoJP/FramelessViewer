@@ -21,8 +21,7 @@ class App(
 ) : JFrame() {
     val popupMenu = PopupMenu(this)
     var focusedPanel: ImagePanel
-    var appWidth = this.width
-    var appHeight = this.height
+    var innerSize = this.contentPane.size
     var isPressedShiftKey = false
     val defaultColor: Color = Color.WHITE
     val focusedColor: Color = Color.CYAN
@@ -70,7 +69,7 @@ class App(
 
             if (appData.get().isLocked) {
                 focusedPanel.border = EmptyBorder(0, 0, 0, 0)
-                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                focusedPanel.bounds = Rectangle(0, 0, innerSize.width, innerSize.height)
             } else focusToPanel(getPanels()[0])
 
             getPanels().forEach { it.updateImage() }
@@ -88,7 +87,7 @@ class App(
             updateAppSize()
 
             if (appData.get().isLocked) {
-                focusedPanel.bounds = Rectangle(0, 0, appWidth, appHeight)
+                focusedPanel.bounds = Rectangle(0, 0, innerSize.width, innerSize.height)
                 repaint()
                 revalidate()
             }
@@ -128,18 +127,12 @@ class App(
     }
 
     private fun updateAppSize() {
-        if (!isUndecorated) {
-            appWidth = width - insets.left - insets.right
-            appHeight = height - insets.top - insets.bottom
-        } else {
-            appWidth = width
-            appHeight = height
-        }
+        innerSize = this.contentPane.size
         appData.applyData { bounds = Rectangle(this@App.x, this@App.y, this@App.width, this@App.height) }
     }
 
     fun createNewPanel(path: String = ""): ImagePanel {
-        val panel = ImagePanel(this, ImagePanelData(Rectangle(appWidth, appHeight), path))
+        val panel = ImagePanel(this, ImagePanelData(Rectangle(innerSize.width, innerSize.height), path))
 
         this.add(panel)
         panel.repaint()
