@@ -141,7 +141,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                     .map { it.absolutePath }
                     .sortedWith(
                         compareBy<String> { numRegex.replace(it, "").lowercase(Locale.getDefault()) }
-                            .thenBy { numRegex.findAll(it).map { v -> v.value }.joinToString("").toLongOrNull() ?: 0 }
+                            .thenBy { numRegex.findAll(it).map { v -> v.value.toInt() }.sum() }
                     )
                     .asSequence()
         }
