@@ -4,6 +4,7 @@ import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage
 import me.bluegecko.framelessviewer.data.ImagePanelData
+import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.Rectangle
 import java.awt.event.*
@@ -27,8 +28,12 @@ class App(
     val focusedColor: Color = Color.CYAN
     var panelDivisor = 2
     val appKeymapsClass: AppKeymaps
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
+        logger.debug("Initializing App. UUID: $uuid")
+        logger.debug(appData.get().toString())
+
         defaultCloseOperation = DISPOSE_ON_CLOSE
         isUndecorated = appData.get().isUndecorated
         layout = null
