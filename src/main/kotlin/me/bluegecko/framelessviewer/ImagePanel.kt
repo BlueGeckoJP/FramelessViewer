@@ -173,8 +173,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         }
                     )
         }
-
-        println(fileList.joinToString())
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
