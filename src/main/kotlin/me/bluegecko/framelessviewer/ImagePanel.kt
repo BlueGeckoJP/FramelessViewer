@@ -348,7 +348,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 if (!filePath.contains(extensionRegex)) {
                     return false
                 }
-                imagePath = filePath
+                setImagePath(filePath)
                 updateImage()
             } catch (e: Exception) {
                 e.printStackTrace()
