@@ -25,7 +25,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     private var oldParentPath = ""
     lateinit var fileList: List<String>
     lateinit var image: BufferedImage
-    val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
+    val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
@@ -140,7 +140,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         val dir = Paths.get(imagePath).parent.toFile()
         dir.listFiles()?.let { files ->
             fileList =
-                files.filter { it.isFile && it.name.contains(extensionRegex) }
+                files.filter { it.isFile && it.extension.matches(extensionRegex) }
                     .map { it.absolutePath }
                     .sortedWith(
                         Comparator { a, b ->
