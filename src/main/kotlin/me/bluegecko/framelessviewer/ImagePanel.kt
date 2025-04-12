@@ -1,6 +1,7 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.ImagePanelData
+import org.slf4j.LoggerFactory
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.MouseAdapter
@@ -20,7 +21,8 @@ import javax.swing.border.LineBorder
 import kotlin.math.abs
 
 class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
-    var imagePath = data.imagePath
+    private var imagePath = ""
+    private var oldParentPath = ""
     lateinit var fileList: List<String>
     lateinit var image: BufferedImage
     val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
@@ -31,8 +33,11 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var resizedHeight = 0
     private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
+        setImagePath(data.imagePath)
+
         border = LineBorder(app.defaultColor, 1)
         background = Color.GRAY
         bounds = data.bounds
@@ -115,7 +120,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         image = it
 
                         updateImageSize()
-                        updateFileList()
 
                         repaint()
                         revalidate()
@@ -169,6 +173,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         }
                     )
         }
+
+        println(fileList.joinToString())
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
@@ -185,6 +191,22 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
         return standardSize * aspectRatio.second / aspectRatio.first
     }
+
+    fun setImagePath(path: String) {
+        imagePath = path
+
+        try {
+            val parent = Paths.get(path).parent.toAbsolutePath().toString()
+            if (parent != oldParentPath) {
+                oldParentPath = parent
+                updateFileList()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get parent path: $path, ${e.message}")
+        }
+    }
+
+    fun getImagePath(): String = imagePath
 
     inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20

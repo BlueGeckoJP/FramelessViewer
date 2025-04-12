@@ -172,23 +172,23 @@ class AppKeymaps(private val app: App) : KeyAdapter() {
 
     private fun addOtherKeymaps() {
         actionsMap["prevImage"] = Runnable {
-            if (app.focusedPanel.imagePath.isEmpty()) return@Runnable
+            if (app.focusedPanel.getImagePath().isEmpty()) return@Runnable
             val fileListSize = app.focusedPanel.fileList.size
-            val fileListIndex = app.focusedPanel.fileList.indexOf(app.focusedPanel.imagePath)
+            val fileListIndex = app.focusedPanel.fileList.indexOf(app.focusedPanel.getImagePath())
             if (fileListIndex - 1 < 0) {
-                app.focusedPanel.imagePath = app.focusedPanel.fileList[fileListSize - 1]
+                app.focusedPanel.setImagePath(app.focusedPanel.fileList[fileListSize - 1])
             } else {
-                app.focusedPanel.imagePath = app.focusedPanel.fileList[fileListIndex - 1]
+                app.focusedPanel.setImagePath(app.focusedPanel.fileList[fileListIndex - 1])
             }
             app.focusedPanel.updateImage()
         }
         actionsMap["nextImage"] = Runnable {
-            if (app.focusedPanel.imagePath.isEmpty()) return@Runnable
-            val fileListIndex = app.focusedPanel.fileList.indexOf(app.focusedPanel.imagePath)
+            if (app.focusedPanel.getImagePath().isEmpty()) return@Runnable
+            val fileListIndex = app.focusedPanel.fileList.indexOf(app.focusedPanel.getImagePath())
             if (fileListIndex + 1 >= app.focusedPanel.fileList.size) {
-                app.focusedPanel.imagePath = app.focusedPanel.fileList[0]
+                app.focusedPanel.setImagePath(app.focusedPanel.fileList[0])
             } else {
-                app.focusedPanel.imagePath = app.focusedPanel.fileList[fileListIndex + 1]
+                app.focusedPanel.setImagePath(app.focusedPanel.fileList[fileListIndex + 1])
             }
             app.focusedPanel.updateImage()
         }
