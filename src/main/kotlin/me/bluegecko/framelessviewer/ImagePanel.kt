@@ -21,7 +21,7 @@ import kotlin.math.abs
 
 class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var imagePath = data.imagePath
-    lateinit var fileList: Sequence<String>
+    lateinit var fileList: List<String>
     lateinit var image: BufferedImage
     val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
@@ -168,7 +168,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                             0
                         }
                     )
-                    .asSequence()
         }
     }
 

@@ -169,7 +169,7 @@ class App(
             val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
+                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.imagePath) + 1}/${focusedPanel.fileList.size}] | ${
                     appController.getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {
