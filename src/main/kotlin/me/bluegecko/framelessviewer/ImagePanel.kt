@@ -31,7 +31,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var resizedHeight = 0
     private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
-    private val numRegex = Regex("[0-9]+")
 
     init {
         border = LineBorder(app.defaultColor, 1)
@@ -140,8 +139,34 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 files.filter { it.isFile && it.name.contains(extensionRegex) }
                     .map { it.absolutePath }
                     .sortedWith(
-                        compareBy<String> { numRegex.replace(it, "").lowercase(Locale.getDefault()) }
-                            .thenBy { numRegex.findAll(it).map { v -> v.value.toInt() }.sum() }
+                        Comparator { a, b ->
+                            val partsOfA = a.split(Regex("(\\d+)|(\\D+)"))
+                            val partsOfB = b.split(Regex("(\\d+)|(\\D+)"))
+
+                            for (i in 0 until maxOf(partsOfA.size, partsOfB.size)) {
+                                if (i >= partsOfA.size) return@Comparator -1
+                                if (i >= partsOfB.size) return@Comparator 1
+
+                                val partOfA = partsOfA[i]
+                                val partOfB = partsOfB[i]
+
+                                return@Comparator if (partOfA.matches(Regex("\\d+"))) {
+                                    if (partOfB.matches(Regex("\\d+"))) {
+                                        partOfA.toInt().compareTo(partOfB.toInt())
+                                    } else {
+                                        1
+                                    }
+                                } else {
+                                    if (partOfB.matches(Regex("\\d+"))) {
+                                        -1
+                                    } else {
+                                        partOfA.compareTo(partOfB)
+                                    }
+                                }
+                            }
+
+                            0
+                        }
                     )
                     .asSequence()
         }
