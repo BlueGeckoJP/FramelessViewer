@@ -116,7 +116,7 @@ class App(
             if (channel.get().isReceived) {
                 val receivedImagePath = channel.get().receivedImagePath
                 if (appData.get().isLocked) {
-                    focusedPanel.imagePath = receivedImagePath
+                    focusedPanel.setImagePath(receivedImagePath)
                     focusedPanel.updateImage()
                 } else {
                     createNewPanel(receivedImagePath)
@@ -148,7 +148,7 @@ class App(
     }
 
     private fun convertToPanelData(): MutableList<ImagePanelData> {
-        return getPanels().map { ImagePanelData(it.bounds, it.imagePath) }.toMutableList()
+        return getPanels().map { ImagePanelData(it.bounds, it.getImagePath()) }.toMutableList()
     }
 
     fun focusToPanel(targetPanel: ImagePanel) {
@@ -165,11 +165,11 @@ class App(
 
     fun updateTitle() {
         try {
-            val imageName = File(focusedPanel.imagePath).name
+            val imageName = File(focusedPanel.getImagePath()).name
             val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
 
             title =
-                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.imagePath) + 1}/${focusedPanel.fileList.toList().size}] | ${
+                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.getImagePath()) + 1}/${focusedPanel.fileList.size}] | ${
                     appController.getShortUUID(uuid)
                 } | PD:${panelDivisor}"
         } catch (e: Exception) {

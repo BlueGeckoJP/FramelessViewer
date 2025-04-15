@@ -122,7 +122,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
         val file = chooser.selectedFile
 
         if (file != null) {
-            app.focusedPanel.imagePath = file.absolutePath
+            app.focusedPanel.setImagePath(file.absolutePath)
             app.focusedPanel.zoomRatio = 1.0
             app.focusedPanel.updateImage()
         }
@@ -203,7 +203,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
                 Channel(
                     message = ChannelMessage.SendImage,
                     sendImageTo = target,
-                    sendImagePath = app.focusedPanel.imagePath
+                    sendImagePath = app.focusedPanel.getImagePath()
                 )
             )
         }

@@ -1,6 +1,7 @@
 package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.ImagePanelData
+import org.slf4j.LoggerFactory
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.MouseAdapter
@@ -20,10 +21,11 @@ import javax.swing.border.LineBorder
 import kotlin.math.abs
 
 class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
-    var imagePath = data.imagePath
-    lateinit var fileList: Sequence<String>
+    private var imagePath = ""
+    private var oldParentPath = ""
+    lateinit var fileList: List<String>
     lateinit var image: BufferedImage
-    val extensionRegex = Regex(".jpg|.jpeg|.png|.gif|.bmp|.dib|.wbmp|.webp", RegexOption.IGNORE_CASE)
+    val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
@@ -31,9 +33,11 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     var resizedHeight = 0
     private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
-    private val numRegex = Regex("[0-9]+")
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
+        setImagePath(data.imagePath)
+
         border = LineBorder(app.defaultColor, 1)
         background = Color.GRAY
         bounds = data.bounds
@@ -116,7 +120,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         image = it
 
                         updateImageSize()
-                        updateFileList()
 
                         repaint()
                         revalidate()
@@ -137,14 +140,46 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         val dir = Paths.get(imagePath).parent.toFile()
         dir.listFiles()?.let { files ->
             fileList =
-                files.filter { it.isFile && it.name.contains(extensionRegex) }
+                files.filter { it.isFile && it.extension.matches(extensionRegex) }
                     .map { it.absolutePath }
-                    .sortedWith(
-                        compareBy<String> { numRegex.replace(it, "").lowercase(Locale.getDefault()) }
-                            .thenBy { numRegex.findAll(it).map { v -> v.value.toInt() }.sum() }
-                    )
-                    .asSequence()
+                    .sortedWith(Comparator { a, b ->
+                        val reAll = Regex("(\\d+)|(\\D+)")
+                        val reNumPerfect = Regex("\\d+")
+
+                        val partsA = reAll.findAll(a).map { it.value }.toList()
+                        val partsB = reAll.findAll(b).map { it.value }.toList()
+
+                        for (i in 0 until maxOf(partsA.size, partsB.size)) {
+                            val partA = partsA.getOrNull(i) ?: ""
+                            val partB = partsB.getOrNull(i) ?: ""
+
+                            if (i >= partsA.size) return@Comparator -1
+                            if (i >= partsB.size) return@Comparator 1
+
+                            if (partA == partB) continue
+
+                            if (reNumPerfect.matches(partA)) {
+                                if (reNumPerfect.matches(partB)) {
+                                    val numA = partA.toInt()
+                                    val numB = partB.toInt()
+                                    return@Comparator numA.compareTo(numB)
+                                } else {
+                                    return@Comparator 1
+                                }
+                            } else {
+                                if (reNumPerfect.matches(partB)) {
+                                    return@Comparator -1
+                                } else {
+                                    return@Comparator partA.compareTo(partB)
+                                }
+                            }
+                        }
+
+                        return@Comparator -1
+                    })
         }
+        
+        logger.debug("File list updated: ${fileList.joinToString()}")
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
@@ -161,6 +196,22 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
         return standardSize * aspectRatio.second / aspectRatio.first
     }
+
+    fun setImagePath(path: String) {
+        imagePath = path
+
+        try {
+            val parent = Paths.get(path).parent.toAbsolutePath().toString()
+            if (parent != oldParentPath) {
+                oldParentPath = parent
+                updateFileList()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get parent path: $path, ${e.message}")
+        }
+    }
+
+    fun getImagePath(): String = imagePath
 
     inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20
@@ -304,7 +355,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 if (!filePath.contains(extensionRegex)) {
                     return false
                 }
-                imagePath = filePath
+                setImagePath(filePath)
                 updateImage()
             } catch (e: Exception) {
                 e.printStackTrace()
