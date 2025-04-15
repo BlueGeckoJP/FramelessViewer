@@ -142,37 +142,44 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             fileList =
                 files.filter { it.isFile && it.extension.matches(extensionRegex) }
                     .map { it.absolutePath }
-                    .sortedWith(
-                        Comparator { a, b ->
-                            val partsOfA = a.split(Regex("(\\d+)|(\\D+)"))
-                            val partsOfB = b.split(Regex("(\\d+)|(\\D+)"))
+                    .sortedWith(Comparator { a, b ->
+                        val reAll = Regex("(\\d+)|(\\D+)")
+                        val reNumPerfect = Regex("\\d+")
 
-                            for (i in 0 until maxOf(partsOfA.size, partsOfB.size)) {
-                                if (i >= partsOfA.size) return@Comparator -1
-                                if (i >= partsOfB.size) return@Comparator 1
+                        val partsA = reAll.findAll(a).map { it.value }.toList()
+                        val partsB = reAll.findAll(b).map { it.value }.toList()
 
-                                val partOfA = partsOfA[i]
-                                val partOfB = partsOfB[i]
+                        for (i in 0 until maxOf(partsA.size, partsB.size)) {
+                            val partA = partsA.getOrNull(i) ?: ""
+                            val partB = partsB.getOrNull(i) ?: ""
 
-                                return@Comparator if (partOfA.matches(Regex("\\d+"))) {
-                                    if (partOfB.matches(Regex("\\d+"))) {
-                                        partOfA.toInt().compareTo(partOfB.toInt())
-                                    } else {
-                                        1
-                                    }
+                            if (i >= partsA.size) return@Comparator -1
+                            if (i >= partsB.size) return@Comparator 1
+
+                            if (partA == partB) continue
+
+                            if (reNumPerfect.matches(partA)) {
+                                if (reNumPerfect.matches(partB)) {
+                                    val numA = partA.toInt()
+                                    val numB = partB.toInt()
+                                    return@Comparator numA.compareTo(numB)
                                 } else {
-                                    if (partOfB.matches(Regex("\\d+"))) {
-                                        -1
-                                    } else {
-                                        partOfA.compareTo(partOfB)
-                                    }
+                                    return@Comparator 1
+                                }
+                            } else {
+                                if (reNumPerfect.matches(partB)) {
+                                    return@Comparator -1
+                                } else {
+                                    return@Comparator partA.compareTo(partB)
                                 }
                             }
-
-                            0
                         }
-                    )
+
+                        return@Comparator -1
+                    })
         }
+        
+        logger.debug("File list updated: ${fileList.joinToString()}")
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
