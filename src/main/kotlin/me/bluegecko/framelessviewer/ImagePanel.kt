@@ -125,7 +125,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         revalidate()
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    if (e.message != null) logger.error("Failed to load image: ${e.message}")
                 } finally {
                     app.updateTitle()
                 }
@@ -178,7 +178,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         return@Comparator -1
                     })
         }
-        
+
         logger.debug("File list updated: ${fileList.joinToString()}")
     }
 
@@ -358,7 +358,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 setImagePath(filePath)
                 updateImage()
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (e.message != null) logger.error("Failed to import image by drag and drop: ${e.message}")
             }
             return true
         }
