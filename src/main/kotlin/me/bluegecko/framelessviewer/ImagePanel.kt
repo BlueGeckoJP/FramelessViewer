@@ -126,6 +126,9 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                     }
                 } catch (e: Exception) {
                     if (e.message != null) logger.error("Failed to load image: ${e.message}")
+                } catch (e: OutOfMemoryError) {
+                    if (e.message != null) logger.error("Failed to load image because of out of memory error. Run System.gc()")
+                    System.gc()
                 } finally {
                     app.updateTitle()
                 }
