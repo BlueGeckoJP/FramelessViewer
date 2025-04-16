@@ -42,7 +42,9 @@ class DCSubcomand : Runnable {
                     logger.error("DC Open: pipe not found. Daemon not running?")
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (e.message != null) {
+                    logger.error("DC Open: Error: ${e.message}")
+                }
             }
 
             appController.stop()
