@@ -55,11 +55,6 @@ fun setupLogger() {
         saveDir.mkdir()
     }
 
-    val logFile = saveDir.resolve("latest.log")
-    if (logFile.exists()) {
-        logFile.delete()
-    }
-
     val context = LoggerFactory.getILoggerFactory() as LoggerContext
 
     val encoder = PatternLayoutEncoder()
