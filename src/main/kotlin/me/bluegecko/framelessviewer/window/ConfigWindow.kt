@@ -11,7 +11,7 @@ import javax.swing.*
 import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableCellRenderer
 
-class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config | FramelessViewer", true) {
+class ConfigWindow(private val app: App) : JDialog(app, "Config | FramelessViewer", true) {
     private val columnNames = arrayOf("Function", "Keybinding")
     private var tableData: Array<Array<String>> = arrayOf()
     private var enteredKey: KeyData? = null
@@ -36,7 +36,7 @@ class KeybindingWindow(private val app: App) : JDialog(app, "Keybinding Config |
                 SwingUtilities.invokeLater {
                     val listener = object : KeyAdapter() {
                         override fun keyPressed(e: KeyEvent) {
-                            this@KeybindingWindow.enteredKey =
+                            this@ConfigWindow.enteredKey =
                                 KeyData(e.keyCode, e.isControlDown, e.isShiftDown, e.isAltDown)
                         }
                     }
