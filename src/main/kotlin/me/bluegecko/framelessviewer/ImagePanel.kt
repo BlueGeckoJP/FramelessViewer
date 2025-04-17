@@ -8,12 +8,8 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
-import java.awt.image.BufferedImage
-import java.io.File
-import java.lang.ref.WeakReference
 import java.nio.file.Paths
 import java.util.*
-import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker
@@ -25,8 +21,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     private var imagePath = ""
     private var oldParentPath = ""
     lateinit var fileList: List<String>
-    private var imageRef: WeakReference<BufferedImage>? = null
-    private var scaledImageRef: WeakReference<Image>? = null
     val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
@@ -35,7 +29,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     var resizedHeight = 0
     val uuid: UUID = UUID.randomUUID()
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private val memoryThreshold = 0.8
 
     init {
         setImagePath(data.imagePath)
@@ -57,20 +50,22 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        val currentImage = scaledImageRef?.get()
-        if (imagePath.isEmpty() || currentImage == null) return
+        if (imagePath.isEmpty()) return
+
+        val originalImage = ImageMemoryPool.getImage(imagePath) ?: return
+        val scaledImage =
+            ImageMemoryPool.getScaledImage(imagePath, resizedWidth, resizedHeight, originalImage) ?: return
 
         val g2d = g as Graphics2D
-
         val x = (width - resizedWidth) / 2 + translateX
         val y = (height - resizedHeight) / 2 + translateY
 
-        g2d.drawImage(currentImage, x, y, resizedWidth, resizedHeight, this)
+        g2d.drawImage(scaledImage, x, y, resizedWidth, resizedHeight, this)
     }
 
     fun updateImageSize() {
-        val currentImage = imageRef?.get() ?: return
         if (imagePath.isEmpty()) return
+        val currentImage = ImageMemoryPool.getImage(imagePath) ?: return
 
         if (currentImage.width > width || currentImage.height > height) {
             val widthStandardSize =
@@ -90,62 +85,28 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
             resizedHeight = (currentImage.height * zoomRatio).toInt()
         }
 
-        val scaled = currentImage.getScaledInstance(resizedWidth, resizedHeight, Image.SCALE_SMOOTH)
-        scaledImageRef = WeakReference(scaled)
-
-        checkMemoryUsage()
-
         repaint()
         revalidate()
     }
 
-    private fun checkMemoryUsage() {
-        val runtime = Runtime.getRuntime()
-        val usedMemory = runtime.totalMemory() - runtime.freeMemory()
-        val maxMemory = runtime.maxMemory()
-
-        if (usedMemory > maxMemory * memoryThreshold) {
-            clearImageCache()
-            System.gc()
-            logger.info("Memory threshold exceeded. Cache cleared.")
-        }
-    }
-
-    private fun clearImageCache() {
-        scaledImageRef?.clear()
-        scaledImageRef = null
-    }
-
     fun updateImage() {
-        object : SwingWorker<BufferedImage?, Void>() {
-            override fun doInBackground(): BufferedImage? {
+        if (imagePath.isEmpty()) return
+
+        object : SwingWorker<Unit, Void>() {
+            override fun doInBackground() {
                 return try {
-                    val file = File(imagePath)
-                    checkMemoryUsage()
-                    ImageIO.read(file)
+                    ImageMemoryPool.getImage(imagePath)
+                    Unit
                 } catch (e: Exception) {
                     logger.error("Failed to read image: ${e.message}")
-                    null
                 }
             }
 
             override fun done() {
                 try {
-                    if (imagePath.isEmpty()) return
-
-                    val img = get()
-                    img?.let {
-                        imageRef = WeakReference(it)
-                        updateImageSize()
-                        repaint()
-                        revalidate()
-                    }
-                } catch (e: Exception) {
-                    logger.error("Failed to load image: ${e.message}")
-                } catch (e: OutOfMemoryError) {
-                    logger.error("OutOfMemoryError occurred. Clearing cache...")
-                    clearImageCache()
-                    System.gc()
+                    updateImageSize()
+                    repaint()
+                    revalidate()
                 } finally {
                     app.updateTitle()
                 }
@@ -157,9 +118,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     }
 
     override fun close() {
-        clearImageCache()
-        imageRef?.clear()
-        imageRef = null
+        ImageMemoryPool.clearCache()
     }
 
     private fun updateFileList() {
@@ -240,9 +199,9 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
 
     fun getImagePath(): String = imagePath
 
-    fun getIWidth(): Int? = imageRef?.get()?.width
+    fun getIWidth(): Int? = ImageMemoryPool.getImage(imagePath)?.width
 
-    fun getIHeight(): Int? = imageRef?.get()?.height
+    fun getIHeight(): Int? = ImageMemoryPool.getImage(imagePath)?.height
 
     inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20
