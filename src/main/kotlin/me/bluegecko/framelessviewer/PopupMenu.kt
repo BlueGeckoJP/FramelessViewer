@@ -158,8 +158,8 @@ class PopupMenu(val app: App) : JPopupMenu() {
     }
 
     private fun itemSetZoomRatioToAutoFun() {
-        app.focusedPanel.resizedWidth = app.focusedPanel.image.width
-        app.focusedPanel.resizedHeight = app.focusedPanel.image.height
+        app.focusedPanel.resizedWidth = app.focusedPanel.getIWidth() ?: 1
+        app.focusedPanel.resizedHeight = app.focusedPanel.getIHeight() ?: 1
         app.focusedPanel.repaint()
         app.focusedPanel.revalidate()
     }
