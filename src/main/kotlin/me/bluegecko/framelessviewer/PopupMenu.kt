@@ -2,7 +2,7 @@ package me.bluegecko.framelessviewer
 
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage
-import me.bluegecko.framelessviewer.window.KeybindingWindow
+import me.bluegecko.framelessviewer.window.ConfigWindow
 import java.awt.Rectangle
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -29,7 +29,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
         val itemToggleTitle = JMenuItem("Toggle Title")
         val itemFitToImage = JMenuItem("Fit To Image")
         val itemSetZoomRatioToAuto = JMenuItem("Set Zoom Ratio To Auto")
-        val itemOpenKeybindingWindow = JMenuItem("Open Keybinding Window")
+        val itemOpenConfig = JMenuItem("Open Config")
         val itemRemoveWidget = JMenuItem("Remove Widget")
         val itemExit = JMenuItem("Exit")
 
@@ -41,7 +41,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
         itemToggleTitle.addActionListener { itemToggleTitleFun() }
         itemFitToImage.addActionListener { itemFitToImageFun() }
         itemSetZoomRatioToAuto.addActionListener { itemSetZoomRatioToAutoFun() }
-        itemOpenKeybindingWindow.addActionListener { itemOpenKeybindingWindowFun() }
+        itemOpenConfig.addActionListener { itemOpenConfigFun() }
         itemRemoveWidget.addActionListener { itemRemoveWidgetFun() }
         itemExit.addActionListener { itemExitFun() }
 
@@ -76,7 +76,7 @@ class PopupMenu(val app: App) : JPopupMenu() {
         this.add(itemSetZoomRatioToAuto)
         this.add(menuSendImageTo)
         this.addSeparator()
-        this.add(itemOpenKeybindingWindow)
+        this.add(itemOpenConfig)
         this.addSeparator()
         this.add(itemRemoveWidget)
         this.add(itemExit)
@@ -158,8 +158,8 @@ class PopupMenu(val app: App) : JPopupMenu() {
     }
 
     private fun itemSetZoomRatioToAutoFun() {
-        app.focusedPanel.resizedWidth = app.focusedPanel.image.width
-        app.focusedPanel.resizedHeight = app.focusedPanel.image.height
+        app.focusedPanel.resizedWidth = app.focusedPanel.getIWidth() ?: 1
+        app.focusedPanel.resizedHeight = app.focusedPanel.getIHeight() ?: 1
         app.focusedPanel.repaint()
         app.focusedPanel.revalidate()
     }
@@ -171,8 +171,8 @@ class PopupMenu(val app: App) : JPopupMenu() {
         app.dispose()
     }
 
-    private fun itemOpenKeybindingWindowFun() {
-        val window = KeybindingWindow(app)
+    private fun itemOpenConfigFun() {
+        val window = ConfigWindow(app)
         window.isVisible = true
     }
 

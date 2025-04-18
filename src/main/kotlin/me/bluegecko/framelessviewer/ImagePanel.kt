@@ -1,18 +1,18 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import me.bluegecko.framelessviewer.data.ImagePanelData
 import org.slf4j.LoggerFactory
 import java.awt.*
+import java.awt.image.BufferedImage
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
-import java.awt.image.BufferedImage
-import java.io.File
 import java.nio.file.Paths
 import java.util.*
-import javax.imageio.ImageIO
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker
@@ -20,20 +20,20 @@ import javax.swing.TransferHandler
 import javax.swing.border.LineBorder
 import kotlin.math.abs
 
-class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
+class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     private var imagePath = ""
     private var oldParentPath = ""
     lateinit var fileList: List<String>
-    lateinit var image: BufferedImage
     val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
     var resizedWidth = 0
     var resizedHeight = 0
-    private var scaledImage: Image? = null
     val uuid: UUID = UUID.randomUUID()
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var errorState = false
 
     init {
         setImagePath(data.imagePath)
@@ -55,33 +55,44 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        if (imagePath.isEmpty() || !::image.isInitialized || scaledImage == null) return
+        if (imagePath.isEmpty()) return
+        if (errorState) {
+            g.color = Color.WHITE
+            g.font = Font("Dialog", Font.BOLD, 14)
+            val message = "Failed to load image"
+            val metrics = g.fontMetrics
+            val x = (width - metrics.stringWidth(message)) / 2
+            val y = (height - metrics.height) / 2 + metrics.ascent
+            g.drawString(message, x, y)
+            return
+        }
 
-        val g2d = g as Graphics2D
+        try {
+            val originalImage = ImageMemoryPool.getImage(imagePath) ?: return
+            val scaledImage = ImageMemoryPool.getScaledImage(imagePath, resizedWidth, resizedHeight, originalImage) ?: return
 
-        val x = (width - resizedWidth) / 2 + translateX
-        val y = (height - resizedHeight) / 2 + translateY
+            val g2d = g as Graphics2D
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
-        g2d.drawImage(
-            scaledImage,
-            x,
-            y,
-            resizedWidth,
-            resizedHeight,
-            this
-        )
+            val x = (width - resizedWidth) / 2 + translateX
+            val y = (height - resizedHeight) / 2 + translateY
+
+            g2d.drawImage(scaledImage, x, y, resizedWidth, resizedHeight, this)
+        } catch (e: Exception) {
+            logger.error("Failed to paint image: ${e.message}")
+            showErrorState()
+        }
     }
 
     fun updateImageSize() {
-        if (imagePath.isEmpty() || !::image.isInitialized) return
+        if (imagePath.isEmpty()) return
+        val currentImage = ImageMemoryPool.getImage(imagePath) ?: return
 
-        if (image.width > width || image.height > height) {
-            val widthStandardSize = Pair(
-                width, scaledSize(image.width, image.height, width)
-            )
-            val heightStandardSize = Pair(
-                scaledSize(image.height, image.width, height), height
-            )
+        if (currentImage.width > width || currentImage.height > height) {
+            val widthStandardSize =
+                Pair(width, scaledSize(currentImage.width, currentImage.height, width))
+            val heightStandardSize =
+                Pair(scaledSize(currentImage.height, currentImage.width, height), height)
 
             if (width >= widthStandardSize.first && height >= widthStandardSize.second) {
                 resizedWidth = (widthStandardSize.first * zoomRatio).toInt()
@@ -91,95 +102,99 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 resizedHeight = (heightStandardSize.second * zoomRatio).toInt()
             }
         } else {
-            resizedWidth = (image.width * zoomRatio).toInt()
-            resizedHeight = (image.height * zoomRatio).toInt()
+            resizedWidth = (currentImage.width * zoomRatio).toInt()
+            resizedHeight = (currentImage.height * zoomRatio).toInt()
         }
-
-        scaledImage = image.getScaledInstance(resizedWidth, resizedHeight, Image.SCALE_SMOOTH)
 
         repaint()
         revalidate()
     }
 
     fun updateImage() {
-        object : SwingWorker<BufferedImage?, Void>() {
-            override fun doInBackground(): BufferedImage? {
-                return try {
-                    ImageIO.read(File(imagePath))
-                } catch (e: Exception) {
-                    null
+        if (imagePath.isEmpty()) return
+
+        errorState = false
+        app.title = "Loading.. ".plus(app.title)
+
+        scope.launch {
+            try {
+                loadImageAsync()
+                withContext(Dispatchers.Swing) {
+                    updateImageSize()
+                    repaint()
+                    revalidate()
+                    app.updateTitle()
                 }
-            }
-
-            override fun done() {
-                try {
-                    if (imagePath.isEmpty()) return
-
-                    val img = get()
-                    img?.let {
-                        image = it
-
-                        updateImageSize()
-
-                        repaint()
-                        revalidate()
-                    }
-                } catch (e: Exception) {
-                    if (e.message != null) logger.error("Failed to load image: ${e.message}")
-                } finally {
+            } catch (e: Exception) {
+                logger.error("Failed to read image: ${e.message}")
+                withContext(Dispatchers.Swing) {
+                    showErrorState()
                     app.updateTitle()
                 }
             }
-        }.also {
-            app.title = "Loading.. ".plus(app.title)
-            it.execute()
         }
+    }
+
+    suspend fun loadImageAsync() = withContext(Dispatchers.IO) {
+        ImageMemoryPool.getImage(imagePath) ?: throw IllegalStateException("Failed to load image")
+    }
+
+    fun showErrorState() {
+        errorState = true
+        background = Color.RED.darker()
+        repaint()
+    }
+
+    override fun close() {
+        scope.cancel()
+        ImageMemoryPool.clearCache()
     }
 
     private fun updateFileList() {
         val dir = Paths.get(imagePath).parent.toFile()
         dir.listFiles()?.let { files ->
             fileList =
-                files.filter { it.isFile && it.extension.matches(extensionRegex) }
+                files
+                    .filter { it.isFile && it.extension.matches(extensionRegex) }
                     .map { it.absolutePath }
-                    .sortedWith(Comparator { a, b ->
-                        val reAll = Regex("(\\d+)|(\\D+)")
-                        val reNumPerfect = Regex("\\d+")
+                    .sortedWith(
+                        Comparator { a, b ->
+                            val reAll = Regex("(\\d+)|(\\D+)")
+                            val reNumPerfect = Regex("\\d+")
 
-                        val partsA = reAll.findAll(a).map { it.value }.toList()
-                        val partsB = reAll.findAll(b).map { it.value }.toList()
+                            val partsA = reAll.findAll(a).map { it.value }.toList()
+                            val partsB = reAll.findAll(b).map { it.value }.toList()
 
-                        for (i in 0 until maxOf(partsA.size, partsB.size)) {
-                            val partA = partsA.getOrNull(i) ?: ""
-                            val partB = partsB.getOrNull(i) ?: ""
+                            for (i in 0 until maxOf(partsA.size, partsB.size)) {
+                                val partA = partsA.getOrNull(i) ?: ""
+                                val partB = partsB.getOrNull(i) ?: ""
 
-                            if (i >= partsA.size) return@Comparator -1
-                            if (i >= partsB.size) return@Comparator 1
+                                if (i >= partsA.size) return@Comparator -1
+                                if (i >= partsB.size) return@Comparator 1
 
-                            if (partA == partB) continue
+                                if (partA == partB) continue
 
-                            if (reNumPerfect.matches(partA)) {
-                                if (reNumPerfect.matches(partB)) {
-                                    val numA = partA.toInt()
-                                    val numB = partB.toInt()
-                                    return@Comparator numA.compareTo(numB)
+                                if (reNumPerfect.matches(partA)) {
+                                    if (reNumPerfect.matches(partB)) {
+                                        val numA = partA.toInt()
+                                        val numB = partB.toInt()
+                                        return@Comparator numA.compareTo(numB)
+                                    } else {
+                                        return@Comparator 1
+                                    }
                                 } else {
-                                    return@Comparator 1
-                                }
-                            } else {
-                                if (reNumPerfect.matches(partB)) {
-                                    return@Comparator -1
-                                } else {
-                                    return@Comparator partA.compareTo(partB)
+                                    if (reNumPerfect.matches(partB)) {
+                                        return@Comparator -1
+                                    } else {
+                                        return@Comparator partA.compareTo(partB)
+                                    }
                                 }
                             }
+
+                            return@Comparator -1
                         }
-
-                        return@Comparator -1
-                    })
+                    )
         }
-
-        logger.debug("File list updated: ${fileList.joinToString()}")
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
@@ -213,6 +228,10 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
 
     fun getImagePath(): String = imagePath
 
+    fun getIWidth(): Int? = ImageMemoryPool.getImage(imagePath)?.width
+
+    fun getIHeight(): Int? = ImageMemoryPool.getImage(imagePath)?.height
+
     inner class DraggableListener : MouseAdapter() {
         private val snapDistance = 20
         private val minimumSize = 50
@@ -239,10 +258,13 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         }
 
         override fun mouseDragged(e: MouseEvent) {
-            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.appData.get().isLocked) {
+            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR &&
+                !app.appData.get().isLocked
+            ) {
                 val newWidth = snapToEdge(e.x, this@ImagePanel.parent.width - this@ImagePanel.x)
                 val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
-                this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
+                this@ImagePanel.size =
+                    Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
             } else if (zoomRatio > 1.0) {
                 val dx = e.x - initClick.x
                 val dy = e.y - initClick.y
@@ -253,20 +275,18 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 this@ImagePanel.revalidate()
                 return
             } else if (!app.appData.get().isLocked) {
-                var newX = snapToEdge(
-                    this@ImagePanel.x + e.x - initClick.x,
-                    this@ImagePanel.parent.width - this@ImagePanel.width
-                )
-                var newY = snapToEdge(
-                    this@ImagePanel.y + e.y - initClick.y,
-                    this@ImagePanel.parent.height - this@ImagePanel.height
-                )
+                var newX =
+                    snapToEdge(
+                        this@ImagePanel.x + e.x - initClick.x,
+                        this@ImagePanel.parent.width - this@ImagePanel.width
+                    )
+                var newY =
+                    snapToEdge(
+                        this@ImagePanel.y + e.y - initClick.y,
+                        this@ImagePanel.parent.height - this@ImagePanel.height
+                    )
 
-                val sto = snapToOther(
-                    newX, newY,
-                    this@ImagePanel.width,
-                    this@ImagePanel.height
-                )
+                val sto = snapToOther(newX, newY, this@ImagePanel.width, this@ImagePanel.height)
 
                 if (sto != null) {
                     newX = sto.first
@@ -299,13 +319,21 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 var newX = x
                 var newY = y
 
-                if ((other.y <= y && y <= other.height + other.y) || (other.y <= y + height && y + height <= other.height + other.y) || (y < other.y && other.y + other.height < y + height)) {
+                if ((other.y <= y && y <= other.height + other.y) ||
+                    (other.y <= y + height && y + height <= other.height + other.y) ||
+                    (y < other.y && other.y + other.height < y + height)
+                ) {
                     if (abs(x - other.x + width) < snapDistance) newX = other.x - width
-                    if (abs(x - (other.x + other.width)) < snapDistance) newX = other.x + other.width
+                    if (abs(x - (other.x + other.width)) < snapDistance)
+                        newX = other.x + other.width
                 }
-                if ((other.x <= x && x <= other.width + other.x) || (other.x <= x + width && x + width <= other.width + other.x) || (x <= other.x && other.x + other.width < x + width)) {
+                if ((other.x <= x && x <= other.width + other.x) ||
+                    (other.x <= x + width && x + width <= other.width + other.x) ||
+                    (x <= other.x && other.x + other.width < x + width)
+                ) {
                     if (abs(y - other.y + height) < snapDistance) newY = other.y - height
-                    if (abs(y - (other.y + other.height)) < snapDistance) newY = other.y + other.height
+                    if (abs(y - (other.y + other.height)) < snapDistance)
+                        newY = other.y + other.height
                 }
 
                 if (newX != x || newY != y) return newX to newY
@@ -314,17 +342,20 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         }
 
         private fun isNearCorner(x: Int, y: Int): Boolean {
-            return (x in 0 until snapDistance || x in this@ImagePanel.width - snapDistance until this@ImagePanel.width) &&
-                    (y in 0 until snapDistance || y in this@ImagePanel.height - snapDistance until this@ImagePanel.height)
+            return (x in 0 until snapDistance ||
+                    x in this@ImagePanel.width - snapDistance until this@ImagePanel.width) &&
+                    (y in 0 until snapDistance ||
+                            y in this@ImagePanel.height - snapDistance until this@ImagePanel.height)
         }
     }
 
     inner class ZoomListener : MouseWheelListener {
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            zoomRatio *= when {
-                e.preciseWheelRotation < 0 -> 1.1
-                else -> 0.9
-            }
+            zoomRatio *=
+                when {
+                    e.preciseWheelRotation < 0 -> 1.1
+                    else -> 0.9
+                }
             if (zoomRatio <= 1.0) {
                 translateX = 0
                 translateY = 0
@@ -358,7 +389,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                 setImagePath(filePath)
                 updateImage()
             } catch (e: Exception) {
-                if (e.message != null) logger.error("Failed to import image by drag and drop: ${e.message}")
+                if (e.message != null)
+                    logger.error("Failed to import image by drag and drop: ${e.message}")
             }
             return true
         }

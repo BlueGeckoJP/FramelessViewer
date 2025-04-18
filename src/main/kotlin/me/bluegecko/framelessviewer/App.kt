@@ -1,5 +1,7 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage
@@ -29,6 +31,8 @@ class App(
     var panelDivisor = 2
     val appKeymapsClass: AppKeymaps
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private val scope = CoroutineScope(Dispatchers.Swing + SupervisorJob())
 
     init {
         logger.debug("Initializing App. UUID: $uuid")
@@ -66,7 +70,7 @@ class App(
         appKeymapsClass = AppKeymaps(this)
         addKeyListener(appKeymapsClass)
 
-        SwingUtilities.invokeLater {
+        scope.launch {
             updateAppSize()
 
             if (appData.get().isLocked) {
@@ -134,13 +138,21 @@ class App(
     }
 
     fun createNewPanel(path: String = ""): ImagePanel {
-        val panel = ImagePanel(this, ImagePanelData(Rectangle(innerSize.width, innerSize.height), path))
+        try {
+            val panel = ImagePanel(this, ImagePanelData(Rectangle(innerSize.width, innerSize.height), path))
+            this.add(panel)
+            panel.repaint()
+            panel.revalidate()
 
-        this.add(panel)
-        panel.repaint()
-        panel.revalidate()
+            if (path.isNotEmpty()) {
+                panel.updateImage()
+            }
 
-        return panel
+            return panel
+        } catch (e: Exception) {
+            logger.error("Failed to create new panel", e)
+            throw IllegalStateException("Failed to create new panel: ${e.message}", e)
+        }
     }
 
     fun getPanels(): List<ImagePanel> {
@@ -148,7 +160,19 @@ class App(
     }
 
     private fun convertToPanelData(): MutableList<ImagePanelData> {
-        return getPanels().map { ImagePanelData(it.bounds, it.getImagePath()) }.toMutableList()
+        try {
+            return getPanels().mapNotNull { panel ->
+                try {
+                    ImagePanelData(panel.bounds, panel.getImagePath())
+                } catch (e: Exception) {
+                    logger.error("Failed to convert panel to data: ${e.message}")
+                    null
+                }
+            }.toMutableList()
+        } catch (e: Exception) {
+            logger.error("Failed to convert panels to data", e)
+            return mutableListOf()
+        }
     }
 
     fun focusToPanel(targetPanel: ImagePanel) {
@@ -165,14 +189,30 @@ class App(
 
     fun updateTitle() {
         try {
-            val imageName = File(focusedPanel.getImagePath()).name
-            val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
+            val imagePath = focusedPanel.getImagePath()
+            if (imagePath.isEmpty()) {
+                title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
+                return
+            }
 
-            title =
-                "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.getImagePath()) + 1}/${focusedPanel.fileList.size}] | ${
-                    appController.getShortUUID(uuid)
-                } | PD:${panelDivisor}"
+            val imageFile = File(imagePath)
+            if (!imageFile.exists()) {
+                logger.warn("Image file not found: $imagePath")
+                title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
+                return
+            }
+
+            val imageName = imageFile.name
+            val nameStr = if (imageName.length < 24) imageName else "${imageName.substring(0, 24)}.."
+            val currentIndex = focusedPanel.fileList.indexOf(imagePath) + 1
+            val totalFiles = focusedPanel.fileList.size
+
+            title = "$nameStr [$currentIndex/$totalFiles] | ${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
+        } catch (e: SecurityException) {
+            logger.error("Security error accessing file", e)
+            title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
         } catch (e: Exception) {
+            logger.error("Error updating title", e)
             title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
         }
     }
@@ -183,5 +223,10 @@ class App(
             panelDataList = convertToPanelData()
             isUndecorated = this@App.isUndecorated
         }
+    }
+
+    override fun dispose() {
+        super.dispose()
+        scope.cancel()
     }
 }
