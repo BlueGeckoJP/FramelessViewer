@@ -1,10 +1,10 @@
 package me.bluegecko.framelessviewer
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
+import me.bluegecko.framelessviewer.data.ChannelMessage
 import me.bluegecko.framelessviewer.data.ChannelMessage.*
 import me.bluegecko.framelessviewer.data.ThreadData
 import org.slf4j.LoggerFactory
@@ -17,6 +17,8 @@ class AppController {
     private var isNormalExecution = true
     private var isFirstTime = true
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private val scope = CoroutineScope(Dispatchers.Swing + SupervisorJob())
 
     fun run(initPath: String = "") {
         while (isNormalExecution) {
@@ -70,13 +72,19 @@ class AppController {
                     }
 
                     SendImage -> {
-                        val itemChannel = item.channel.get()
-                        val targetThreadData = threadDataList.filter { it.uuid == itemChannel.sendImageTo }[0]
-                        val targetChannel = targetThreadData.channel.get()
-                        targetChannel.receivedImagePath = itemChannel.sendImagePath
-                        targetChannel.isReceived = true
-                        item.channel.set(Channel())
-                        logger.info("SendImage ${item.uuid} -> ${targetThreadData.uuid}")
+                        try {
+                            val itemChannel = item.channel.get()
+                            val targetThreadData = threadDataList.find { it.uuid == itemChannel.sendImageTo }
+                                ?: throw IllegalStateException("Target window not found: ${itemChannel.sendImageTo}")
+                            val targetChannel = targetThreadData.channel.get()
+                            targetChannel.receivedImagePath = itemChannel.sendImagePath
+                            targetChannel.isReceived = true
+                            item.channel.set(Channel())
+                            logger.info("SendImage ${item.uuid} -> ${targetThreadData.uuid}")
+                        } catch (e: Exception) {
+                            logger.error("Failed to send image", e)
+                            item.channel.set(Channel()) // Reset channel state on error
+                        }
                     }
 
                     Normal -> {}
@@ -90,9 +98,17 @@ class AppController {
     private fun runApp(initAppData: AppData = AppData(), initPath: String = ""): ThreadData {
         val channel = AtomicReference(Channel())
         val uuid = UUID.randomUUID().toString()
-        val thread = CoroutineScope(Dispatchers.Default).launch {
-            App(channel, uuid, initAppData, initPath)
+
+        val thread = scope.launch {
+            try {
+                App(channel, uuid, initAppData, initPath)
+            } catch (e: Exception) {
+                logger.error("Failed to create application window", e)
+                channel.set(Channel(Exit)) // Signal thread to exit on error
+                throw e
+            }
         }
+
         return ThreadData(uuid, thread, channel, initAppData)
     }
 
@@ -105,13 +121,23 @@ class AppController {
     }
 
     fun newWindowByDaemon(path: String) {
-        val lastAppData = threadDataList.last().appData.get()
-        val returnValue = runApp(AppData(lastAppData), path)
-        threadDataList.add(returnValue)
-        logger.info("NewWindow By Daemon -> ${returnValue.uuid}")
+        try {
+            if (threadDataList.isEmpty()) {
+                throw IllegalStateException("No existing windows to copy settings from")
+            }
+
+            val lastAppData = threadDataList.last().appData.get()
+            val returnValue = runApp(AppData(lastAppData), path)
+            threadDataList.add(returnValue)
+            logger.info("NewWindow By Daemon -> ${returnValue.uuid}")
+        } catch (e: Exception) {
+            logger.error("Failed to create new window by daemon", e)
+            throw e
+        }
     }
 
     fun stop() {
         isNormalExecution = false
+        scope.cancel()
     }
 }
