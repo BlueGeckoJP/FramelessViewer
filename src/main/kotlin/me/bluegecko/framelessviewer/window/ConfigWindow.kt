@@ -13,16 +13,24 @@ import javax.swing.table.TableCellRenderer
 
 class ConfigWindow(private val app: App) : JDialog(app, "Config | FramelessViewer", true) {
     init {
-        size = Dimension(400, 300)
+        size = Dimension(400, 400)
         layout = BorderLayout()
         setLocationRelativeTo(app)
 
         val tabbedPane = JTabbedPane()
 
+        val configPanel = ConfigPanel()
         val tablePanel = TablePanel()
 
+        tabbedPane.addTab("Config", configPanel)
         tabbedPane.addTab("Keybindings", tablePanel)
         contentPane.add(tabbedPane, BorderLayout.CENTER)
+    }
+
+    inner class ConfigPanel : JPanel() {
+        init {
+            layout = BorderLayout()
+        }
     }
 
     inner class TablePanel : JPanel() {
