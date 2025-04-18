@@ -1,6 +1,7 @@
 package me.bluegecko.framelessviewer.window
 
 import me.bluegecko.framelessviewer.App
+import me.bluegecko.framelessviewer.ImageMemoryPool
 import me.bluegecko.framelessviewer.data.KeyData
 import java.awt.*
 import java.awt.event.KeyAdapter
@@ -29,7 +30,13 @@ class ConfigWindow(private val app: App) : JDialog(app, "Config | FramelessViewe
 
     inner class ConfigPanel : JPanel() {
         init {
-            layout = BorderLayout()
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+
+            val memUsageLabel = JLabel(ImageMemoryPool.getMemoryUsage())
+            val cacheSizeLabel = JLabel(ImageMemoryPool.getCacheSize())
+
+            this.add(memUsageLabel)
+            this.add(cacheSizeLabel)
         }
     }
 
