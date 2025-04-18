@@ -17,8 +17,12 @@ class ConfigWindow(private val app: App) : JDialog(app, "Config | FramelessViewe
         layout = BorderLayout()
         setLocationRelativeTo(app)
 
+        val tabbedPane = JTabbedPane()
+
         val tablePanel = TablePanel()
-        contentPane.add(tablePanel, BorderLayout.CENTER)
+
+        tabbedPane.addTab("Keybindings", tablePanel)
+        contentPane.add(tabbedPane, BorderLayout.CENTER)
     }
 
     inner class TablePanel : JPanel() {
