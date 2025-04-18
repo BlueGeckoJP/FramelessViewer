@@ -1,5 +1,7 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import me.bluegecko.framelessviewer.data.AppData
 import me.bluegecko.framelessviewer.data.Channel
 import me.bluegecko.framelessviewer.data.ChannelMessage
@@ -29,6 +31,8 @@ class App(
     var panelDivisor = 2
     val appKeymapsClass: AppKeymaps
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private val scope = CoroutineScope(Dispatchers.Swing + SupervisorJob())
 
     init {
         logger.debug("Initializing App. UUID: $uuid")
@@ -66,7 +70,7 @@ class App(
         appKeymapsClass = AppKeymaps(this)
         addKeyListener(appKeymapsClass)
 
-        SwingUtilities.invokeLater {
+        scope.launch {
             updateAppSize()
 
             if (appData.get().isLocked) {
@@ -139,6 +143,11 @@ class App(
             this.add(panel)
             panel.repaint()
             panel.revalidate()
+
+            if (path.isNotEmpty()) {
+                panel.updateImage()
+            }
+
             return panel
         } catch (e: Exception) {
             logger.error("Failed to create new panel", e)
@@ -214,5 +223,10 @@ class App(
             panelDataList = convertToPanelData()
             isUndecorated = this@App.isUndecorated
         }
+    }
+
+    override fun dispose() {
+        super.dispose()
+        scope.cancel()
     }
 }

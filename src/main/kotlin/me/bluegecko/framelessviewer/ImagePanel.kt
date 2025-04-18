@@ -1,8 +1,11 @@
 package me.bluegecko.framelessviewer
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import me.bluegecko.framelessviewer.data.ImagePanelData
 import org.slf4j.LoggerFactory
 import java.awt.*
+import java.awt.image.BufferedImage
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -29,6 +32,8 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     var resizedHeight = 0
     val uuid: UUID = UUID.randomUUID()
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var errorState = false
 
     init {
         setImagePath(data.imagePath)
@@ -51,16 +56,32 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
         super.paintComponent(g)
 
         if (imagePath.isEmpty()) return
+        if (errorState) {
+            g.color = Color.WHITE
+            g.font = Font("Dialog", Font.BOLD, 14)
+            val message = "Failed to load image"
+            val metrics = g.fontMetrics
+            val x = (width - metrics.stringWidth(message)) / 2
+            val y = (height - metrics.height) / 2 + metrics.ascent
+            g.drawString(message, x, y)
+            return
+        }
 
-        val originalImage = ImageMemoryPool.getImage(imagePath) ?: return
-        val scaledImage =
-            ImageMemoryPool.getScaledImage(imagePath, resizedWidth, resizedHeight, originalImage) ?: return
+        try {
+            val originalImage = ImageMemoryPool.getImage(imagePath) ?: return
+            val scaledImage = ImageMemoryPool.getScaledImage(imagePath, resizedWidth, resizedHeight, originalImage) ?: return
 
-        val g2d = g as Graphics2D
-        val x = (width - resizedWidth) / 2 + translateX
-        val y = (height - resizedHeight) / 2 + translateY
+            val g2d = g as Graphics2D
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
 
-        g2d.drawImage(scaledImage, x, y, resizedWidth, resizedHeight, this)
+            val x = (width - resizedWidth) / 2 + translateX
+            val y = (height - resizedHeight) / 2 + translateY
+
+            g2d.drawImage(scaledImage, x, y, resizedWidth, resizedHeight, this)
+        } catch (e: Exception) {
+            logger.error("Failed to paint image: ${e.message}")
+            showErrorState()
+        }
     }
 
     fun updateImageSize() {
@@ -92,32 +113,40 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel(), AutoCloseable {
     fun updateImage() {
         if (imagePath.isEmpty()) return
 
-        object : SwingWorker<Unit, Void>() {
-            override fun doInBackground() {
-                return try {
-                    ImageMemoryPool.getImage(imagePath)
-                    Unit
-                } catch (e: Exception) {
-                    logger.error("Failed to read image: ${e.message}")
-                }
-            }
+        errorState = false
+        app.title = "Loading.. ".plus(app.title)
 
-            override fun done() {
-                try {
+        scope.launch {
+            try {
+                loadImageAsync()
+                withContext(Dispatchers.Swing) {
                     updateImageSize()
                     repaint()
                     revalidate()
-                } finally {
+                    app.updateTitle()
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to read image: ${e.message}")
+                withContext(Dispatchers.Swing) {
+                    showErrorState()
                     app.updateTitle()
                 }
             }
-        }.also {
-            app.title = "Loading.. ".plus(app.title)
-            it.execute()
         }
     }
 
+    suspend fun loadImageAsync() = withContext(Dispatchers.IO) {
+        ImageMemoryPool.getImage(imagePath) ?: throw IllegalStateException("Failed to load image")
+    }
+
+    fun showErrorState() {
+        errorState = true
+        background = Color.RED.darker()
+        repaint()
+    }
+
     override fun close() {
+        scope.cancel()
         ImageMemoryPool.clearCache()
     }
 

@@ -26,7 +26,7 @@ fun main(args: Array<String>) = runBlocking {
     try {
         UIManager.setLookAndFeel(FlatMacDarkLaf())
         ImageIO.scanForPlugins()
-        
+
         // WebP support check
         val webpReaders = ImageIO.getImageReadersByFormatName("webp")
         if (!webpReaders.hasNext()) {
@@ -40,12 +40,34 @@ fun main(args: Array<String>) = runBlocking {
         val argumentsParser = ArgumentsParser()
         CommandLine(argumentsParser).execute(*args)
 
+        // Setup shutdown hook for proper resource cleanup
         Runtime.getRuntime().addShutdownHook(Thread {
-            daemon?.let {
-                it.stop()
-            }
+            try {
+                // Clean up daemon resources
+                daemon?.let {
+                    it.stop()
+                }
 
-            appController.threadDataList.forEach { it.thread.cancel() }
+                // Cancel all threads
+                appController.threadDataList.forEach {
+                    try {
+                        it.thread.cancel()
+                    } catch (e: Exception) {
+                        logger.error("Error canceling thread: ${it.uuid}", e)
+                    }
+                }
+
+                // Clean up image resources
+                try {
+                    ImageIO.setUseCache(false)
+
+                    Runtime.getRuntime().gc()
+                } catch (e: Exception) {
+                    logger.error("Error cleaning up image resources", e)
+                }
+            } catch (e: Exception) {
+                logger.error("Error during shutdown", e)
+            }
         })
 
         if (argumentsParser.daemon) {
