@@ -44,9 +44,7 @@ fun main(args: Array<String>) = runBlocking {
         Runtime.getRuntime().addShutdownHook(Thread {
             try {
                 // Clean up daemon resources
-                daemon?.let {
-                    it.stop()
-                }
+                daemon?.stop()
 
                 // Cancel all threads
                 appController.threadDataList.forEach {
