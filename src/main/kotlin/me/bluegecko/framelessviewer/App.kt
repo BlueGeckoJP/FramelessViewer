@@ -14,7 +14,6 @@ import java.awt.event.*
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JFrame
-import javax.swing.SwingUtilities
 import javax.swing.Timer
 import javax.swing.border.EmptyBorder
 import javax.swing.border.LineBorder
@@ -85,6 +84,8 @@ class App(
 
             val timer = Timer(1000, ImageReceiver())
             timer.start()
+
+            updateTitle()
         }
     }
 
