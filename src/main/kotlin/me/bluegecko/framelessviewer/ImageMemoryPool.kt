@@ -15,8 +15,6 @@ object ImageMemoryPool {
     private const val MEMORY_THRESHOLD = 0.8
 
     fun getImage(path: String): BufferedImage? {
-        logger.debug(getMemoryUsage())
-        logger.debug(getCacheSize())
         return imageCache[path]?.get() ?: loadImage(path)
     }
 
