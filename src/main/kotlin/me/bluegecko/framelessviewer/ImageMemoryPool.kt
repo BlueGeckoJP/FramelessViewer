@@ -10,8 +10,8 @@ import javax.imageio.ImageIO
 
 object ImageMemoryPool {
     private val logger = LoggerFactory.getLogger(ImageMemoryPool::class.java)
-    private val imageCache = Collections.synchronizedMap(WeakHashMap<String, WeakReference<BufferedImage>>())
-    private val scaledImageCache = Collections.synchronizedMap(WeakHashMap<String, WeakReference<Image>>())
+    private val imageCache = Collections.synchronizedMap(HashMap<String, WeakReference<BufferedImage>>())
+    private val scaledImageCache = Collections.synchronizedMap(HashMap<String, WeakReference<Image>>())
     private const val MEMORY_THRESHOLD = 0.8
 
     fun getImage(path: String): BufferedImage? {
