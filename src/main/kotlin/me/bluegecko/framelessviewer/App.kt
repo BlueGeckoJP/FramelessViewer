@@ -172,7 +172,7 @@ class App(
                 "$nameStr [${focusedPanel.fileList.indexOf(focusedPanel.getImagePath()) + 1}/${focusedPanel.fileList.size}] | ${
                     appController.getShortUUID(uuid)
                 } | PD:${panelDivisor}"
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             title = "${appController.getShortUUID(uuid)} | PD:${panelDivisor}"
         }
     }
