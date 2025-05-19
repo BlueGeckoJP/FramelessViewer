@@ -106,7 +106,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
             override fun doInBackground(): BufferedImage? {
                 return try {
                     ImageIO.read(File(imagePath))
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
@@ -178,8 +178,6 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
                         return@Comparator -1
                     })
         }
-
-        logger.debug("File list updated: ${fileList.joinToString()}")
     }
 
     // size1: 1920, size2: 1080, standardSize: 1600 => 900
