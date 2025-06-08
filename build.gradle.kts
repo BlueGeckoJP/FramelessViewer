@@ -30,6 +30,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.17")
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation("ch.qos.logback:logback-classic:1.5.18")
+    runtimeOnly("com.github.gotson.nightmonkeys:imageio-heif:1.0.0")
 }
 
 tasks.test {
