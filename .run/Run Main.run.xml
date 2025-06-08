@@ -1,11 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="Run Main" type="Application" factoryName="Application">
-        <option name="ALTERNATIVE_JRE_PATH" value="17"/>
-        <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true"/>
-        <option name="MAIN_CLASS_NAME" value="me.bluegecko.framelessviewer.MainKt"/>
-        <module name="FramelessViewer.main"/>
-        <method v="2">
-            <option name="Make" enabled="true"/>
-        </method>
-    </configuration>
+  <configuration default="false" name="Run Main" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="temurin-22" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="me.bluegecko.framelessviewer.MainKt" />
+    <module name="FramelessViewer.main" />
+    <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
 </component>
