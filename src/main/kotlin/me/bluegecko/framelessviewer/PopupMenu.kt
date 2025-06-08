@@ -116,8 +116,20 @@ class PopupMenu(val app: App) : JPopupMenu() {
         chooser.fileFilter = FileNameExtensionFilter("BMP", "bmp", "dib")
         chooser.fileFilter = FileNameExtensionFilter("WBMP", "wbmp")
         chooser.fileFilter = FileNameExtensionFilter("WebP", "webp")
+        chooser.fileFilter = FileNameExtensionFilter("AVIF", "avif")
         chooser.fileFilter =
-            FileNameExtensionFilter("Supported images", "jpg", "jpeg", "png", "gif", "bmp", "dib", "wbmp", "webp")
+            FileNameExtensionFilter(
+                "Supported images",
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "bmp",
+                "dib",
+                "wbmp",
+                "webp",
+                "avif"
+            )
         chooser.showOpenDialog(null)
         val file = chooser.selectedFile
 

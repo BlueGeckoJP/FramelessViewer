@@ -25,7 +25,7 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
     private var oldParentPath = ""
     lateinit var fileList: List<String>
     lateinit var image: BufferedImage
-    val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp", RegexOption.IGNORE_CASE)
+    val extensionRegex = Regex("jpg|jpeg|png|gif|bmp|dib|wbmp|webp|avif", RegexOption.IGNORE_CASE)
     var zoomRatio = 1.0
     var translateX = 0
     var translateY = 0
