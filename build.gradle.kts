@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.1.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -14,7 +14,7 @@ dependencies {
     testImplementation(kotlin("test"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.21")
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core
     implementation("com.twelvemonkeys.imageio:imageio-core:3.11.0")
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
@@ -36,7 +36,7 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(22)
 }
 
 tasks.withType<Jar> {
