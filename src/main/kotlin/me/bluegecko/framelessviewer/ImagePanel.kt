@@ -237,42 +237,58 @@ class ImagePanel(val app: App, data: ImagePanelData) : JPanel() {
         }
 
         override fun mouseDragged(e: MouseEvent) {
-            if (this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.appData.get().isLocked) {
-                val newWidth = snapToEdge(e.x, this@ImagePanel.parent.width - this@ImagePanel.x)
-                val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
-                this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
-            } else if (zoomRatio > 1.0) {
-                val dx = e.x - initClick.x
-                val dy = e.y - initClick.y
-                translateX += dx
-                translateY += dy
-                initClick = e.point
-                this@ImagePanel.repaint()
-                this@ImagePanel.revalidate()
-                return
-            } else if (!app.appData.get().isLocked) {
-                var newX = snapToEdge(
-                    this@ImagePanel.x + e.x - initClick.x,
-                    this@ImagePanel.parent.width - this@ImagePanel.width
-                )
-                var newY = snapToEdge(
-                    this@ImagePanel.y + e.y - initClick.y,
-                    this@ImagePanel.parent.height - this@ImagePanel.height
-                )
-
-                val sto = snapToOther(
-                    newX, newY,
-                    this@ImagePanel.width,
-                    this@ImagePanel.height
-                )
-
-                if (sto != null) {
-                    newX = sto.first
-                    newY = sto.second
+            when {
+                this@ImagePanel.cursor.type == Cursor.SE_RESIZE_CURSOR && !app.appData.get().isLocked -> {
+                    handleResize(e)
                 }
-
-                this@ImagePanel.location = Point(newX, newY)
+                zoomRatio > 1.0 -> {
+                    handleImagePanning(e)
+                    return
+                }
+                !app.appData.get().isLocked -> {
+                    handlePanelMovement(e)
+                }
             }
+        }
+
+        private fun handleResize(e: MouseEvent) {
+            val newWidth = snapToEdge(e.x, this@ImagePanel.parent.width - this@ImagePanel.x)
+            val newHeight = snapToEdge(e.y, this@ImagePanel.parent.height - this@ImagePanel.y)
+            this@ImagePanel.size = Dimension(maxOf(newWidth, minimumSize), maxOf(newHeight, minimumSize))
+        }
+
+        private fun handleImagePanning(e: MouseEvent) {
+            val dx = e.x - initClick.x
+            val dy = e.y - initClick.y
+            translateX += dx
+            translateY += dy
+            initClick = e.point
+            this@ImagePanel.repaint()
+            this@ImagePanel.revalidate()
+        }
+
+        private fun handlePanelMovement(e: MouseEvent) {
+            var newX = snapToEdge(
+                this@ImagePanel.x + e.x - initClick.x,
+                this@ImagePanel.parent.width - this@ImagePanel.width
+            )
+            var newY = snapToEdge(
+                this@ImagePanel.y + e.y - initClick.y,
+                this@ImagePanel.parent.height - this@ImagePanel.height
+            )
+
+            val sto = snapToOther(
+                newX, newY,
+                this@ImagePanel.width,
+                this@ImagePanel.height
+            )
+
+            if (sto != null) {
+                newX = sto.first
+                newY = sto.second
+            }
+
+            this@ImagePanel.location = Point(newX, newY)
         }
 
         override fun mouseReleased(e: MouseEvent) {
