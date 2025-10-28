@@ -5,7 +5,7 @@ A quirky image viewer built with Kotlin and Swing, featuring tiling, title bar s
 > [!CAUTION]
 > This repository is largely unmaintained.
 > There are no plans for new feature additions or bug fixes.
->
+
 > [!WARNING]
 > This was created as a hobby for study purposes, so it is not at a practical level.
 
