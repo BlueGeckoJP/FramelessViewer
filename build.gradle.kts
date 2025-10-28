@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.1.21"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "9.2.2"
+    application
 }
 
 group = "me.bluegecko"
@@ -37,11 +38,15 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(22)
 }
 
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "me.bluegecko.framelessviewer.MainKt"
     }
+}
+
+application {
+    mainClass = "me.bluegecko.framelessviewer.MainKt"
 }
